@@ -1,0 +1,1598 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TiffySearch - Intelligens AI Kereső</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Importáljuk az Inter betűtípust a modern megjelenésért */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        /* CSS változók a színek és átmenetek egyszerű kezeléséhez, sötét és világos módhoz optimalizálva */
+        :root {
+            --color-pink: #FF69B4; /* Élénk rózsaszín */
+            --color-rich-blue: #007BFF; /* Gazdag kék */
+            --color-neon-green: #39FF14; /* Neonzöld */
+            --color-light-purple: #A020F0; /* Világos lila */
+            --color-dark-bg: #0A0E19; /* Sötét háttér */
+            --color-dark-secondary: #121622; /* Sötét másodlagos háttér */
+            --color-dark-tertiary: #1A1F3A; /* Sötét harmadlagos háttér */
+            --color-text-light: #E2E8F0; /* Világos szöveg */
+            --color-text-muted: #94A3B8; /* Halvány szöveg */
+            --color-border-dark: rgba(255, 255, 255, 0.1); /* Sötét mód szegély */
+            --color-card-bg-dark: rgba(255, 255, 255, 0.05); /* Sötét mód kártya háttér */
+            --color-button-bg: linear-gradient(45deg, var(--color-light-purple), var(--color-pink)); /* Gomb háttér gradiens */
+            --color-button-hover-shadow: rgba(160, 32, 240, 0.4); /* Gomb lebegés árnyék */
+
+            --color-light-bg: #FFFFFF; /* Világos háttér */
+            --color-light-secondary: #F8F8F8; /* Világos másodlagos háttér */
+            --color-light-tertiary: #E8E8E8; /* Világos harmadlagos háttér */
+            --color-text-dark: #333333; /* Sötét szöveg */
+            --color-border-light: rgba(0, 0, 0, 0.1); /* Világos mód szegély */
+            --color-card-bg-light: rgba(0, 0, 0, 0.03); /* Világos mód kártya háttér */
+            --color-button-bg-light: linear-gradient(45deg, var(--color-pink), var(--color-rich-blue)); /* Világos mód gomb háttér */
+            --color-button-hover-shadow-light: rgba(255, 105, 180, 0.4); /* Világos mód gomb lebegés árnyék */
+        }
+
+        /* Általános test stílusok, animált háttér gradiens és betűtípus */
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: var(--color-dark-bg);
+            color: var(--color-text-light);
+            min-height: 100vh;
+            transition: background 0.5s ease, color 0.5s ease;
+            position: relative;
+            overflow-x: hidden;
+            font-size: 15px;
+        }
+
+        /* Világos mód stílusok */
+        body.light-mode {
+            background: var(--color-light-bg);
+            color: var(--color-text-dark);
+        }
+
+        /* Háttér buborék effektusok a vizuális mélységért */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 10% 20%, rgba(255, 105, 180, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 90% 80%, rgba(0, 123, 255, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 30% 70%, rgba(57, 255, 20, 0.08) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 30%, rgba(160, 32, 240, 0.08) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+            transition: opacity 0.5s ease;
+            opacity: 1;
+        }
+
+        body.light-mode::before {
+            opacity: 0.3;
+        }
+
+        /* Konténer stílusok a tartalom középre igazításához és reszponzivitásához */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Fejléc animáció a görgetéskor történő elrejtéshez */
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            flex-shrink: 0;
+            transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.6s ease;
+        }
+
+        .header.hidden {
+            transform: translateY(-150px);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Logó stílusa színátmenettel és kiemelt betűtípussal */
+        .logo {
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, var(--color-pink), var(--color-rich-blue), var(--color-neon-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.05em;
+        }
+
+        .powered-by-header {
+            color: var(--color-text-muted);
+            font-size: 0.95rem;
+            opacity: 0.7;
+            margin-top: -0.5rem;
+            transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        body.light-mode .powered-by-header {
+            color: #888;
+        }
+
+        .powered-by-header span {
+            color: var(--color-neon-green);
+            font-weight: 600;
+        }
+
+        body.light-mode .powered-by-header span {
+            color: var(--color-rich-blue);
+        }
+
+        /* Keresőmező konténer stílusok és fixált pozíció görgetéskor */
+        .search-container {
+            position: relative;
+            margin-bottom: 2rem;
+            flex-shrink: 0;
+            transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .search-container.fixed-bottom {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 4rem);
+            max-width: 800px;
+            z-index: 1000;
+            transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .search-container.fixed-bottom.hidden {
+            transform: translateX(-50%) translateY(250px);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Keresősáv modern design elemekkel és árnyékokkal */
+        .search-bar {
+            background: var(--color-dark-secondary);
+            border-radius: 60px;
+            padding: 0.8rem 1.2rem;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            border: 1px solid var(--color-border-dark);
+            box-shadow: 
+                0 4px 25px rgba(0, 0, 0, 0.2),
+                inset 0 0 20px rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        body.light-mode .search-bar {
+            background: var(--color-light-secondary);
+            border: 1px solid var(--color-border-light);
+            box-shadow: 
+                0 4px 25px rgba(0, 0, 0, 0.08), 
+                inset 0 0 20px rgba(0, 0, 0, 0.03);
+        }
+
+        /* Keresősáv fókuszált állapota */
+        .search-bar:focus-within {
+            border-color: var(--color-rich-blue);
+            box-shadow: 
+                0 0 40px rgba(0, 123, 255, 0.3),
+                inset 0 0 30px rgba(0, 123, 255, 0.1);
+        }
+
+        body.light-mode .search-bar:focus-within {
+            border-color: var(--color-rich-blue);
+            box-shadow: 
+                0 0 40px rgba(0, 123, 255, 0.1), 
+                inset 0 0 30px rgba(0, 123, 255, 0.05);
+        }
+
+        .search-bar input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--color-text-light);
+            font-size: 1rem;
+            flex: 1;
+            margin: 0 0.8rem;
+            padding: 0.1rem 0;
+        }
+
+        body.light-mode .search-bar input {
+            color: var(--color-text-dark);
+        }
+
+        .search-bar input::placeholder {
+            color: #64748b;
+        }
+
+        body.light-mode .search-bar input::placeholder {
+            color: #A0A0A0;
+        }
+
+        /* Keresés ikon stílusa */
+        .search-icon {
+            color: var(--color-rich-blue);
+            font-size: 1.15rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            order: 2;
+        }
+
+        .search-icon:hover {
+            color: var(--color-pink);
+            transform: scale(1.15);
+        }
+
+        /* Plusz gomb a kiegészítő funkciókhoz */
+        .plus-button {
+            background: transparent;
+            border: none;
+            color: var(--color-rich-blue);
+            font-size: 1.15rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            order: 0;
+        }
+
+        .plus-button:hover {
+            color: var(--color-pink);
+            background: rgba(255, 255, 255, 0.1);
+            transform: rotate(90deg);
+        }
+
+        body.light-mode .plus-button:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        /* Lebegő menü stílusok, animált megjelenéssel */
+        .floating-menu {
+            position: absolute;
+            bottom: calc(100% + 10px);
+            left: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 10px;
+            border-radius: 12px;
+            background: var(--color-dark-secondary);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            opacity: 0;
+            transform: translateY(10px);
+            visibility: hidden;
+            transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
+            z-index: 1001;
+        }
+
+        .floating-menu.show {
+            opacity: 1;
+            transform: translateY(0);
+            visibility: visible;
+        }
+
+        .floating-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--color-text-light);
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: background 0.2s ease, color 0.2s ease;
+            font-size: 0.9rem;
+        }
+
+        body.light-mode .floating-menu-item {
+            color: var(--color-text-dark);
+        }
+
+        .floating-menu-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: var(--color-pink);
+        }
+
+        body.light-mode .floating-menu-item:hover {
+            background: rgba(0, 0, 0, 0.08);
+            color: var(--color-rich-blue);
+        }
+
+        .floating-menu-item i {
+            font-size: 1.1rem;
+            color: var(--color-rich-blue);
+            width: 20px;
+            text-align: center;
+        }
+
+        body.light-mode .floating-menu-item i {
+            color: var(--color-pink);
+        }
+
+        /* Eredmények konténer, görgethető tartalommal */
+        .results-container {
+            flex: 1;
+            padding-bottom: 120px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch; /* Sima görgetés mobil eszközökön */
+        }
+
+        /* Betöltés animáció */
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            text-align: center;
+        }
+
+        .loading i {
+            font-size: 2rem;
+            color: var(--color-rich-blue);
+            margin-bottom: 1rem;
+            animation: spin 1s linear infinite; /* Forgó ikon animáció */
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .loading div {
+            color: var(--color-text-muted);
+            font-size: 1rem;
+        }
+
+        /* AI válasz kártya stílusok, modern háttérrel és árnyékkal */
+        .ai-answer {
+            background: var(--color-card-bg-dark);
+            border-radius: 16px;
+            padding: 1.8rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(8px); /* Elmosódás effektus */
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        body.light-mode .ai-answer {
+            background: var(--color-card-bg-light);
+            border: 1px solid var(--color-border-light);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+        }
+
+        .ai-answer h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--color-text-light);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        body.light-mode .ai-answer h3 {
+            color: var(--color-text-dark);
+        }
+
+        .ai-answer h3 i {
+            color: var(--color-rich-blue);
+        }
+
+        .ai-answer p {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: var(--color-text-muted);
+            margin-bottom: 0;
+        }
+
+        body.light-mode .ai-answer p {
+            color: #666;
+        }
+
+        /* Források szekció */
+        .sources {
+            margin-top: 2rem;
+        }
+
+        .sources h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--color-text-light);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        body.light-mode .sources h4 {
+            color: var(--color-text-dark);
+        }
+
+        .sources h4 i {
+            color: var(--color-rich-blue);
+        }
+
+        .source-item {
+            background: var(--color-card-bg-dark);
+            padding: 0.8rem 1rem;
+            margin-bottom: 0.6rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.2s ease;
+        }
+
+        body.light-mode .source-item {
+            background: var(--color-card-bg-light);
+            border: 1px solid var(--color-border-light);
+        }
+
+        .source-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        body.light-mode .source-item:hover {
+            background: rgba(0, 0, 0, 0.05);
+            border-color: rgba(0, 0, 0, 0.1);
+        }
+
+        .source-item a {
+            font-size: 0.95rem;
+            color: var(--color-rich-blue);
+            text-decoration: none;
+            font-weight: 500;
+            display: block;
+            margin-bottom: 0.3rem;
+        }
+
+        .source-item a:hover {
+            color: var(--color-pink);
+            text-decoration: underline;
+        }
+
+        .source-domain {
+            font-size: 0.8rem;
+            color: var(--color-text-muted);
+        }
+
+        body.light-mode .source-domain {
+            color: #888;
+        }
+
+        .powered-by-results {
+            text-align: center;
+            margin-top: 2.5rem;
+            color: var(--color-text-muted);
+            font-size: 0.9rem;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+        }
+
+        body.light-mode .powered-by-results {
+            color: #888;
+        }
+
+        .powered-by-results span {
+            color: var(--color-neon-green);
+            font-weight: 600;
+        }
+
+        body.light-mode .powered-by-results span {
+            color: var(--color-rich-blue);
+        }
+
+        /* "Részletesebben" gomb stílusa */
+        .more-info-btn {
+            background: var(--color-button-bg);
+            border: none;
+            border-radius: 10px;
+            padding: 0.8rem 1.6rem;
+            margin: 1.5rem auto;
+            font-size: 0.95rem;
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(160, 32, 240, 0.3);
+        }
+
+        .more-info-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 20px var(--color-button-hover-shadow);
+        }
+
+        body.light-mode .more-info-btn {
+            background: var(--color-button-bg-light);
+            box-shadow: 0 5px 15px rgba(255, 105, 180, 0.3);
+        }
+
+        body.light-mode .more-info-btn:hover {
+            box-shadow: 0 7px 20px var(--color-button-hover-shadow-light);
+        }
+
+        /* Részletes összefoglaló overlay */
+        .detailed-summary-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--color-dark-bg);
+            z-index: 1500;
+            padding: 1.5rem 0;
+            overflow-y: auto;
+            display: none;
+            animation: fadeIn 0.3s ease-out; /* Animált megjelenés */
+        }
+
+        body.light-mode .detailed-summary-overlay {
+            background: var(--color-light-bg);
+        }
+
+        .detailed-summary-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .detailed-summary-content {
+            background: var(--color-card-bg-dark);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            font-size: 1rem;
+            line-height: 1.6;
+            color: var(--color-text-light);
+        }
+        
+        body.light-mode .detailed-summary-content {
+            color: var(--color-text-dark);
+        }
+
+        body.light-mode .detailed-summary-content {
+            background: var(--color-card-bg-light);
+            border: 1px solid var(--color-border-light);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+        }
+
+        .detailed-summary-content h2 {
+            font-size: 1.8rem;
+            color: var(--color-text-light);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        body.light-mode .detailed-summary-content h2 {
+            color: var(--color-text-dark);
+        }
+
+        .detailed-summary-content h3 {
+            font-size: 1.3rem;
+            color: var(--color-text-light);
+            margin: 1.5rem 0 1rem 0;
+        }
+
+        body.light-mode .detailed-summary-content h3 {
+            color: var(--color-text-dark);
+        }
+
+        .continue-button-container {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .continue-btn {
+            background: var(--color-button-bg);
+            border: none;
+            border-radius: 10px;
+            padding: 0.9rem 1.8rem;
+            font-size: 1.05rem;
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(160, 32, 240, 0.3);
+        }
+
+        .continue-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 20px var(--color-button-hover-shadow);
+        }
+
+        body.light-mode .continue-btn {
+            background: var(--color-button-bg-light);
+            box-shadow: 0 5px 15px rgba(255, 105, 180, 0.3);
+        }
+
+        body.light-mode .continue-btn:hover {
+            box-shadow: 0 7px 20px var(--color-button-hover-shadow-light);
+        }
+
+        /* Sötét mód váltó gomb */
+        .dark-mode-toggle {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            width: 40px;
+            height: 40px;
+            background: var(--color-card-bg-dark);
+            border: 1px solid var(--color-border-dark);
+            border-radius: 50%;
+            color: var(--color-text-light);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 1100;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15); /* Árnyék a gombhoz */
+        }
+
+        body.light-mode .dark-mode-toggle {
+            background: var(--color-card-bg-light);
+            border: 1px solid var(--color-border-light);
+            color: var(--color-text-dark);
+        }
+
+        .dark-mode-toggle:hover {
+            background: var(--color-rich-blue);
+            color: white;
+            transform: scale(1.1);
+            box-shadow: 0 5px 15px rgba(0, 123, 255, 0.3);
+        }
+
+        .dark-mode-toggle i {
+            font-size: 1.1rem;
+        }
+
+        /* Modális ablak overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            animation: fadeIn 0.3s ease-out; /* Animált megjelenés */
+        }
+
+        /* Modális ablak tartalom */
+        .modal-content {
+            background: var(--color-dark-secondary);
+            border-radius: 16px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 1px solid var(--color-border-dark);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: slideInFromTop 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); /* Animált beúszás */
+        }
+
+        body.light-mode .modal-content {
+            background: var(--color-light-secondary);
+            border: 1px solid var(--color-border-light);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            background: var(--color-button-bg);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--color-text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            color: var(--color-pink);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        body.light-mode .modal-close:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .modal-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .modal-input {
+            background: var(--color-dark-bg);
+            border: 1px solid var(--color-border-dark);
+            border-radius: 8px;
+            padding: 0.8rem;
+            color: var(--color-text-light);
+            font-size: 0.95rem;
+        }
+
+        body.light-mode .modal-input {
+            background: var(--color-light-bg);
+            border: 1px solid var(--color-border-light);
+            color: var(--color-text-dark);
+        }
+
+        .modal-button {
+            background: var(--color-button-bg);
+            border: none;
+            border-radius: 8px;
+            padding: 0.8rem 1.5rem;
+            color: white;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .modal-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(160, 32, 240, 0.4);
+        }
+
+        .modal-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .generation-result {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--color-border-dark);
+            color: var(--color-text-light);
+            line-height: 1.6;
+        }
+        
+        body.light-mode .generation-result {
+             border-top: 1px solid var(--color-border-light);
+             color: var(--color-text-dark);
+        }
+
+        .generation-result img, .generation-result video {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .download-btn {
+            background: var(--color-neon-green);
+            color: var(--color-dark-bg);
+            border: none;
+            border-radius: 6px;
+            padding: 0.6rem 1.2rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .download-btn:hover {
+            background: #2EE10A;
+            transform: translateY(-1px);
+        }
+
+        .error, .modal-message {
+            background: rgba(255, 107, 53, 0.1);
+            border: 1px solid rgba(255, 107, 53, 0.3);
+            color: #ffb3b3;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Képgenerálás eredményrács */
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .image-card {
+            background: var(--color-card-bg-dark);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        body.light-mode .image-card {
+            background: var(--color-card-bg-light);
+            border: 1px solid var(--color-border-light);
+        }
+
+        .image-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .image-card img {
+            width: 100%;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .image-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .image-action {
+            background: var(--color-button-bg);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            transition: all 0.2s ease;
+        }
+
+        .image-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(160, 32, 240, 0.4);
+        }
+
+        /* Animációk */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Reszponzív design mobil eszközökhöz */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            .logo {
+                font-size: 2.5rem;
+            }
+            .powered-by-header, .powered-by-results {
+                font-size: 0.85rem;
+            }
+            .search-bar {
+                padding: 0.7rem 1rem;
+            }
+            .search-bar input {
+                font-size: 0.95rem;
+                margin: 0 0.6rem;
+            }
+            .search-icon, .plus-button {
+                font-size: 1.05rem;
+            }
+            .ai-answer {
+                padding: 1.2rem;
+            }
+            .ai-answer h3 {
+                font-size: 1.1rem;
+            }
+            .ai-answer p {
+                font-size: 0.9rem;
+            }
+            .sources {
+                margin-top: 1.5rem;
+            }
+            .sources h4 {
+                font-size: 0.95rem;
+            }
+            .source-item {
+                padding: 0.7rem 0.8rem;
+                font-size: 0.9rem;
+            }
+            .more-info-btn, .continue-btn {
+                padding: 0.7rem 1.2rem;
+                font-size: 0.9rem;
+            }
+            .detailed-summary-content {
+                padding: 1rem;
+                font-size: 0.95rem;
+            }
+            .detailed-summary-content h2 {
+                font-size: 1.6rem;
+            }
+            .detailed-summary-content h3 {
+                font-size: 1.1rem;
+            }
+            .search-container.fixed-bottom {
+                bottom: 10px;
+            }
+            .floating-menu {
+                bottom: calc(100% + 5px);
+                padding: 8px;
+                gap: 6px;
+            }
+            .floating-menu-item {
+                padding: 6px 10px;
+                font-size: 0.85rem;
+            }
+            .floating-menu-item i {
+                font-size: 1rem;
+            }
+            .modal-content {
+                padding: 1.5rem;
+                max-width: 95%;
+            }
+            .modal-title {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sötét mód váltó gomb -->
+    <div class="dark-mode-toggle" id="darkModeToggle">
+        <i class="fas fa-moon"></i>
+    </div>
+
+    <div class="container">
+        <!-- Fejléc logóval és alcímmel -->
+        <div class="header" id="mainHeader">
+            <h1 class="logo">TiffySearch</h1>
+            <p class="powered-by-header" id="poweredByHeader">
+                Powered by <span>TiffySearch AI</span> - A TiffyTime projekt része!
+            </p>
+        </div>
+
+        <!-- Eredmények megjelenítési területe -->
+        <div class="results-container" id="resultsContainer">
+        </div>
+
+        <!-- Keresőmező és lebegő menü -->
+        <div class="search-container fixed-bottom" id="searchContainer">
+            <div class="search-bar">
+                <!-- Plusz gomb a kiegészítő funkciókhoz -->
+                <button class="plus-button" id="plusButton">
+                    <i class="fas fa-plus"></i>
+                </button>
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    placeholder="Kérdezz bármit, vagy válassz egy funkciót..."
+                    autocomplete="off"
+                >
+                <!-- Keresés indító ikon -->
+                <i class="fas fa-search search-icon" id="sendBtn"></i>
+            </div>
+            <!-- Lebegő menü a plusz gomb megnyomásakor -->
+            <div class="floating-menu" id="floatingMenu">
+                <div class="floating-menu-item" id="generateImageBtn">
+                    <i class="fas fa-image"></i> ✨ Kép Generálás
+                </div>
+                 <div class="floating-menu-item" id="planTripBtn">
+                    <i class="fas fa-map-signs"></i> ✨ Tervezz utazást
+                </div>
+                <div class="floating-menu-item" id="findRecipeBtn">
+                    <i class="fas fa-utensils"></i> ✨ Recept keresése
+                </div>
+                <div class="floating-menu-item" id="generateVideoBtn">
+                    <i class="fas fa-video"></i> Videó Generálás
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Részletes összefoglaló overlay -->
+    <div class="detailed-summary-overlay" id="detailedSummaryOverlay" style="display: none;">
+        <div class="detailed-summary-container">
+            <div class="detailed-summary-content" id="detailedSummaryContent">
+            </div>
+            <div class="continue-button-container">
+                <button class="continue-btn" id="continueBtn">
+                    <i class="fas fa-arrow-left"></i> Vissza a kereséshez
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modális ablakok a Gemini funkciókhoz -->
+    <div class="modal-overlay" id="imageGenerationModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title"><i class="fas fa-image"></i> ✨ Kép Generálás</h2>
+                <button class="modal-close" data-modal-id="imageGenerationModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-message-container"></div>
+            <form class="modal-form" id="imageGenerationForm">
+                <textarea class="modal-input" id="imagePrompt" placeholder="Írj le, milyen képet szeretnél generálni..." rows="3" required></textarea>
+                <button type="submit" class="modal-button" id="generateImageSubmitBtn">
+                    <i class="fas fa-magic"></i> Kép Generálása
+                </button>
+            </form>
+            <div class="generation-result" id="imageResult" style="display: none;">
+                <img id="generatedImage" alt="Generált kép">
+                <br>
+                <a class="download-btn" id="downloadImageBtn" download="tiffysearch-image.png">
+                    <i class="fas fa-download"></i> Letöltés
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="videoGenerationModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title"><i class="fas fa-video"></i> Videó Generálás</h2>
+                <button class="modal-close" data-modal-id="videoGenerationModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-message">
+                <i class="fas fa-tools"></i> A videógenerálás hamarosan elérhető lesz! Keményen dolgozunk a funkció bevezetésén.
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="planTripModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title"><i class="fas fa-map-signs"></i> ✨ Tervezz utazást</h2>
+                <button class="modal-close" data-modal-id="planTripModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+             <div class="modal-message-container"></div>
+            <form class="modal-form" id="planTripForm">
+                <input type="text" class="modal-input" id="tripDestination" placeholder="Hova szeretnél utazni?" required>
+                <textarea class="modal-input" id="tripPreferences" placeholder="Milyen preferenciáid vannak? (pl. olcsó, családbarát, történelmi látnivalók)" rows="3"></textarea>
+                <button type="submit" class="modal-button" id="planTripSubmitBtn">
+                    <i class="fas fa-paper-plane"></i> Utazás Tervezése
+                </button>
+            </form>
+            <div class="generation-result" id="tripResult" style="display: none;"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="findRecipeModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title"><i class="fas fa-utensils"></i> ✨ Recept keresése</h2>
+                <button class="modal-close" data-modal-id="findRecipeModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+             <div class="modal-message-container"></div>
+            <form class="modal-form" id="findRecipeForm">
+                <textarea class="modal-input" id="recipeIngredients" placeholder="Milyen alapanyagok vannak otthon? (vesszővel elválasztva)" rows="3" required></textarea>
+                <input type="text" class="modal-input" id="recipeMealType" placeholder="Étel típusa (opcionális, pl. leves, főétel, desszert)">
+                <button type="submit" class="modal-button" id="findRecipeSubmitBtn">
+                    <i class="fas fa-search"></i> Recept Keresése
+                </button>
+            </form>
+            <div class="generation-result" id="recipeResult" style="display: none;"></div>
+        </div>
+    </div>
+
+
+    <script>
+        // DOM elemek lekérése
+        const searchInput = document.getElementById('searchInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const mainHeader = document.getElementById('mainHeader');
+        const searchContainer = document.getElementById('searchContainer');
+        const detailedSummaryOverlay = document.getElementById('detailedSummaryOverlay');
+        const detailedSummaryContent = document.getElementById('detailedSummaryContent');
+        const continueBtn = document.getElementById('continueBtn');
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const plusButton = document.getElementById('plusButton');
+        const floatingMenu = document.getElementById('floatingMenu');
+        
+        // Menüpontok
+        const generateImageMenuItem = document.getElementById('generateImageBtn');
+        const generateVideoMenuItem = document.getElementById('generateVideoBtn');
+        const planTripMenuItem = document.getElementById('planTripBtn');
+        const findRecipeMenuItem = document.getElementById('findRecipeBtn');
+
+        // Modális ablakok
+        const imageGenerationModal = document.getElementById('imageGenerationModal');
+        const videoGenerationModal = document.getElementById('videoGenerationModal');
+        const planTripModal = document.getElementById('planTripModal');
+        const findRecipeModal = document.getElementById('findRecipeModal');
+
+        // Képgenerálás elemei
+        const imageGenerationForm = document.getElementById('imageGenerationForm');
+        const imagePromptInput = document.getElementById('imagePrompt');
+        const generateImageSubmitBtn = document.getElementById('generateImageSubmitBtn');
+        const imageResultDiv = document.getElementById('imageResult');
+        const generatedImage = document.getElementById('generatedImage');
+        const downloadImageBtn = document.getElementById('downloadImageBtn');
+
+        // Utazástervezés elemei
+        const planTripForm = document.getElementById('planTripForm');
+        const tripDestinationInput = document.getElementById('tripDestination');
+        const tripPreferencesInput = document.getElementById('tripPreferences');
+        const planTripSubmitBtn = document.getElementById('planTripSubmitBtn');
+        const tripResultDiv = document.getElementById('tripResult');
+
+        // Receptkeresés elemei
+        const findRecipeForm = document.getElementById('findRecipeForm');
+        const recipeIngredientsInput = document.getElementById('recipeIngredients');
+        const recipeMealTypeInput = document.getElementById('recipeMealType');
+        const findRecipeSubmitBtn = document.getElementById('findRecipeSubmitBtn');
+        const recipeResultDiv = document.getElementById('recipeResult');
+
+
+        let isLoading = false; // Betöltési állapot jelző
+        let currentSearchData = null; // Aktuális keresési adatok tárolása
+        let currentQuery = ''; // Aktuális keresési lekérdezés tárolása
+        let isSearchMode = false; // Keresési mód jelző
+        
+        // Gemini API kulcs - HAGYD ÜRESEN, a Canvas környezet automatikusan kezeli
+        const apiKey = ""; 
+
+        /**
+         * Beállítja a sötét vagy világos módot.
+         * @param {boolean} isDark - Igaz, ha sötét mód, hamis, ha világos mód.
+         */
+        function setDarkMode(isDark) {
+            if (isDark) {
+                document.body.classList.remove('light-mode');
+                darkModeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+            } else {
+                document.body.classList.add('light-mode');
+                darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            }
+            localStorage.setItem('darkMode', isDark ? 'true' : 'false');
+        }
+
+        // Sötét mód preferenciájának ellenőrzése és beállítása
+        const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+        const savedDarkMode = localStorage.getItem('darkMode');
+
+        if (savedDarkMode !== null) {
+            setDarkMode(savedDarkMode === 'true');
+        } else {
+            setDarkMode(prefersDarkScheme.matches);
+        }
+
+        // Sötét mód váltó eseményfigyelő
+        darkModeToggle.addEventListener('click', () => {
+            setDarkMode(document.body.classList.contains('light-mode'));
+        });
+
+        // Plusz gomb eseményfigyelő a lebegő menü megjelenítéséhez/elrejtéséhez
+        plusButton.addEventListener('click', (event) => {
+            event.stopPropagation(); // Megakadályozza az esemény továbbterjedését
+            floatingMenu.classList.toggle('show');
+        });
+
+        // Dokumentum kattintás figyelése a lebegő menü elrejtéséhez, ha máshová kattintunk
+        document.addEventListener('click', (event) => {
+            if (!floatingMenu.contains(event.target) && !plusButton.contains(event.target)) {
+                floatingMenu.classList.remove('show');
+            }
+        });
+
+        /**
+         * Megjeleníti a megadott modális ablakot.
+         * @param {string} modalId - A megjelenítendő modális ablak ID-je.
+         */
+        function showModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+        }
+
+        /**
+         * Bezárja a megadott modális ablakot.
+         * @param {string} modalId - A bezárandó modális ablak ID-je.
+         */
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.style.display = 'none';
+            // Esetlegesen generált tartalom és üzenetek törlése bezáráskor
+            const resultDiv = modal.querySelector('.generation-result');
+            if (resultDiv) resultDiv.style.display = 'none';
+            const messageContainer = modal.querySelector('.modal-message-container');
+            if (messageContainer) messageContainer.innerHTML = '';
+        }
+
+        // Menüpontok eseményfigyelői
+        generateImageMenuItem.addEventListener('click', () => { floatingMenu.classList.remove('show'); showModal('imageGenerationModal'); });
+        generateVideoMenuItem.addEventListener('click', () => { floatingMenu.classList.remove('show'); showModal('videoGenerationModal'); });
+        planTripMenuItem.addEventListener('click', () => { floatingMenu.classList.remove('show'); showModal('planTripModal'); });
+        findRecipeMenuItem.addEventListener('click', () => { floatingMenu.classList.remove('show'); showModal('findRecipeModal'); });
+
+        // Modális bezáró gombok eseményfigyelői
+        document.querySelectorAll('.modal-close').forEach(btn => {
+            btn.addEventListener('click', () => closeModal(btn.dataset.modalId));
+        });
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === e.currentTarget) {
+                    closeModal(overlay.id);
+                }
+            });
+        });
+
+        /**
+         * Üzenet megjelenítése egy modális ablakon belül.
+         * @param {string} modalId - A modális ablak ID-je.
+         * @param {string} message - A megjelenítendő üzenet.
+         * @param {string} type - 'error' vagy 'info'.
+         */
+        function showModalMessage(modalId, message, type = 'error') {
+            const container = document.getElementById(modalId).querySelector('.modal-message-container');
+            if (!container) return;
+            const icon = type === 'error' ? 'fa-exclamation-triangle' : 'fa-info-circle';
+            container.innerHTML = `<div class="${type}"><i class="fas ${icon}"></i> ${message}</div>`;
+        }
+
+        /**
+         * Megjeleníti a betöltési animációt.
+         */
+        function showLoading() {
+            isLoading = true;
+            resultsContainer.innerHTML = `
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <div>TiffySearch AI gondolkodik...</div>
+                </div>
+            `;
+            resultsContainer.scrollTop = 0;
+        }
+
+        /**
+         * Hibaüzenet megjelenítése a fő eredménylistában.
+         * @param {string} message - A megjelenítendő hibaüzenet.
+         */
+        function showError(message) {
+            resultsContainer.innerHTML = ''; // Törli a betöltést
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${message}`;
+            resultsContainer.prepend(errorDiv);
+        }
+
+        /**
+         * Eredmények megjelenítése a UI-n (mock adatokkal).
+         */
+        function displayResults(data) {
+            if (!data) {
+                showError('Nem érkezett érvényes válasz a keresésre.');
+                return;
+            }
+
+            currentSearchData = data;
+            currentQuery = data.query;
+            resultsContainer.innerHTML = '';
+
+            if (!isSearchMode) {
+                mainHeader.classList.add('hidden');
+                searchContainer.classList.add('fixed-bottom');
+                isSearchMode = true;
+            }
+
+            // AI válasz megjelenítése
+            const aiAnswerDiv = document.createElement('div');
+            aiAnswerDiv.className = 'ai-answer';
+            aiAnswerDiv.innerHTML = `
+                <h3><i class="fas fa-robot"></i> TiffySearch AI válasza</h3>
+                <p>${data.answer}</p>
+            `;
+            resultsContainer.appendChild(aiAnswerDiv);
+
+            // Részletesebben gomb
+            const moreInfoBtn = document.createElement('button');
+            moreInfoBtn.className = 'more-info-btn';
+            moreInfoBtn.innerHTML = '<i class="fas fa-expand-alt"></i> ✨ Részletesebben';
+            moreInfoBtn.addEventListener('click', showDetailedSummary);
+            resultsContainer.appendChild(moreInfoBtn);
+
+            // Források megjelenítése
+            if (data.sources && data.sources.length > 0) {
+                const sourcesDiv = document.createElement('div');
+                sourcesDiv.className = 'sources';
+                sourcesDiv.innerHTML = '<h4><i class="fas fa-link"></i> Releváns források</h4>';
+                data.sources.forEach(source => {
+                    const domain = new URL(source.url).hostname;
+                    const sourceItem = document.createElement('div');
+                    sourceItem.className = 'source-item';
+                    sourceItem.innerHTML = `
+                        <a href="${source.url}" target="_blank" rel="noopener noreferrer">${source.title}</a>
+                        <div class="source-domain">${domain}</div>
+                    `;
+                    sourcesDiv.appendChild(sourceItem);
+                });
+                resultsContainer.appendChild(sourcesDiv);
+            }
+
+            const poweredByResults = document.createElement('div');
+            poweredByResults.className = 'powered-by-results';
+            poweredByResults.innerHTML = 'Powered by <span>TiffySearch AI</span> - A TiffyTime projekt része!';
+            resultsContainer.appendChild(poweredByResults);
+        }
+
+        /**
+         * Megjeleníti a részletes összefoglaló overlayt és lekéri az adatokat a Gemini API-tól.
+         */
+        async function showDetailedSummary() {
+            if (!currentQuery) return;
+
+            mainHeader.classList.add('hidden');
+            searchContainer.classList.add('hidden');
+            detailedSummaryOverlay.style.display = 'block';
+            detailedSummaryContent.innerHTML = `
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <div>✨ TiffySearch AI készíti a részletes összefoglalót...</div>
+                </div>
+            `;
+            detailedSummaryOverlay.scrollTop = 0;
+
+            const prompt = `Készíts egy részletes, jól strukturált, magyar nyelvű összefoglalót a következő témáról: "${currentQuery}". Használj címsorokat, listákat és emelj ki fontos információkat. Az összefoglaló legyen informatív és könnyen olvasható.`;
+
+            try {
+                const text = await callGemini(prompt);
+                detailedSummaryContent.innerHTML = `
+                    <h2><i class="fas fa-book-open"></i> Részletes összefoglaló: ${currentQuery}</h2>
+                    <div>${text.replace(/\n/g, '<br>')}</div>
+                `;
+            } catch (error) {
+                detailedSummaryContent.innerHTML = `
+                    <div class="error">
+                        <i class="fas fa-exclamation-triangle"></i> 
+                        Hiba történt a részletes összefoglaló készítése során: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        /**
+         * Elrejti a részletes összefoglaló overlayt.
+         */
+        function hideDetailedSummary() {
+            detailedSummaryOverlay.style.display = 'none';
+            mainHeader.classList.remove('hidden');
+            searchContainer.classList.remove('hidden');
+            if (isSearchMode) {
+                searchContainer.classList.add('fixed-bottom');
+            }
+        }
+
+        /**
+         * Általános keresés végrehajtása (mock adatokkal).
+         */
+        async function performSearch() {
+            const query = searchInput.value.trim();
+            if (!query || isLoading) return;
+
+            showLoading();
+            
+            // Ez a rész mostantól mock adatokat használ a bemutatóhoz.
+            // A valós alkalmazásban itt hívnád a saját backend keresődet.
+            setTimeout(() => {
+                const mockData = {
+                    query: query,
+                    answer: `Ez egy AI által generált rövid válasz a következőre: "${query}". A részletekért kattints a "Részletesebben" gombra, amely a Gemini API segítségével készít egy mélyebb összefoglalót.`,
+                    sources: [
+                        { title: `Kapcsolódó cikk a ${query} témában - Wikipedia`, url: `https://hu.wikipedia.org/wiki/${query}` },
+                        { title: `Keresési eredmények a ${query} témára - Google`, url: `https://www.google.com/search?q=${query}` }
+                    ]
+                };
+                displayResults(mockData);
+                isLoading = false;
+            }, 1500);
+        }
+
+        /**
+         * Általános Gemini API hívás szöveggeneráláshoz.
+         * @param {string} prompt A prompt a Gemini számára.
+         * @returns {Promise<string>} A generált szöveg.
+         */
+        async function callGemini(prompt) {
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{ role: "user", parts: [{ text: prompt }] }]
+            };
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const errorBody = await response.json();
+                throw new Error(`API hiba: ${errorBody.error?.message || response.statusText}`);
+            }
+
+            const result = await response.json();
+            if (result.candidates && result.candidates.length > 0 &&
+                result.candidates[0].content && result.candidates[0].content.parts &&
+                result.candidates[0].content.parts.length > 0) {
+                return result.candidates[0].content.parts[0].text;
+            } else {
+                throw new Error("Nem sikerült érvényes választ kapni a Gemini API-tól.");
+            }
+        }
+
+        // Eseményfigyelők
+        sendBtn.addEventListener('click', performSearch);
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') performSearch();
+        });
+        continueBtn.addEventListener('click', hideDetailedSummary);
+
+        // Képgenerálás űrlap beküldése
+        imageGenerationForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const prompt = imagePromptInput.value.trim();
+            if (!prompt) return;
+
+            const submitBtn = generateImageSubmitBtn;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generálás...';
+            imageResultDiv.style.display = 'none';
+            document.querySelector('#imageGenerationModal .modal-message-container').innerHTML = '';
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+            const payload = { instances: [{ prompt: prompt }], parameters: { "sampleCount": 1 } };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorBody = await response.json();
+                    throw new Error(`API hiba: ${errorBody.error?.message || response.statusText}`);
+                }
+
+                const result = await response.json();
+                if (result.predictions && result.predictions.length > 0 && result.predictions[0].bytesBase64Encoded) {
+                    const imageUrl = `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
+                    generatedImage.src = imageUrl;
+                    downloadImageBtn.href = imageUrl;
+                    imageResultDiv.style.display = 'block';
+                } else {
+                    throw new Error("Nem sikerült képet generálni.");
+                }
+            } catch (error) {
+                showModalMessage('imageGenerationModal', `Hiba történt: ${error.message}`);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-magic"></i> Kép Generálása';
+            }
+        });
+
+        // Utazástervezés űrlap beküldése
+        planTripForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const destination = tripDestinationInput.value.trim();
+            const preferences = tripPreferencesInput.value.trim();
+            if (!destination) return;
+
+            const submitBtn = planTripSubmitBtn;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Tervezés...';
+            tripResultDiv.style.display = 'none';
+            document.querySelector('#planTripModal .modal-message-container').innerHTML = '';
+
+            const prompt = `Viselkedj, mint egy profi utazási tanácsadó. Készíts egy részletes, magyar nyelvű útitervet a következő helyre: "${destination}". Vedd figyelembe ezeket a preferenciákat: "${preferences || 'nincs megadva'}". Az útiterv tartalmazzon javaslatokat látnivalókra, programokra, éttermekre és közlekedésre. Legyen jól strukturált, használj címsorokat és listákat.`;
+
+            try {
+                const itinerary = await callGemini(prompt);
+                tripResultDiv.innerHTML = itinerary.replace(/\n/g, '<br>');
+                tripResultDiv.style.display = 'block';
+            } catch (error) {
+                showModalMessage('planTripModal', `Hiba történt: ${error.message}`);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Utazás Tervezése';
+            }
+        });
+
+        // Receptkeresés űrlap beküldése
+        findRecipeForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const ingredients = recipeIngredientsInput.value.trim();
+            const mealType = recipeMealTypeInput.value.trim();
+            if (!ingredients) return;
+
+            const submitBtn = findRecipeSubmitBtn;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Keresés...';
+            recipeResultDiv.style.display = 'none';
+            document.querySelector('#findRecipeModal .modal-message-container').innerHTML = '';
+
+            let prompt = `Viselkedj, mint egy séf. Adj egy finom, magyar nyelvű receptet a következő alapanyagokból: "${ingredients}".`;
+            if (mealType) {
+                prompt += ` Az étel típusa legyen: "${mealType}".`;
+            }
+            prompt += ` A recept legyen részletes, tartalmazza a hozzávalók listáját és az elkészítés lépéseit.`;
+
+            try {
+                const recipe = await callGemini(prompt);
+                recipeResultDiv.innerHTML = recipe.replace(/\n/g, '<br>');
+                recipeResultDiv.style.display = 'block';
+            } catch (error) {
+                showModalMessage('findRecipeModal', `Hiba történt: ${error.message}`);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-search"></i> Recept Keresése';
+            }
+        });
+
+        // Fókusz a keresőmezőre az oldal betöltésekor
+        searchInput.focus();
+    </script>
+</body>
+</html>

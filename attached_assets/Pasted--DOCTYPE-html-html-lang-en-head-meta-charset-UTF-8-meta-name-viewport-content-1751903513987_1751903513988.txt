@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jade - Fejlett AI Asszisztens</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #000000;
+            color: #ffffff;
+            overflow: hidden;
+        }
+
+        /* Custom gradient backgrounds */
+        .gradient-bg {
+            background: #000000;
+            position: relative;
+        }
+
+        .gradient-bg::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 20% 50%, rgba(0, 255, 136, 0.1) 0%, transparent 60%),
+                        radial-gradient(circle at 80% 80%, rgba(0, 136, 255, 0.08) 0%, transparent 60%);
+            animation: floatGradient 15s ease-in-out infinite;
+            pointer-events: none;
+            filter: blur(40px);
+        }
+
+        /* Removed grid pattern for cleaner look */
+
+        @keyframes floatGradient {
+            0%, 100% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes spin-slow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .animate-spin-slow {
+            animation: spin-slow 8s linear infinite;
+        }
+
+        @keyframes gradient {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .animate-gradient {
+            background-size: 200% 200%;
+            animation: gradient 3s ease infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .neon-gradient {
+            background: linear-gradient(135deg, #00ff88 0%, #0088ff 100%);
+        }
+
+        .neon-gradient-text {
+            background: linear-gradient(135deg, #00ff88 0%, #0088ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .neon-border {
+            position: relative;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            overflow: hidden;
+        }
+
+        .neon-border::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(0, 255, 136, 0.3), transparent, rgba(0, 136, 255, 0.3));
+            transform: rotate(0deg);
+            transition: transform 0.6s;
+            opacity: 0;
+        }
+
+        .neon-border:hover::before {
+            transform: rotate(90deg);
+            opacity: 1;
+        }
+
+        .neon-border::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.05) 0%, rgba(0, 136, 255, 0.05) 100%);
+            border-radius: inherit;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .neon-border:hover::after {
+            opacity: 1;
+        }
+
+        /* Glassmorphism cards */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+            transition: left 0.5s;
+        }
+
+        .glass-card:hover::before {
+            left: 100%;
+        }
+
+        /* Sidebar styling */
+        .sidebar {
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        /* Chat container */
+        .chat-container {
+            height: calc(100vh - 80px);
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+
+        .chat-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .chat-container::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #00ff88 0%, #0088ff 100%);
+            border-radius: 3px;
+        }
+
+        /* Message styling */
+        .message {
+            animation: fadeInUp 0.3s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .user-message {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+        }
+
+        .ai-message {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Input styling */
+        .input-container {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 -10px 40px 0 rgba(0, 0, 0, 0.3),
+                        inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .input-field {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            transition: all 0.2s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: rgba(0, 255, 136, 0.5);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        /* Button styling */
+        .send-button {
+            background: linear-gradient(135deg, #00ff88 0%, #0088ff 100%);
+            transition: all 0.2s ease;
+        }
+
+        .send-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+        }
+
+        .send-button:active {
+            transform: scale(0.98);
+        }
+
+        /* Typing indicator */
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 8px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: linear-gradient(135deg, #00ff88 0%, #0088ff 100%);
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+            30% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Glow effects */
+        .neon-glow {
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                z-index: 50;
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+        }
+
+        /* Custom animations */
+        .pulse-glow {
+            animation: pulseGlow 2s infinite;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% {
+                box-shadow: 0 0 5px rgba(0, 255, 136, 0.5);
+            }
+            50% {
+                box-shadow: 0 0 20px rgba(0, 255, 136, 0.8), 0 0 30px rgba(255, 20, 147, 0.6);
+            }
+        }
+
+        .chat-history-item {
+            transition: all 0.2s ease;
+            border-left: 2px solid transparent;
+            padding-left: 12px;
+        }
+
+        .chat-history-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-left-color: #00ff88;
+        }
+
+        .model-badge {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            font-size: 10px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            color: rgba(0, 255, 136, 0.9);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 15px rgba(0, 255, 136, 0.15),
+                        inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+<body class="gradient-bg">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar w-64 lg:w-80 h-full flex flex-col">
+            <!-- Header -->
+            <div class="p-4 border-b border-gray-800">
+                <button id="newChatBtn" class="w-full bg-gradient-to-r from-green-500 to-blue-500 text-black font-semibold rounded-xl px-4 py-3 flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-green-500/20 transition-all duration-200">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    <span>Új beszélgetés</span>
+                </button>
+=======
+            </div>
+
+            <!-- Chat History -->
+            <div class="flex-1 overflow-y-auto p-4">
+                <h3 class="text-xs uppercase tracking-wider text-gray-500 mb-3">Ma</h3>
+                <div class="space-y-1">
+                    <div class="chat-history-item p-3 rounded-lg cursor-pointer">
+                        <div class="text-sm text-gray-300 truncate">Hogyan implementáljunk neurális hálózatokat</div>
+                        <div class="text-xs text-gray-600 mt-1">2 üzenet</div>
+                    </div>
+                    <div class="chat-history-item p-3 rounded-lg cursor-pointer">
+                        <div class="text-sm text-gray-300 truncate">Kvantumszámítógépek alapjai</div>
+                        <div class="text-xs text-gray-600 mt-1">5 üzenet</div>
+                    </div>
+                </div>
+
+                <h3 class="text-xs uppercase tracking-wider text-gray-500 mb-3 mt-6">Tegnap</h3>
+                <div class="space-y-1">
+                    <div class="chat-history-item p-3 rounded-lg cursor-pointer">
+                        <div class="text-sm text-gray-300 truncate">React vs Vue összehasonlítás</div>
+                        <div class="text-xs text-gray-600 mt-1">8 üzenet</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings -->
+            <div class="p-4 border-t border-gray-800">
+                <button class="relative w-full p-[1px] rounded-xl overflow-hidden group">
+                    <div class="absolute inset-0 bg-gradient-to-r from-green-400 via-[#ff1493] to-blue-500 opacity-50 blur-sm group-hover:opacity-80 transition-opacity duration-300"></div>
+                    <div class="relative flex items-center gap-3 bg-black/80 backdrop-blur-xl rounded-xl p-3 transition-all duration-300 group-hover:bg-black/60">
+                        <div class="relative w-8 h-8 rounded-lg overflow-hidden">
+                            <div class="absolute inset-0 bg-gradient-to-br from-green-400 to-[#ff1493] opacity-30 group-hover:opacity-50 transition-opacity"></div>
+                            <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+                            <div class="relative w-full h-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                    </div>
+                    <span class="text-gray-300 text-sm font-medium">Beállítások</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col">
+            <!-- Top Bar -->
+            <header class="h-16 flex items-center justify-between px-4 lg:px-6 border-b border-gray-800">
+                <button id="menuToggle" class="lg:hidden relative p-2 rounded-lg overflow-hidden group">
+                    <div class="absolute inset-0 bg-gradient-to-r from-green-400/20 to-blue-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <svg class="relative w-6 h-6 text-gray-400 group-hover:text-green-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+                
+                <div class="flex items-center gap-3">
+                    <h1 class="text-xl font-semibold neon-gradient-text">Jade</h1>
+                    <span class="model-badge">GPT-4</span>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button class="glass-card p-2.5 rounded-xl group transition-all duration-300">
+                        <svg class="w-5 h-5 text-gray-400 group-hover:text-green-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                    </button>
+                    <button class="glass-card p-2.5 rounded-xl group transition-all duration-300">
+                        <svg class="w-5 h-5 text-gray-400 group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Chat Container -->
+            <div id="chatContainer" class="chat-container flex-1 p-4 lg:p-6">
+                <!-- Welcome Message -->
+                <div class="max-w-3xl mx-auto text-center py-20">
+                    <div class="mb-8">
+                        <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/75125ca6-b626-4035-b3d2-c7d2b10d3f55.png" alt="Futuristic AI logo with glowing neon green and blue circuit patterns forming a brain shape on black background" class="w-24 h-24 mx-auto rounded-2xl neon-glow" />
+                    </div>
+                    <h2 class="text-3xl font-bold mb-4 neon-gradient-text">Üdvözöl a Jade</h2>
+                    <p class="text-gray-400 mb-8">Fejlett AI asszisztensed a legújabb képességekkel</p>
+                </div>
+
+                <!-- Messages will be appended here -->
+                <div id="messagesContainer"></div>
+            </div>
+
+            <!-- Input Container -->
+            <div class="input-container px-4 lg:px-6 py-4">
+                <div class="max-w-3xl mx-auto">
+                    <div class="flex items-end gap-3">
+                        <div class="flex-1">
+                            <textarea 
+                                id="messageInput"
+                                class="input-field w-full px-4 py-3 rounded-xl resize-none"
+                                placeholder="Írj egy üzenetet..."
+                                rows="1"
+                                style="max-height: 120px;"
+                            ></textarea>
+                        </div>
+                        <button id="sendButton" class="send-button p-3 rounded-xl">
+                            <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="mt-3 text-xs text-gray-500 text-center">
+                        A Jade tévedhet. Fontos információkat ellenőrizz.
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // State management
+        let messages = [];
+        let isTyping = false;
+
+        // DOM elements
+        const chatContainer = document.getElementById('chatContainer');
+        const messagesContainer = document.getElementById('messagesContainer');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const sidebar = document.getElementById('sidebar');
+        const menuToggle = document.getElementById('menuToggle');
+        const newChatBtn = document.getElementById('newChatBtn');
+
+        // Toggle sidebar on mobile
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+        });
+
+        // Auto-resize textarea
+        messageInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+
+        // Handle enter key
+        messageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Send button click
+        sendButton.addEventListener('click', sendMessage);
+
+        // New chat button
+        newChatBtn.addEventListener('click', () => {
+            messages = [];
+            messagesContainer.innerHTML = '';
+            chatContainer.querySelector('.max-w-3xl').style.display = 'block';
+            messageInput.focus();
+        });
+
+        // Suggestion cards removed
+
+        // Send message function
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message || isTyping) return;
+
+            // Hide welcome screen on first message
+            if (messages.length === 0) {
+                chatContainer.querySelector('.max-w-3xl').style.display = 'none';
+            }
+
+            // Add user message
+            addMessage('user', message);
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+            
+            // Show typing indicator
+            showTypingIndicator();
+            
+            // Simulate AI response
+            setTimeout(() => {
+                hideTypingIndicator();
+                const aiResponse = generateAIResponse(message);
+                addMessage('ai', aiResponse);
+            }, 1500 + Math.random() * 1500);
+        }
+
+        // Add message to chat
+        function addMessage(sender, content) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message mb-6 animate-fadeIn';
+            
+            const isUser = sender === 'user';
+            
+            messageDiv.innerHTML = `
+                <div class="max-w-3xl mx-auto">
+                    <div class="flex ${isUser ? 'justify-end' : 'justify-start'} gap-3">
+                        ${!isUser ? `
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 rounded-lg neon-gradient flex items-center justify-center">
+                                <span class="text-black font-bold text-sm">AI</span>
+                            </div>
+                        </div>
+                        ` : ''}
+                        <div class="${isUser ? 'user-message' : 'ai-message'} max-w-[80%] px-4 py-3 rounded-2xl">
+                            <div class="text-sm ${isUser ? 'text-white' : 'text-gray-200'}">${content}</div>
+                            <div class="text-xs ${isUser ? 'text-green-400' : 'text-gray-500'} mt-1">
+                                ${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                            </div>
+                        </div>
+                        ${isUser ? `
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-[#ff1493] flex items-center justify-center">
+                                <span class="text-white font-bold text-sm">U</span>
+                            </div>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+            
+            messagesContainer.appendChild(messageDiv);
+            messages.push({sender, content});
+            
+            // Scroll to bottom
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Show typing indicator
+        function showTypingIndicator() {
+            isTyping = true;
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typingIndicator';
+            typingDiv.className = 'message mb-6';
+            
+            typingDiv.innerHTML = `
+                <div class="max-w-3xl mx-auto">
+                    <div class="flex justify-start gap-3">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 rounded-lg neon-gradient flex items-center justify-center">
+                                <span class="text-black font-bold text-sm">AI</span>
+                            </div>
+                        </div>
+                        <div class="ai-message px-4 py-3 rounded-2xl">
+                            <div class="typing-indicator">
+                                <div class="typing-dot"></div>
+                                <div class="typing-dot"></div>
+                                <div class="typing-dot"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            messagesContainer.appendChild(typingDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Hide typing indicator
+        function hideTypingIndicator() {
+            isTyping = false;
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) indicator.remove();
+        }
+
+        // Generate AI response (mock)
+        function generateAIResponse(userMessage) {
+            const responses = {
+                'szia': 'Szia! Miben segíthetek ma? Itt vagyok, hogy segítsek kódolásban, írásban, elemzésben vagy bármilyen kérdésedben.',
+                'hello': 'Szia! Miben segíthetek ma? Itt vagyok, hogy segítsek kódolásban, írásban, elemzésben vagy bármilyen kérdésedben.',
+                'hogy vagy': 'Kiválóan működöm! Készen állok, hogy segítsek bármilyen feladatban. Min szeretnél dolgozni ma?',
+                'segíts': 'Tudok segíteni:\n• Kódgenerálás és hibakeresés\n• Kreatív írás és tartalomkészítés\n• Adatelemzés és betekintések\n• Általános kérdések és magyarázatok\n• Problémamegoldás és ötletelés\n\nMit szeretnél felfedezni?',
+                'help': 'Tudok segíteni:\n• Kódgenerálás és hibakeresés\n• Kreatív írás és tartalomkészítés\n• Adatelemzés és betekintések\n• Általános kérdések és magyarázatok\n• Problémamegoldás és ötletelés\n\nMit szeretnél felfedezni?',
+                'kód': 'Örömmel segítek a kódolásban! Milyen programozási nyelven dolgozol? Tudok segíteni Python, JavaScript, Java, C++ és sok más nyelvben. Kérlek, oszd meg a konkrét követelményeidet vagy a megoldandó problémát.',
+                'code': 'Örömmel segítek a kódolásban! Milyen programozási nyelven dolgozol? Tudok segíteni Python, JavaScript, Java, C++ és sok más nyelvben. Kérlek, oszd meg a konkrét követelményeidet vagy a megoldandó problémát.',
+                'default': 'Értem, hogy ezt kérdezed: "' + userMessage + '". Hadd adjak egy átfogó választ.\n\nA kérdésed alapján itt van néhány kulcspont:\n\n1. Először bontsuk le a fő fogalmakat\n2. Majd felfedezzük a gyakorlati alkalmazásokat\n3. Végül adok néhány példát vagy következő lépést\n\nSzeretnéd, ha bármelyik szempontot részletesebben kifejteném?'
+            };
+=======
+
+            const lowerMessage = userMessage.toLowerCase();
+            
+            for (const [key, value] of Object.entries(responses)) {
+                if (lowerMessage.includes(key)) {
+                    return value;
+                }
+            }
+            
+            return responses.default;
+        }
+
+        // Focus input on load
+        window.addEventListener('load', () => {
+            messageInput.focus();
+        });
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth < 1024) {
+                if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+                    sidebar.classList.remove('open');
+                }
+            }
+        });
+    </script>
+</body>
+</html>
