@@ -1,0 +1,587 @@
+
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jade - AI Asszisztens</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #000000;
+            color: #ffffff;
+            overflow: hidden;
+        }
+
+        .gradient-bg {
+            background: #000000;
+            position: relative;
+        }
+
+        .gradient-bg::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 20% 50%, rgba(0, 255, 136, 0.1) 0%, transparent 60%),
+                        radial-gradient(circle at 80% 80%, rgba(0, 136, 255, 0.08) 0%, transparent 60%);
+            animation: floatGradient 15s ease-in-out infinite;
+            pointer-events: none;
+            filter: blur(40px);
+        }
+
+        @keyframes floatGradient {
+            0%, 100% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .neon-gradient-text {
+            background: linear-gradient(135deg, #00ff88 0%, #0088ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .chat-container {
+            height: calc(100vh - 80px);
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+
+        .chat-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .chat-container::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #00ff88 0%, #0088ff 100%);
+            border-radius: 3px;
+        }
+
+        .message {
+            animation: fadeInUp 0.3s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .user-message {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+        }
+
+        .ai-message {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .input-container {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 -10px 40px 0 rgba(0, 0, 0, 0.3),
+                        inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .input-field {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            transition: all 0.2s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: rgba(0, 255, 136, 0.5);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .send-button {
+            background: linear-gradient(135deg, #00ff88 0%, #0088ff 100%);
+            transition: all 0.2s ease;
+        }
+
+        .send-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+        }
+
+        .send-button:active {
+            transform: scale(0.98);
+        }
+
+        .send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 8px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: linear-gradient(135deg, #00ff88 0%, #0088ff 100%);
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+            30% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .chat-history-item {
+            transition: all 0.2s ease;
+            border-left: 2px solid transparent;
+            padding-left: 12px;
+        }
+
+        .chat-history-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-left-color: #00ff88;
+        }
+
+        .model-badge {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            font-size: 10px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            color: rgba(0, 255, 136, 0.9);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 15px rgba(0, 255, 136, 0.15),
+                        inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                z-index: 50;
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+<body class="gradient-bg">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar w-64 lg:w-80 h-full flex flex-col">
+            <!-- Header -->
+            <div class="p-4 border-b border-gray-800">
+                <button id="newChatBtn" class="w-full bg-gradient-to-r from-green-500 to-blue-500 text-black font-semibold rounded-xl px-4 py-3 flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-green-500/20 transition-all duration-200">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    <span>Új beszélgetés</span>
+                </button>
+            </div>
+
+            <!-- Chat History -->
+            <div class="flex-1 overflow-y-auto p-4">
+                <h3 class="text-xs uppercase tracking-wider text-gray-500 mb-3">Beszélgetések</h3>
+                <div class="space-y-1" id="chatHistory">
+                    <!-- A beszélgetési előzmények itt jelennek meg -->
+                </div>
+            </div>
+
+            <!-- Settings -->
+            <div class="p-4 border-t border-gray-800">
+                <div class="text-xs text-gray-500 text-center">
+                    <div class="mb-2">Powered by</div>
+                    <div class="model-badge">Llama 4 Scout</div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col">
+            <!-- Top Bar -->
+            <header class="h-16 flex items-center justify-between px-4 lg:px-6 border-b border-gray-800">
+                <button id="menuToggle" class="lg:hidden relative p-2 rounded-lg overflow-hidden group">
+                    <div class="absolute inset-0 bg-gradient-to-r from-green-400/20 to-blue-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <svg class="relative w-6 h-6 text-gray-400 group-hover:text-green-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+                
+                <div class="flex items-center gap-3">
+                    <h1 class="text-xl font-semibold neon-gradient-text">Jade</h1>
+                    <span class="model-badge">Llama 4</span>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button class="glass-card p-2.5 rounded-xl group transition-all duration-300">
+                        <svg class="w-5 h-5 text-gray-400 group-hover:text-green-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Chat Container -->
+            <div id="chatContainer" class="chat-container flex-1 p-4 lg:p-6">
+                <!-- Welcome Message -->
+                <div class="max-w-3xl mx-auto text-center py-20" id="welcomeScreen">
+                    <div class="mb-8">
+                        <div class="w-24 h-24 mx-auto rounded-2xl bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center text-black font-bold text-2xl">
+                            J
+                        </div>
+                    </div>
+                    <h2 class="text-3xl font-bold mb-4 neon-gradient-text">Üdvözöl a Jade</h2>
+                    <p class="text-gray-400 mb-8">Fejlett AI asszisztensed Meta Llama 4 Scout technológiával</p>
+                    <div class="grid md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+                        <div class="glass-card p-4 rounded-xl">
+                            <h3 class="font-semibold mb-2">🧠 Intelligens válaszok</h3>
+                            <p class="text-sm text-gray-400">Részletes és hasznos információk bármilyen témában</p>
+                        </div>
+                        <div class="glass-card p-4 rounded-xl">
+                            <h3 class="font-semibold mb-2">💻 Kódolási segítség</h3>
+                            <p class="text-sm text-gray-400">Programozási problémák megoldása és optimalizálás</p>
+                        </div>
+                        <div class="glass-card p-4 rounded-xl">
+                            <h3 class="font-semibold mb-2">📝 Kreatív írás</h3>
+                            <p class="text-sm text-gray-400">Szövegek készítése és szerkesztése</p>
+                        </div>
+                        <div class="glass-card p-4 rounded-xl">
+                            <h3 class="font-semibold mb-2">🔍 Elemzés</h3>
+                            <p class="text-sm text-gray-400">Adatok és információk részletes vizsgálata</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Messages will be appended here -->
+                <div id="messagesContainer"></div>
+            </div>
+
+            <!-- Input Container -->
+            <div class="input-container px-4 lg:px-6 py-4">
+                <div class="max-w-3xl mx-auto">
+                    <div class="flex items-end gap-3">
+                        <div class="flex-1">
+                            <textarea 
+                                id="messageInput"
+                                class="input-field w-full px-4 py-3 rounded-xl resize-none"
+                                placeholder="Írj egy üzenetet a Jade-nek..."
+                                rows="1"
+                                style="max-height: 120px;"
+                            ></textarea>
+                        </div>
+                        <button id="sendButton" class="send-button p-3 rounded-xl">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="mt-3 text-xs text-gray-500 text-center">
+                        A Jade AI tévedhet. Fontos információkat ellenőrizz.
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Állapotkezelés
+        let messages = [];
+        let isTyping = false;
+        let chatHistory = [];
+
+        // DOM elemek
+        const chatContainer = document.getElementById('chatContainer');
+        const messagesContainer = document.getElementById('messagesContainer');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const sidebar = document.getElementById('sidebar');
+        const menuToggle = document.getElementById('menuToggle');
+        const newChatBtn = document.getElementById('newChatBtn');
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const chatHistoryContainer = document.getElementById('chatHistory');
+
+        // Sidebar toggle mobil nézetben
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+        });
+
+        // Textarea automatikus méretezés
+        messageInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+
+        // Enter billentyű kezelése
+        messageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Küldés gomb
+        sendButton.addEventListener('click', sendMessage);
+
+        // Új chat gomb
+        newChatBtn.addEventListener('click', () => {
+            messages = [];
+            messagesContainer.innerHTML = '';
+            welcomeScreen.style.display = 'block';
+            messageInput.focus();
+        });
+
+        // Üzenet küldése
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message || isTyping) return;
+
+            // Üdvözlő képernyő elrejtése
+            if (messages.length === 0) {
+                welcomeScreen.style.display = 'none';
+            }
+
+            // Felhasználó üzenetének hozzáadása
+            addMessage('user', message);
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+            
+            // Gépelés jelző megjelenítése
+            showTypingIndicator();
+            
+            try {
+                // API hívás
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        history: messages.slice(-10) // Utolsó 10 üzenet küldése kontextusnak
+                    })
+                });
+
+                const data = await response.json();
+                
+                hideTypingIndicator();
+                
+                if (data.error) {
+                    addMessage('ai', '❌ Hiba: ' + data.error);
+                } else {
+                    addMessage('ai', data.response);
+                }
+                
+            } catch (error) {
+                hideTypingIndicator();
+                addMessage('ai', '❌ Kapcsolódási hiba: ' + error.message);
+            }
+        }
+
+        // Üzenet hozzáadása a chathez
+        function addMessage(sender, content) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message mb-6';
+            
+            const isUser = sender === 'user';
+            const timestamp = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            messageDiv.innerHTML = `
+                <div class="max-w-3xl mx-auto">
+                    <div class="flex ${isUser ? 'justify-end' : 'justify-start'} gap-3">
+                        ${!isUser ? `
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
+                                <span class="text-black font-bold text-sm">J</span>
+                            </div>
+                        </div>
+                        ` : ''}
+                        <div class="${isUser ? 'user-message' : 'ai-message'} max-w-[80%] px-4 py-3 rounded-2xl">
+                            <div class="text-sm ${isUser ? 'text-white' : 'text-gray-200'}">${content.replace(/\n/g, '<br>')}</div>
+                            <div class="text-xs ${isUser ? 'text-green-400' : 'text-gray-500'} mt-1">
+                                ${timestamp}
+                            </div>
+                        </div>
+                        ${isUser ? `
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-blue-500 flex items-center justify-center">
+                                <span class="text-white font-bold text-sm">Te</span>
+                            </div>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+            
+            messagesContainer.appendChild(messageDiv);
+            messages.push({role: sender === 'user' ? 'user' : 'assistant', content: content});
+            
+            // Görgetés az aljára
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            // Chat előzmények frissítése
+            updateChatHistory();
+        }
+
+        // Gépelés jelző megjelenítése
+        function showTypingIndicator() {
+            isTyping = true;
+            sendButton.disabled = true;
+            
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typingIndicator';
+            typingDiv.className = 'message mb-6';
+            
+            typingDiv.innerHTML = `
+                <div class="max-w-3xl mx-auto">
+                    <div class="flex justify-start gap-3">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
+                                <span class="text-black font-bold text-sm">J</span>
+                            </div>
+                        </div>
+                        <div class="ai-message px-4 py-3 rounded-2xl">
+                            <div class="typing-indicator">
+                                <div class="typing-dot"></div>
+                                <div class="typing-dot"></div>
+                                <div class="typing-dot"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            messagesContainer.appendChild(typingDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Gépelés jelző elrejtése
+        function hideTypingIndicator() {
+            isTyping = false;
+            sendButton.disabled = false;
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) indicator.remove();
+        }
+
+        // Chat előzmények frissítése
+        function updateChatHistory() {
+            if (messages.length > 0) {
+                const firstUserMessage = messages.find(m => m.role === 'user');
+                if (firstUserMessage) {
+                    const preview = firstUserMessage.content.substring(0, 50) + 
+                                  (firstUserMessage.content.length > 50 ? '...' : '');
+                    
+                    // Ellenőrizzük, hogy már létezik-e ez a chat
+                    const existingIndex = chatHistory.findIndex(chat => 
+                        chat.preview === preview
+                    );
+                    
+                    if (existingIndex === -1) {
+                        chatHistory.unshift({
+                            preview: preview,
+                            messageCount: messages.length,
+                            timestamp: new Date().toLocaleString()
+                        });
+                        
+                        // Csak az utolsó 10 chat megtartása
+                        if (chatHistory.length > 10) {
+                            chatHistory = chatHistory.slice(0, 10);
+                        }
+                        
+                        renderChatHistory();
+                    }
+                }
+            }
+        }
+
+        // Chat előzmények renderelése
+        function renderChatHistory() {
+            chatHistoryContainer.innerHTML = '';
+            
+            chatHistory.forEach((chat, index) => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'chat-history-item p-3 rounded-lg cursor-pointer';
+                historyItem.innerHTML = `
+                    <div class="text-sm text-gray-300 truncate">${chat.preview}</div>
+                    <div class="text-xs text-gray-600 mt-1">${chat.messageCount} üzenet</div>
+                `;
+                chatHistoryContainer.appendChild(historyItem);
+            });
+        }
+
+        // Fókusz a beviteli mezőre betöltéskor
+        window.addEventListener('load', () => {
+            messageInput.focus();
+        });
+
+        // Sidebar bezárása kattintásra mobilon
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth < 1024) {
+                if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+                    sidebar.classList.remove('open');
+                }
+            }
+        });
+    </script>
+</body>
+</html>
