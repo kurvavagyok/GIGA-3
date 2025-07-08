@@ -169,10 +169,7 @@ async def serve_frontend():
     """A frontend HTML oldal kiszolgálása."""
     return FileResponse("templates/index.html")
 
-@app.get("/login")
-async def serve_login():
-    """A bejelentkezési oldal kiszolgálása."""
-    return FileResponse("templates/login.html")
+
 
 @app.post("/api/auth/apple")
 async def apple_signin(request: Request):
