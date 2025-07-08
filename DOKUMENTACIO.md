@@ -68,22 +68,22 @@ A Jade egy intelligens chatbot, ami speciálisan tudományos kutatásokhoz kész
 - `/api/deep_discovery/simulation_optimizer` - Szimuláció optimalizálás
 
 ### `templates/index.html`
-**Mit csinál:** Teljesen újratervezett webes felhasználói felület
-**Új funkciók:**
-- **Üdvözlő képernyő**: Intelligens javaslatok gyors kezdéshez
-- **Lebegő eszköztár**: Gyors hozzáférés a speciális funkciókhoz
-- **Okos gyorsműveletek**: Az AI válaszok alapján javasolt következő lépések
-- **Folyamatos chat élmény**: Oldalsáv nélküli, fókuszált beszélgetés
-- **Responsív dizájn**: Mobilra és asztali gépekre optimalizált
+**Mit csinál:** A webes felhasználói felület
+**Tartalom:**
+- Modern, fekete hátteres dizájn
+- Chat interface üzenetküldéshez
+- 4 modális ablak a speciális funkciókhoz
+- Responsive design (mobil-barát)
+- JavaScript a felhasználói interakciókhoz
+- Tailwind CSS stílusok
+- Font Awesome ikonok
 
 **Felhasználói elemek:**
-- Központi chat ablak teljes képernyős élménnyel
-- Intelligens üdvözlő képernyő példakérdésekkel
-- Lebegő eszköz gombok a jobb oldalon
-- Gyorsműveletek az AI válaszok alatt
-- Modernizált modális ablakok
-- Valós idejű gépelés indikátor
-- Automatikus textarea méretezés
+- Chat ablak üzenetekkel
+- Szövegbeviteli mező
+- Küldés gomb
+- Oldalsáv a speciális eszközökkel
+- Modális ablakok a funkciókhoz
 
 ### `.replit`
 **Mit csinál:** Replit konfiguráció
