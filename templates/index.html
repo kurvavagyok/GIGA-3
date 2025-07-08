@@ -1,28 +1,31 @@
-
 <!DOCTYPE html>
 <html lang="hu">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jade - AI Asszisztens</title>
+    <title>Jade - DeeAI</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --color-green: #00ff88;
+            --color-blue: #0088ff;
+            --color-pink: #ff1493;
+            --color-bg: #000000;
+            --color-surface: rgba(10, 10, 10, 0.8);
+            --color-glass: rgba(255, 255, 255, 0.03);
+            --color-border: rgba(255, 255, 255, 0.08);
+            --color-text: #ffffff;
+            --color-text-muted: #a0aec0;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: #000000;
-            color: #ffffff;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--color-bg);
+            color: var(--color-text);
             overflow: hidden;
-        }
-
-        .gradient-bg {
-            background: #000000;
-            position: relative;
         }
 
         .gradient-bg::before {
@@ -40,31 +43,22 @@
         }
 
         @keyframes floatGradient {
-            0%, 100% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0%, 100% { transform: rotate(0deg) translate(10%, -10%); }
+            50% { transform: rotate(180deg) translate(-10%, 10%); }
         }
 
         .neon-gradient-text {
-            background: linear-gradient(135deg, #00ff88 0%, #0088ff 100%);
+            background: linear-gradient(135deg, var(--color-green) 0%, var(--color-blue) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
 
-        .glass-card {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            position: relative;
-            overflow: hidden;
-        }
-
         .sidebar {
-            background: rgba(10, 10, 10, 0.8);
+            background: var(--color-surface);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            border-right: 1px solid var(--color-border);
             transition: transform 0.3s ease;
         }
 
@@ -74,57 +68,31 @@
             scroll-behavior: smooth;
         }
 
-        .chat-container::-webkit-scrollbar {
-            width: 6px;
-        }
+        .chat-container::-webkit-scrollbar { width: 6px; }
+        .chat-container::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); }
+        .chat-container::-webkit-scrollbar-thumb { background: linear-gradient(135deg, var(--color-green) 0%, var(--color-blue) 100%); border-radius: 3px; }
 
-        .chat-container::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .chat-container::-webkit-scrollbar-thumb {
-            background: linear-gradient(135deg, #00ff88 0%, #0088ff 100%);
-            border-radius: 3px;
-        }
-
-        .message {
-            animation: fadeInUp 0.3s ease;
-        }
+        .message { animation: fadeInUp 0.4s ease-out; }
 
         @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .user-message {
-            background: rgba(0, 255, 136, 0.1);
-            border: 1px solid rgba(0, 255, 136, 0.2);
-        }
-
-        .ai-message {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
+        .user-message { background: rgba(0, 255, 136, 0.1); border: 1px solid rgba(0, 255, 136, 0.2); }
+        .ai-message { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); }
 
         .input-container {
-            background: rgba(255, 255, 255, 0.02);
-            backdrop-filter: blur(40px) saturate(180%);
-            -webkit-backdrop-filter: blur(40px) saturate(180%);
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 -10px 40px 0 rgba(0, 0, 0, 0.3),
-                        inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid var(--color-border);
         }
 
         .input-field {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #ffffff;
+            color: var(--color-text);
             transition: all 0.2s ease;
         }
 
@@ -135,94 +103,79 @@
         }
 
         .send-button {
-            background: linear-gradient(135deg, #00ff88 0%, #0088ff 100%);
+            background: linear-gradient(135deg, var(--color-green) 0%, var(--color-blue) 100%);
             transition: all 0.2s ease;
         }
+        .send-button:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(0, 255, 136, 0.3); }
+        .send-button:active { transform: scale(0.98); }
 
-        .send-button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
-        }
-
-        .send-button:active {
-            transform: scale(0.98);
-        }
-
-        .send-button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .typing-indicator {
-            display: flex;
-            gap: 4px;
-            padding: 8px;
-        }
-
-        .typing-dot {
-            width: 8px;
-            height: 8px;
-            background: linear-gradient(135deg, #00ff88 0%, #0088ff 100%);
-            border-radius: 50%;
-            animation: typing 1.4s infinite ease-in-out;
-        }
-
-        .typing-dot:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-
-        .typing-dot:nth-child(3) {
-            animation-delay: 0.4s;
-        }
+        .typing-indicator { display: flex; gap: 4px; padding: 8px; }
+        .typing-dot { width: 8px; height: 8px; background: linear-gradient(135deg, var(--color-green) 0%, var(--color-blue) 100%); border-radius: 50%; animation: typing 1.4s infinite ease-in-out; }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
 
         @keyframes typing {
-            0%, 60%, 100% {
-                transform: scale(0.8);
-                opacity: 0.5;
-            }
-            30% {
-                transform: scale(1);
-                opacity: 1;
-            }
+            0%, 60%, 100% { transform: scale(0.8); opacity: 0.5; }
+            30% { transform: scale(1); opacity: 1; }
         }
 
-        .chat-history-item {
-            transition: all 0.2s ease;
-            border-left: 2px solid transparent;
-            padding-left: 12px;
-        }
-
-        .chat-history-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-            border-left-color: #00ff88;
-        }
+        .neon-glow { box-shadow: 0 0 20px rgba(0, 255, 136, 0.3), 0 0 40px rgba(0, 136, 255, 0.2); }
 
         .model-badge {
             background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
             border: 1px solid rgba(0, 255, 136, 0.2);
             font-size: 10px;
             padding: 4px 10px;
             border-radius: 20px;
             color: rgba(0, 255, 136, 0.9);
             font-weight: 600;
-            letter-spacing: 0.5px;
-            box-shadow: 0 4px 15px rgba(0, 255, 136, 0.15),
-                        inset 0 0 0 1px rgba(255, 255, 255, 0.05);
         }
 
-        @media (max-width: 768px) {
-            .sidebar {
-                position: fixed;
-                z-index: 50;
-                transform: translateX(-100%);
-            }
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none; justify-content: center; align-items: center;
+            z-index: 2000; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            animation: fadeIn 0.3s ease-out;
+        }
 
-            .sidebar.open {
-                transform: translateX(0);
-            }
+        .modal-content {
+            background: #0A0E19;
+            border-radius: 16px; padding: 2rem; width: 90%; max-width: 500px;
+            max-height: 80vh; overflow-y: auto; border: 1px solid var(--color-border);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: slideInFromTop 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .modal-title {
+            background: linear-gradient(135deg, var(--color-green), var(--color-blue));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+
+        .modal-close:hover { color: var(--color-pink); background: rgba(255, 255, 255, 0.1); }
+        .modal-input { background: #000; border: 1px solid var(--color-border); }
+        .modal-button { background: linear-gradient(135deg, var(--color-green), var(--color-blue)); }
+        .modal-button:hover { box-shadow: 0 0 20px rgba(0, 255, 136, 0.4); }
+
+        .ai-answer-card { background: rgba(255, 255, 255, 0.05); border: 1px solid var(--color-border); border-radius: 12px; padding: 1rem; }
+        .ai-answer-card h3 { color: var(--color-green); }
+        .related-actions-card { margin-top: 1rem; }
+        .related-actions-card button { 
+            display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; border-radius: 8px; 
+            transition: background 0.2s; width: 100%; text-align: left;
+            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--color-text);
+            font-size: 0.875rem; /* text-sm */
+        }
+        .related-actions-card button:hover { background: rgba(255, 255, 255, 0.1); }
+        .related-actions-card i { color: var(--color-blue); }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideInFromTop { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; z-index: 50; transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
         }
     </style>
 </head>
@@ -233,27 +186,28 @@
             <!-- Header -->
             <div class="p-4 border-b border-gray-800">
                 <button id="newChatBtn" class="w-full bg-gradient-to-r from-green-500 to-blue-500 text-black font-semibold rounded-xl px-4 py-3 flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-green-500/20 transition-all duration-200">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                    </svg>
+                    <i class="fas fa-plus"></i>
                     <span>Új beszélgetés</span>
                 </button>
             </div>
 
-            <!-- Chat History -->
-            <div class="flex-1 overflow-y-auto p-4">
-                <h3 class="text-xs uppercase tracking-wider text-gray-500 mb-3">Beszélgetések</h3>
-                <div class="space-y-1" id="chatHistory">
-                    <!-- A beszélgetési előzmények itt jelennek meg -->
-                </div>
+            <!-- Deep Discovery Tools -->
+            <div class="p-4">
+                 <h3 class="text-xs uppercase tracking-wider text-gray-500 mb-3">Deep Discovery Eszközök</h3>
+                 <div class="space-y-2">
+                     <button id="researchTrendsBtn" class="w-full text-left text-sm text-gray-300 p-2 rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-3"><i class="fas fa-flask w-5 text-center text-green-400"></i> Kutatási Trendek</button>
+                     <button id="proteinStructureBtn" class="w-full text-left text-sm text-gray-300 p-2 rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-3"><i class="fas fa-dna w-5 text-center text-blue-400"></i> Fehérje Struktúra</button>
+                     <button id="customGCPModelBtn" class="w-full text-left text-sm text-gray-300 p-2 rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-3"><i class="fas fa-cloud w-5 text-center text-pink-400"></i> Egyedi GCP Modell</button>
+                     <button id="simulationOptimizerBtn" class="w-full text-left text-sm text-gray-300 p-2 rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-3"><i class="fas fa-microchip w-5 text-center text-yellow-400"></i> Szimuláció Optimalizáló</button>
+                 </div>
             </div>
-
+             <div class="flex-1"></div>
             <!-- Settings -->
             <div class="p-4 border-t border-gray-800">
-                <div class="text-xs text-gray-500 text-center">
-                    <div class="mb-2">Powered by</div>
-                    <div class="model-badge">Llama 4 Scout</div>
-                </div>
+                <button class="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-gray-800 transition-colors">
+                    <i class="fas fa-cog text-gray-400"></i>
+                    <span class="text-gray-300 text-sm font-medium">Beállítások</span>
+                </button>
             </div>
         </aside>
 
@@ -261,59 +215,26 @@
         <main class="flex-1 flex flex-col">
             <!-- Top Bar -->
             <header class="h-16 flex items-center justify-between px-4 lg:px-6 border-b border-gray-800">
-                <button id="menuToggle" class="lg:hidden relative p-2 rounded-lg overflow-hidden group">
-                    <div class="absolute inset-0 bg-gradient-to-r from-green-400/20 to-blue-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    <svg class="relative w-6 h-6 text-gray-400 group-hover:text-green-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                    </svg>
+                <button id="menuToggle" class="lg:hidden p-2 rounded-lg hover:bg-gray-800">
+                    <i class="fas fa-bars text-gray-400"></i>
                 </button>
-                
                 <div class="flex items-center gap-3">
                     <h1 class="text-xl font-semibold neon-gradient-text">Jade</h1>
-                    <span class="model-badge">Llama 4</span>
+                    <span id="currentModelBadge" class="model-badge">Hibrid AI</span>
                 </div>
-
-                <div class="flex items-center gap-2">
-                    <button class="glass-card p-2.5 rounded-xl group transition-all duration-300">
-                        <svg class="w-5 h-5 text-gray-400 group-hover:text-green-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                        </svg>
-                    </button>
-                </div>
+                <div class="w-6"></div>
             </header>
 
             <!-- Chat Container -->
             <div id="chatContainer" class="chat-container flex-1 p-4 lg:p-6">
                 <!-- Welcome Message -->
-                <div class="max-w-3xl mx-auto text-center py-20" id="welcomeScreen">
+                <div id="welcomeScreen" class="max-w-3xl mx-auto text-center py-20">
                     <div class="mb-8">
-                        <div class="w-24 h-24 mx-auto rounded-2xl bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center text-black font-bold text-2xl">
-                            J
-                        </div>
+                        <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/75125ca6-b626-4035-b3d2-c7d2b10d3f55.png" alt="Jade AI Logo" class="w-24 h-24 mx-auto rounded-2xl neon-glow" />
                     </div>
                     <h2 class="text-3xl font-bold mb-4 neon-gradient-text">Üdvözöl a Jade</h2>
-                    <p class="text-gray-400 mb-8">Fejlett AI asszisztensed Meta Llama 4 Scout technológiával</p>
-                    <div class="grid md:grid-cols-2 gap-4 max-w-2xl mx-auto">
-                        <div class="glass-card p-4 rounded-xl">
-                            <h3 class="font-semibold mb-2">🧠 Intelligens válaszok</h3>
-                            <p class="text-sm text-gray-400">Részletes és hasznos információk bármilyen témában</p>
-                        </div>
-                        <div class="glass-card p-4 rounded-xl">
-                            <h3 class="font-semibold mb-2">💻 Kódolási segítség</h3>
-                            <p class="text-sm text-gray-400">Programozási problémák megoldása és optimalizálás</p>
-                        </div>
-                        <div class="glass-card p-4 rounded-xl">
-                            <h3 class="font-semibold mb-2">📝 Kreatív írás</h3>
-                            <p class="text-sm text-gray-400">Szövegek készítése és szerkesztése</p>
-                        </div>
-                        <div class="glass-card p-4 rounded-xl">
-                            <h3 class="font-semibold mb-2">🔍 Elemzés</h3>
-                            <p class="text-sm text-gray-400">Adatok és információk részletes vizsgálata</p>
-                        </div>
-                    </div>
+                    <p class="text-gray-400 mb-8">Fejlett AI asszisztensed, a Deep Discovery erejével.</p>
                 </div>
-
-                <!-- Messages will be appended here -->
                 <div id="messagesContainer"></div>
             </div>
 
@@ -322,57 +243,328 @@
                 <div class="max-w-3xl mx-auto">
                     <div class="flex items-end gap-3">
                         <div class="flex-1">
-                            <textarea 
-                                id="messageInput"
-                                class="input-field w-full px-4 py-3 rounded-xl resize-none"
-                                placeholder="Írj egy üzenetet a Jade-nek..."
-                                rows="1"
-                                style="max-height: 120px;"
-                            ></textarea>
+                            <textarea id="messageInput" class="input-field w-full px-4 py-3 rounded-xl resize-none" placeholder="Írj egy üzenetet..." rows="1" style="max-height: 120px;"></textarea>
                         </div>
                         <button id="sendButton" class="send-button p-3 rounded-xl">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
-                            </svg>
+                            <i class="fas fa-paper-plane text-black"></i>
                         </button>
                     </div>
                     <div class="mt-3 text-xs text-gray-500 text-center">
-                        A Jade AI tévedhet. Fontos információkat ellenőrizz.
+                        A Jade tévedhet. Fontos információkat ellenőrizz.
                     </div>
                 </div>
             </div>
         </main>
     </div>
 
-    <script>
-        // Állapotkezelés
-        let messages = [];
-        let isTyping = false;
-        let chatHistory = [];
+    <!-- Modals -->
+    <!-- Research Trends Modal -->
+    <div class="modal-overlay" id="researchTrendsModal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold modal-title">Kutatási Trendek Elemzése</h2>
+                <button class="modal-close p-2 rounded-full" data-modal-id="researchTrendsModal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-message-container"></div>
+            <form id="researchTrendsForm" class="flex flex-col gap-4">
+                <textarea class="modal-input rounded-lg p-3" id="researchQuery" placeholder="Milyen tudományos/innovációs trendeket vizsgálnál?" rows="3" required></textarea>
+                <input type="number" class="modal-input rounded-lg p-3" id="numResults" placeholder="Találatok száma (1-10)" value="5" min="1" max="10">
+                <input type="number" class="modal-input rounded-lg p-3" id="summaryLength" placeholder="Összefoglaló hossza (szóban, 50-500)" value="200" min="50" max="500">
+                <button type="submit" class="modal-button font-bold py-3 rounded-lg" id="researchTrendsSubmitBtn">Elemzés Indítása</button>
+            </form>
+            <div id="researchResult" class="mt-4 pt-4 border-t border-gray-700 text-gray-300" style="display: none;">
+                <h3 class="text-lg font-semibold mb-2 flex items-center gap-2 text-green-400"><i class="fas fa-chart-line"></i> Összefoglaló</h3>
+                <p id="researchSummary" class="mb-4"></p>
+                <h4 class="text-md font-semibold my-2 text-blue-400">Források</h4>
+                <div id="researchSources" class="space-y-2"></div>
+            </div>
+        </div>
+    </div>
 
-        // DOM elemek
+    <!-- Protein Structure Modal -->
+    <div class="modal-overlay" id="proteinStructureModal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold modal-title">Fehérje Struktúra Keresése</h2>
+                <button class="modal-close p-2 rounded-full" data-modal-id="proteinStructureModal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-message-container"></div>
+            <form id="proteinStructureForm" class="flex flex-col gap-4">
+                <input type="text" class="modal-input rounded-lg p-3" id="proteinId" placeholder="Fehérje azonosító (pl. UniProt ID: P0DTC2)" required>
+                <button type="submit" class="modal-button font-bold py-3 rounded-lg" id="proteinStructureSubmitBtn">Keresés</button>
+            </form>
+            <div id="proteinResult" class="mt-4 pt-4 border-t border-gray-700 text-gray-300" style="display: none;">
+                <h3 class="text-lg font-semibold mb-2 flex items-center gap-2 text-green-400"><i class="fas fa-microscope"></i> Struktúra Részletek</h3>
+                <p><strong>UniProt ID:</strong> <span id="resultUniProtId"></span></p>
+                <p><strong>Modell Konfidencia (pLDDT):</strong> <span id="resultPlddt"></span></p>
+                <p class="mt-2">
+                    <a id="resultProteinUrl" href="#" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline flex items-center gap-2">
+                        <i class="fas fa-external-link-alt"></i> Struktúra letöltése (CIF/PDB)
+                    </a>
+                </p>
+                <p class="mt-1">
+                    <a id="resultPaeUrl" href="#" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline flex items-center gap-2">
+                        <i class="fas fa-chart-area"></i> PAE Diagram
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom GCP Model Modal -->
+    <div class="modal-overlay" id="customGCPModelModal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold modal-title">Egyedi GCP Modell Hívása</h2>
+                <button class="modal-close p-2 rounded-full" data-modal-id="customGCPModelModal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-message-container"></div>
+            <form id="customGCPModelForm" class="flex flex-col gap-4">
+                <input type="text" class="modal-input rounded-lg p-3" id="gcpEndpointId" placeholder="GCP Endpoint ID" required>
+                <textarea class="modal-input rounded-lg p-3" id="gcpInputData" placeholder="Bemeneti JSON adat (pl. {'smiles': 'CCO'})" rows="5" required></textarea>
+                <button type="submit" class="modal-button font-bold py-3 rounded-lg" id="customGCPModelSubmitBtn">Hívás</button>
+            </form>
+            <div id="gcpResult" class="mt-4 pt-4 border-t border-gray-700 text-gray-300" style="display: none;">
+                <h3 class="text-lg font-semibold mb-2 flex items-center gap-2 text-green-400"><i class="fas fa-cloud-upload-alt"></i> Modell Válasz</h3>
+                <pre id="gcpResponseData" class="bg-gray-900 p-3 rounded-lg text-xs overflow-x-auto"></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Simulation Optimizer Modal -->
+    <div class="modal-overlay" id="simulationOptimizerModal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold modal-title">Szimuláció Optimalizáló</h2>
+                <button class="modal-close p-2 rounded-full" data-modal-id="simulationOptimizerModal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-message-container"></div>
+            <form id="simulationOptimizerForm" class="flex flex-col gap-4">
+                <input type="text" class="modal-input rounded-lg p-3" id="simulationType" placeholder="Szimuláció típusa (pl. molecular_dynamics)" required>
+                <textarea class="modal-input rounded-lg p-3" id="simulationInputParams" placeholder="Bemeneti paraméterek JSON formátumban" rows="3" required></textarea>
+                <input type="text" class="modal-input rounded-lg p-3" id="optimizationGoal" placeholder="Optimalizálási cél (pl. minimize_energy)" required>
+                <button type="submit" class="modal-button font-bold py-3 rounded-lg" id="simulationOptimizerSubmitBtn">Optimalizálás</button>
+            </form>
+            <div id="simulationResult" class="mt-4 pt-4 border-t border-gray-700 text-gray-300" style="display: none;">
+                <h3 class="text-lg font-semibold mb-2 flex items-center gap-2 text-green-400"><i class="fas fa-cogs"></i> Optimalizált Kimenet</h3>
+                <pre id="simulationOptimizedOutput" class="bg-gray-900 p-3 rounded-lg text-xs overflow-x-auto"></pre>
+                <p class="text-xs text-gray-500 mt-2">Modell használva: <span id="simulationModelUsed"></span></p>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // --- STATE & DOM ELEMENTS ---
+        let isTyping = false;
+        let currentUserId = localStorage.getItem('jadeUserId') || `user_${Math.random().toString(36).substring(2, 15)}`;
+        localStorage.setItem('jadeUserId', currentUserId); // Mentjük a felhasználó ID-t
+
+        const API_BASE_URL = window.location.origin; // A Repliten ez a Repl URL-je lesz
+
         const chatContainer = document.getElementById('chatContainer');
         const messagesContainer = document.getElementById('messagesContainer');
         const messageInput = document.getElementById('messageInput');
         const sendButton = document.getElementById('sendButton');
+        const welcomeScreen = document.getElementById('welcomeScreen');
         const sidebar = document.getElementById('sidebar');
         const menuToggle = document.getElementById('menuToggle');
         const newChatBtn = document.getElementById('newChatBtn');
-        const welcomeScreen = document.getElementById('welcomeScreen');
-        const chatHistoryContainer = document.getElementById('chatHistory');
+        const currentModelBadge = document.getElementById('currentModelBadge');
 
-        // Sidebar toggle mobil nézetben
-        menuToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('open');
-        });
+        // Deep Discovery Tool Buttons
+        const researchTrendsBtn = document.getElementById('researchTrendsBtn');
+        const proteinStructureBtn = document.getElementById('proteinStructureBtn');
+        const customGCPModelBtn = document.getElementById('customGCPModelBtn');
+        const simulationOptimizerBtn = document.getElementById('simulationOptimizerBtn');
 
-        // Textarea automatikus méretezés
+
+        // --- CORE FUNCTIONS ---
+
+        /**
+         * Sends a message from the user input, triggers AI response.
+         */
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message || isTyping) return;
+
+            if (messagesContainer.children.length === 0) {
+                welcomeScreen.style.display = 'none';
+            }
+
+            addMessage('user', message);
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+
+            showTypingIndicator();
+
+            try {
+                // Beszélgetési előzmények lekérése a backendről
+                const historyRes = await fetch(`${API_BASE_URL}/api/deep_discovery/chat_history/${currentUserId}`);
+                const historyData = await historyRes.json();
+                const currentHistory = historyData.history || [];
+
+                const payload = {
+                    message: message,
+                    user_id: currentUserId,
+                    history: currentHistory.map(msg => ({ role: msg.role, content: msg.content })) // Csak a role és content
+                };
+
+                const response = await fetch(`${API_BASE_URL}/api/deep_discovery/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorBody = await response.json();
+                    throw new Error(errorBody.detail || response.statusText);
+                }
+
+                const result = await response.json();
+                addAiChatResponse(result.response, result.model_used);
+
+            } catch (error) {
+                console.error("Chat Error:", error);
+                addMessage('ai', `<div class="text-red-400">Hoppá, hiba történt a válasszal: ${error.message}. Kérjük, próbálja újra később.</div>`);
+            } finally {
+                hideTypingIndicator();
+            }
+        }
+
+        /**
+         * Adds a message to the chat UI.
+         * @param {'user' | 'ai'} sender - The sender of the message.
+         * @param {string} content - The HTML content of the message.
+         */
+        function addMessage(sender, content) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message mb-6';
+
+            const isUser = sender === 'user';
+
+            messageDiv.innerHTML = `
+                <div class="max-w-3xl mx-auto">
+                    <div class="flex ${isUser ? 'justify-end' : 'justify-start'} gap-3">
+                        ${!isUser ? `
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
+                                <i class="fas fa-robot text-black"></i>
+                            </div>
+                        </div>` : ''}
+                        <div class="${isUser ? 'user-message' : 'ai-message'} max-w-[80%] px-4 py-3 rounded-2xl">
+                            <div class="text-sm ${isUser ? 'text-white' : 'text-gray-200'}">${content}</div>
+                        </div>
+                    </div>
+                </div>`;
+
+            messagesContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        /**
+         * Adds a structured AI chat response to the chat, including model used and suggested actions.
+         * @param {string} answer - The AI's answer.
+         * @param {string} modelUsed - The AI model that generated the response.
+         */
+        function addAiChatResponse(answer, modelUsed) {
+            currentModelBadge.textContent = modelUsed; // Frissítjük a badge-et
+
+            // Itt a "Deep Discovery" logika: a Gemini javasolhat további műveleteket
+            // Ez a logika a backendben, a Gemini promptban lenne a legcélszerűbb,
+            // hogy a Gemini maga dönti el, releváns-e egy speciális eszköz.
+            // Például, ha a Gemini válaszában kulcsszavak vannak, vagy egy bizonyos formátum.
+
+            // DEMÓ CÉLJÁRA: Kézzel javasolunk műveleteket, vagy egy egyszerű kulcsszó alapú felismerést.
+            let suggestedActionsHtml = '';
+            const lowerCaseAnswer = answer.toLowerCase();
+
+            if (lowerCaseAnswer.includes('fehérje') || lowerCaseAnswer.includes('struktúra') || lowerCaseAnswer.includes('biológia')) {
+                suggestedActionsHtml += `
+                    <button class="mb-2" onclick="showModal('proteinStructureModal'); addMessage('ai', 'Rendben, indítsuk el a Fehérje Struktúra Keresőt. Melyik fehérje ID-t szeretnéd lekérdezni?');">
+                        <i class="fas fa-dna text-blue-400"></i> Fehérje Struktúra Keresése
+                    </button>`;
+            }
+            if (lowerCaseAnswer.includes('anyag') || lowerCaseAnswer.includes('kémia') || lowerCaseAnswer.includes('molekula')) {
+                suggestedActionsHtml += `
+                    <button class="mb-2" onclick="showModal('customGCPModelModal'); addMessage('ai', 'Értem, indítsuk el az Egyedi GCP Modellt. Kérlek, add meg a végpont ID-t és a bemeneti adatokat.');">
+                        <i class="fas fa-cloud text-pink-400"></i> Egyedi GCP Modell Hívása
+                    </button>`;
+            }
+            if (lowerCaseAnswer.includes('szimuláció') || lowerCaseAnswer.includes('optimalizálás') || lowerCaseAnswer.includes('tervezés')) {
+                suggestedActionsHtml += `
+                    <button class="mb-2" onclick="showModal('simulationOptimizerModal'); addMessage('ai', 'Készen állok a Szimuláció Optimalizálásra. Milyen típusú szimulációról van szó?');">
+                        <i class="fas fa-microchip text-yellow-400"></i> Szimuláció Optimalizáló
+                    </button>`;
+            }
+            if (lowerCaseAnswer.includes('kutatás') || lowerCaseAnswer.includes('trend') || lowerCaseAnswer.includes('felfedezés')) {
+                suggestedActionsHtml += `
+                    <button class="mb-2" onclick="showModal('researchTrendsModal'); addMessage('ai', 'Indítsuk el a Kutatási Trendek Elemzőt. Milyen témában szeretnél kutatni?');">
+                        <i class="fas fa-flask text-green-400"></i> Kutatási Trendek Elemzése
+                    </button>`;
+            }
+
+
+            const content = `
+                <div class="ai-answer-card">
+                    <h3 class="text-lg font-semibold mb-2 flex items-center gap-2"><i class="fas fa-sparkles"></i> Válasz</h3>
+                    <p class="text-gray-300">${answer.replace(/\n/g, '<br>')}</p>
+                </div>
+                ${suggestedActionsHtml ? `
+                <div class="related-actions-card space-y-2">
+                    <h4 class="text-md font-semibold my-2 text-blue-400">Javasolt Deep Discovery Műveletek</h4>
+                    ${suggestedActionsHtml}
+                </div>` : ''}
+            `;
+            addMessage('ai', content);
+        }
+
+
+        /**
+         * Shows the typing indicator in the chat.
+         */
+        function showTypingIndicator() {
+            isTyping = true;
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typingIndicator';
+            typingDiv.className = 'message mb-6';
+            typingDiv.innerHTML = `
+                <div class="max-w-3xl mx-auto">
+                    <div class="flex justify-start gap-3">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
+                                <i class="fas fa-robot text-black"></i>
+                            </div>
+                        </div>
+                        <div class="ai-message px-4 py-3 rounded-2xl">
+                            <div class="typing-indicator">
+                                <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            messagesContainer.appendChild(typingDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        /**
+         * Hides the typing indicator.
+         */
+        function hideTypingIndicator() {
+            isTyping = false;
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) indicator.remove();
+        }
+
+        // --- UI & EVENT LISTENERS ---
+
+        // Auto-resize textarea
         messageInput.addEventListener('input', function() {
             this.style.height = 'auto';
             this.style.height = Math.min(this.scrollHeight, 120) + 'px';
         });
 
-        // Enter billentyű kezelése
+        // Handle enter key
         messageInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -380,207 +572,275 @@
             }
         });
 
-        // Küldés gomb
+        // Send button click
         sendButton.addEventListener('click', sendMessage);
 
-        // Új chat gomb
-        newChatBtn.addEventListener('click', () => {
-            messages = [];
+        // New chat button
+        newChatBtn.addEventListener('click', async () => {
+            await fetch(`${API_BASE_URL}/api/deep_discovery/clear_chat_history/${currentUserId}`, { method: 'POST' });
             messagesContainer.innerHTML = '';
             welcomeScreen.style.display = 'block';
             messageInput.focus();
+            currentModelBadge.textContent = 'Hibrid AI';
         });
 
-        // Üzenet küldése
-        async function sendMessage() {
-            const message = messageInput.value.trim();
-            if (!message || isTyping) return;
+        // Toggle sidebar on mobile
+        menuToggle.addEventListener('click', () => sidebar.classList.toggle('open'));
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth < 1024 && !sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+                sidebar.classList.remove('open');
+            }
+        });
 
-            // Üdvözlő képernyő elrejtése
-            if (messages.length === 0) {
-                welcomeScreen.style.display = 'none';
+        // --- MODAL & TOOLS LOGIC ---
+
+        function showModal(modalId) { document.getElementById(modalId).style.display = 'flex'; }
+        function closeModal(modalId) { 
+            document.getElementById(modalId).style.display = 'none'; 
+            // Reset modal messages
+            const container = document.getElementById(modalId).querySelector('.modal-message-container');
+            if (container) container.innerHTML = '';
+        }
+
+        document.querySelectorAll('.modal-close').forEach(btn => btn.addEventListener('click', () => closeModal(btn.dataset.modalId)));
+
+        // Assign Deep Discovery Tool buttons to modals
+        researchTrendsBtn.addEventListener('click', () => showModal('researchTrendsModal'));
+        proteinStructureBtn.addEventListener('click', () => showModal('proteinStructureModal'));
+        customGCPModelBtn.addEventListener('click', () => showModal('customGCPModelModal'));
+        simulationOptimizerBtn.addEventListener('click', () => showModal('simulationOptimizerModal'));
+
+        function showModalMessage(modalId, message, isError = true) {
+            const container = document.getElementById(modalId).querySelector('.modal-message-container');
+            if (!container) return;
+            container.innerHTML = `<div class="p-3 mb-4 ${isError ? 'text-red-300 bg-red-500/20' : 'text-green-300 bg-green-500/20'} rounded-lg">${message}</div>`;
+        }
+
+        // Research Trends Form
+        document.getElementById('researchTrendsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const query = document.getElementById('researchQuery').value;
+            const numResults = parseInt(document.getElementById('numResults').value);
+            const summaryLength = parseInt(document.getElementById('summaryLength').value);
+            const submitBtn = document.getElementById('researchTrendsSubmitBtn');
+            const resultDiv = document.getElementById('researchResult');
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = 'Elemzés...';
+            resultDiv.style.display = 'none';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/deep_discovery/research_trends`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query, num_results: numResults, summary_length: summaryLength })
+                });
+
+                if (!response.ok) {
+                    const errorBody = await response.json();
+                    throw new Error(errorBody.detail || response.statusText);
+                }
+
+                const data = await response.json();
+                document.getElementById('researchSummary').innerHTML = data.summary.replace(/\n/g, '<br>');
+
+                const sourcesContainer = document.getElementById('researchSources');
+                sourcesContainer.innerHTML = '';
+                if (data.sources && data.sources.length > 0) {
+                    data.sources.forEach(source => {
+                        const sourceLink = document.createElement('a');
+                        sourceLink.href = source.url;
+                        sourceLink.target = "_blank";
+                        sourceLink.rel = "noopener noreferrer";
+                        sourceLink.className = "flex items-center gap-2 p-2 rounded-lg hover:bg-gray-800 transition-colors";
+                        sourceLink.innerHTML = `<i class="fas fa-external-link-alt text-blue-400"></i> <span class="text-gray-300 text-sm">${source.title}</span>`;
+                        sourcesContainer.appendChild(sourceLink);
+                    });
+                } else {
+                    sourcesContainer.innerHTML = '<p class="text-gray-500 text-sm">Nincsenek források.</p>';
+                }
+
+                resultDiv.style.display = 'block';
+                showModalMessage('researchTrendsModal', 'Elemzés sikeresen befejezve!', false);
+            } catch (error) {
+                showModalMessage('researchTrendsModal', `Hiba: ${error.message}`);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Elemzés Indítása';
+            }
+        });
+
+        // Protein Structure Form
+        document.getElementById('proteinStructureForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const proteinId = document.getElementById('proteinId').value.trim();
+            const submitBtn = document.getElementById('proteinStructureSubmitBtn');
+            const resultDiv = document.getElementById('proteinResult');
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = 'Keresés...';
+            resultDiv.style.display = 'none';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/deep_discovery/protein_structure`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ protein_id: proteinId })
+                });
+
+                if (!response.ok) {
+                    const errorBody = await response.json();
+                    throw new Error(errorBody.detail || response.statusText);
+                }
+
+                const data = await response.json();
+                if (data.details) {
+                    document.getElementById('resultUniProtId').textContent = data.details.uniprot_id || 'N/A';
+                    document.getElementById('resultPlddt').textContent = data.details.plddt ? data.details.plddt.toFixed(2) : 'N/A';
+
+                    const proteinUrlLink = document.getElementById('resultProteinUrl');
+                    proteinUrlLink.href = data.details.protein_url || '#';
+                    proteinUrlLink.style.display = data.details.protein_url ? 'flex' : 'none';
+
+                    const paeUrlLink = document.getElementById('resultPaeUrl');
+                    paeUrlLink.href = data.details.pae_url || '#';
+                    paeUrlLink.style.display = data.details.pae_url ? 'flex' : 'none';
+
+                    resultDiv.style.display = 'block';
+                    showModalMessage('proteinStructureModal', 'Fehérje struktúra sikeresen lekérdezve!', false);
+                } else {
+                    showModalMessage('proteinStructureModal', data.message || 'Nem található adat a megadott fehérje ID-hez.');
+                }
+            } catch (error) {
+                showModalMessage('proteinStructureModal', `Hiba: ${error.message}`);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Keresés';
+            }
+        });
+
+        // Custom GCP Model Form
+        document.getElementById('customGCPModelForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const gcpEndpointId = document.getElementById('gcpEndpointId').value.trim();
+            const gcpInputDataRaw = document.getElementById('gcpInputData').value.trim();
+            const submitBtn = document.getElementById('customGCPModelSubmitBtn');
+            const resultDiv = document.getElementById('gcpResult');
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = 'Hívás...';
+            resultDiv.style.display = 'none';
+
+            let inputData;
+            try {
+                inputData = JSON.parse(gcpInputDataRaw);
+            } catch (jsonError) {
+                showModalMessage('customGCPModelModal', `Érvénytelen JSON bemeneti adat: ${jsonError.message}`);
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Hívás';
+                return;
             }
 
-            // Felhasználó üzenetének hozzáadása
-            addMessage('user', message);
-            messageInput.value = '';
-            messageInput.style.height = 'auto';
-            
-            // Gépelés jelző megjelenítése
-            showTypingIndicator();
-            
             try {
-                // API hívás
-                const response = await fetch('/api/chat', {
+                const response = await fetch(`${API_BASE_URL}/api/deep_discovery/custom_gcp_model`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        message: message,
-                        history: messages.slice(-10) // Utolsó 10 üzenet küldése kontextusnak
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        gcp_endpoint_id: gcpEndpointId, 
+                        input_data: inputData 
                     })
                 });
 
+                if (!response.ok) {
+                    const errorBody = await response.json();
+                    throw new Error(errorBody.detail || response.statusText);
+                }
+
                 const data = await response.json();
-                
-                hideTypingIndicator();
-                
-                if (data.error) {
-                    addMessage('ai', '❌ Hiba: ' + data.error);
-                } else {
-                    addMessage('ai', data.response);
-                }
-                
+                document.getElementById('gcpResponseData').textContent = JSON.stringify(data.model_response, null, 2);
+                resultDiv.style.display = 'block';
+                showModalMessage('customGCPModelModal', 'GCP modell hívás sikeres!', false);
             } catch (error) {
-                hideTypingIndicator();
-                addMessage('ai', '❌ Kapcsolódási hiba: ' + error.message);
+                showModalMessage('customGCPModelModal', `Hiba: ${error.message}`);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Hívás';
             }
-        }
-
-        // Üzenet hozzáadása a chathez
-        function addMessage(sender, content) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'message mb-6';
-            
-            const isUser = sender === 'user';
-            const timestamp = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            
-            messageDiv.innerHTML = `
-                <div class="max-w-3xl mx-auto">
-                    <div class="flex ${isUser ? 'justify-end' : 'justify-start'} gap-3">
-                        ${!isUser ? `
-                        <div class="flex-shrink-0">
-                            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
-                                <span class="text-black font-bold text-sm">J</span>
-                            </div>
-                        </div>
-                        ` : ''}
-                        <div class="${isUser ? 'user-message' : 'ai-message'} max-w-[80%] px-4 py-3 rounded-2xl">
-                            <div class="text-sm ${isUser ? 'text-white' : 'text-gray-200'}">${content.replace(/\n/g, '<br>')}</div>
-                            <div class="text-xs ${isUser ? 'text-green-400' : 'text-gray-500'} mt-1">
-                                ${timestamp}
-                            </div>
-                        </div>
-                        ${isUser ? `
-                        <div class="flex-shrink-0">
-                            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-blue-500 flex items-center justify-center">
-                                <span class="text-white font-bold text-sm">Te</span>
-                            </div>
-                        </div>
-                        ` : ''}
-                    </div>
-                </div>
-            `;
-            
-            messagesContainer.appendChild(messageDiv);
-            messages.push({role: sender === 'user' ? 'user' : 'assistant', content: content});
-            
-            // Görgetés az aljára
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-            
-            // Chat előzmények frissítése
-            updateChatHistory();
-        }
-
-        // Gépelés jelző megjelenítése
-        function showTypingIndicator() {
-            isTyping = true;
-            sendButton.disabled = true;
-            
-            const typingDiv = document.createElement('div');
-            typingDiv.id = 'typingIndicator';
-            typingDiv.className = 'message mb-6';
-            
-            typingDiv.innerHTML = `
-                <div class="max-w-3xl mx-auto">
-                    <div class="flex justify-start gap-3">
-                        <div class="flex-shrink-0">
-                            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
-                                <span class="text-black font-bold text-sm">J</span>
-                            </div>
-                        </div>
-                        <div class="ai-message px-4 py-3 rounded-2xl">
-                            <div class="typing-indicator">
-                                <div class="typing-dot"></div>
-                                <div class="typing-dot"></div>
-                                <div class="typing-dot"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            messagesContainer.appendChild(typingDiv);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-
-        // Gépelés jelző elrejtése
-        function hideTypingIndicator() {
-            isTyping = false;
-            sendButton.disabled = false;
-            const indicator = document.getElementById('typingIndicator');
-            if (indicator) indicator.remove();
-        }
-
-        // Chat előzmények frissítése
-        function updateChatHistory() {
-            if (messages.length > 0) {
-                const firstUserMessage = messages.find(m => m.role === 'user');
-                if (firstUserMessage) {
-                    const preview = firstUserMessage.content.substring(0, 50) + 
-                                  (firstUserMessage.content.length > 50 ? '...' : '');
-                    
-                    // Ellenőrizzük, hogy már létezik-e ez a chat
-                    const existingIndex = chatHistory.findIndex(chat => 
-                        chat.preview === preview
-                    );
-                    
-                    if (existingIndex === -1) {
-                        chatHistory.unshift({
-                            preview: preview,
-                            messageCount: messages.length,
-                            timestamp: new Date().toLocaleString()
-                        });
-                        
-                        // Csak az utolsó 10 chat megtartása
-                        if (chatHistory.length > 10) {
-                            chatHistory = chatHistory.slice(0, 10);
-                        }
-                        
-                        renderChatHistory();
-                    }
-                }
-            }
-        }
-
-        // Chat előzmények renderelése
-        function renderChatHistory() {
-            chatHistoryContainer.innerHTML = '';
-            
-            chatHistory.forEach((chat, index) => {
-                const historyItem = document.createElement('div');
-                historyItem.className = 'chat-history-item p-3 rounded-lg cursor-pointer';
-                historyItem.innerHTML = `
-                    <div class="text-sm text-gray-300 truncate">${chat.preview}</div>
-                    <div class="text-xs text-gray-600 mt-1">${chat.messageCount} üzenet</div>
-                `;
-                chatHistoryContainer.appendChild(historyItem);
-            });
-        }
-
-        // Fókusz a beviteli mezőre betöltéskor
-        window.addEventListener('load', () => {
-            messageInput.focus();
         });
 
-        // Sidebar bezárása kattintásra mobilon
-        document.addEventListener('click', (e) => {
-            if (window.innerWidth < 1024) {
-                if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
-                    sidebar.classList.remove('open');
-                }
+        // Simulation Optimizer Form
+        document.getElementById('simulationOptimizerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const simulationType = document.getElementById('simulationType').value.trim();
+            const simulationInputParamsRaw = document.getElementById('simulationInputParams').value.trim();
+            const optimizationGoal = document.getElementById('optimizationGoal').value.trim();
+            const submitBtn = document.getElementById('simulationOptimizerSubmitBtn');
+            const resultDiv = document.getElementById('simulationResult');
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = 'Optimalizálás...';
+            resultDiv.style.display = 'none';
+
+            let inputParams;
+            try {
+                inputParams = JSON.parse(simulationInputParamsRaw);
+            } catch (jsonError) {
+                showModalMessage('simulationOptimizerModal', `Érvénytelen JSON bemeneti paraméterek: ${jsonError.message}`);
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Optimalizálás';
+                return;
             }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/deep_discovery/simulation_optimizer`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        simulation_type: simulationType, 
+                        input_parameters: inputParams,
+                        optimization_goal: optimizationGoal
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorBody = await response.json();
+                    throw new Error(errorBody.detail || response.statusText);
+                }
+
+                const data = await response.json();
+                document.getElementById('simulationOptimizedOutput').textContent = data.optimized_output;
+                document.getElementById('simulationModelUsed').textContent = data.model_used;
+                resultDiv.style.display = 'block';
+                showModalMessage('simulationOptimizerModal', 'Szimuláció optimalizálás sikeres!', false);
+            } catch (error) {
+                showModalMessage('simulationOptimizerModal', `Hiba: ${error.message}`);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Optimalizálás';
+            }
+        });
+
+        // Focus input on load
+        window.addEventListener('load', () => {
+            messageInput.focus();
+            // Ha van mentett előzmény, töltsük be
+            // fetch(`${API_BASE_URL}/api/deep_discovery/chat_history/${currentUserId}`)
+            //     .then(res => res.json())
+            //     .then(data => {
+            //         if (data.history && data.history.length > 0) {
+            //             welcomeScreen.style.display = 'none';
+            //             data.history.forEach(msg => {
+            //                 if (msg.role === 'user') {
+            //                     addMessage('user', msg.content);
+            //                 } else if (msg.role === 'assistant') {
+            //                     // Itt kellene újra feldolgozni a válaszokat, hogy a javaslatok is megjelenjenek.
+            //                     // Egyszerűsítésként most csak a szöveget adjuk hozzá.
+            //                     addMessage('ai', msg.content); 
+            //                 }
+            //             });
+            //         }
+            //     })
+            //     .catch(error => console.error("Error loading chat history:", error));
         });
     </script>
 </body>
