@@ -139,7 +139,7 @@ class ChatRequest(BaseModel):
 
 class UserSubscriptionRequest(BaseModel):
     user_id: str
-    subscription_type: str = Field(..., regex="^(basic|pro|enterprise)$")
+    subscription_type: str = Field(..., pattern="^(basic|pro|enterprise)$")
     
 class UserUsageResponse(BaseModel):
     user_id: str
