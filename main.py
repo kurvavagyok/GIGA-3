@@ -248,19 +248,43 @@ SUBSCRIPTION_LIMITS = {
         'daily_api_calls': 50,
         'max_sequence_length': 1000,
         'concurrent_requests': 1,
-        'advanced_models': False
+        'advanced_models': False,
+        'lab_analysis': False,
+        'patent_search': False,
+        'market_analysis': False,
+        'priority_support': False
     },
     'pro': {
         'daily_api_calls': 500,
         'max_sequence_length': 10000,
         'concurrent_requests': 3,
-        'advanced_models': True
+        'advanced_models': True,
+        'lab_analysis': True,
+        'patent_search': True,
+        'market_analysis': False,
+        'priority_support': True
     },
     'enterprise': {
         'daily_api_calls': 10000,
         'max_sequence_length': 50000,
         'concurrent_requests': 10,
-        'advanced_models': True
+        'advanced_models': True,
+        'lab_analysis': True,
+        'patent_search': True,
+        'market_analysis': True,
+        'priority_support': True
+    },
+    'research_institution': {
+        'daily_api_calls': 25000,
+        'max_sequence_length': 100000,
+        'concurrent_requests': 20,
+        'advanced_models': True,
+        'lab_analysis': True,
+        'patent_search': True,
+        'market_analysis': True,
+        'priority_support': True,
+        'custom_models': True,
+        'bulk_processing': True
     }
 }
 
@@ -1020,6 +1044,191 @@ async def simulation_optimizer(req: SimulationOptimizerRequest):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Hiba történt a szimuláció optimalizálása során: {e}"
+        )
+
+@app.post("/api/deep_discovery/patent_analysis")
+async def patent_analysis(request: Request):
+    """
+    Szabadalom elemzés és IP védelem - valós üzleti értékű funkció
+    """
+    try:
+        data = await request.json()
+        invention_description = data.get('invention_description', '')
+        technology_field = data.get('technology_field', '')
+        
+        if not invention_description:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Találmány leírása szükséges"
+            )
+        
+        # Cache ellenőrzés
+        cache_key = f"patent_{hashlib.md5(invention_description.encode()).hexdigest()}"
+        cached_result = get_cached_result(cache_key)
+        if cached_result:
+            return cached_result
+        
+        # Exa keresés szabadalmakra
+        patent_search_query = f"patent {technology_field} {invention_description} invention"
+        
+        if exa_client:
+            search_results = exa_client.search(
+                query=patent_search_query,
+                num_results=10,
+                text_contents={"max_characters": 1000}
+            )
+            
+            patent_info = []
+            for result in search_results.results:
+                patent_info.append({
+                    "title": result.title,
+                    "url": result.url,
+                    "content": result.text_contents.text if result.text_contents else ""
+                })
+        else:
+            patent_info = []
+        
+        # AI elemzés
+        analysis_prompt = f"""
+        Szabadalom és IP elemzés:
+        
+        Találmány: {invention_description}
+        Technológiai terület: {technology_field}
+        
+        Talált kapcsolódó szabadalmak:
+        {json.dumps(patent_info, indent=2)}
+        
+        Adj részletes elemzést:
+        1. Szabadalmazhatóság értékelése
+        2. Hasonló szabadalmak elemzése
+        3. IP stratégia javaslat
+        4. Kockázatok és lehetőségek
+        5. Következő lépések
+        """
+        
+        response_text = ""
+        model_used = ""
+        
+        if gemini_model:
+            response = await gemini_model.generate_content_async(
+                analysis_prompt,
+                generation_config=genai.types.GenerationConfig(
+                    max_output_tokens=2048,
+                    temperature=0.1
+                )
+            )
+            response_text = response.text
+            model_used = "Google Gemini 2.5 Pro"
+        
+        result = {
+            "invention_analysis": response_text,
+            "related_patents": patent_info,
+            "model_used": model_used,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        # Cache mentés
+        save_to_cache(cache_key, result, model_used)
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Szabadalom elemzési hiba: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Hiba a szabadalom elemzés során: {e}"
+        )
+
+@app.post("/api/deep_discovery/market_analysis")
+async def market_analysis(request: Request):
+    """
+    Piaci elemzés és konkurencia kutatás - valós üzleti értékű funkció
+    """
+    try:
+        data = await request.json()
+        product_description = data.get('product_description', '')
+        target_market = data.get('target_market', '')
+        
+        if not product_description:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Termék leírása szükséges"
+            )
+        
+        # Piaci kutatás az Exa-val
+        market_queries = [
+            f"market size {target_market} {product_description}",
+            f"competitors {product_description} industry analysis",
+            f"market trends {target_market} 2024"
+        ]
+        
+        market_data = []
+        if exa_client:
+            for query in market_queries:
+                try:
+                    search_results = exa_client.search(
+                        query=query,
+                        num_results=5,
+                        text_contents={"max_characters": 800}
+                    )
+                    
+                    for result in search_results.results:
+                        market_data.append({
+                            "query": query,
+                            "title": result.title,
+                            "url": result.url,
+                            "content": result.text_contents.text if result.text_contents else ""
+                        })
+                except Exception as e:
+                    logger.warning(f"Piaci keresési hiba: {e}")
+                    continue
+        
+        # AI elemzés
+        analysis_prompt = f"""
+        Piaci elemzés és üzleti stratégia:
+        
+        Termék/szolgáltatás: {product_description}
+        Célpiac: {target_market}
+        
+        Piaci kutatás eredményei:
+        {json.dumps(market_data, indent=2)}
+        
+        Adj részletes üzleti elemzést:
+        1. Piaci méret és potenciál
+        2. Főbb versenytársak elemzése
+        3. Árképzési stratégia
+        4. SWOT elemzés
+        5. Go-to-market stratégia
+        6. Kockázatok és lehetőségek
+        7. Pénzügyi előrejelzések
+        """
+        
+        response_text = ""
+        model_used = ""
+        
+        if gemini_model:
+            response = await gemini_model.generate_content_async(
+                analysis_prompt,
+                generation_config=genai.types.GenerationConfig(
+                    max_output_tokens=2048,
+                    temperature=0.2
+                )
+            )
+            response_text = response.text
+            model_used = "Google Gemini 2.5 Pro"
+        
+        return {
+            "market_analysis": response_text,
+            "market_research_data": market_data,
+            "model_used": model_used,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Piaci elemzési hiba: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Hiba a piaci elemzés során: {e}"
         )
 
 @app.post("/api/deep_discovery/alphagenome")
