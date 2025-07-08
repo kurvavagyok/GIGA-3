@@ -48,7 +48,14 @@ A Deep Discovery AI egy teljes körű, piaci értékű mesterséges intelligenci
 ```
 
 ### templates/index.html
-Modern, reszponzív chat interfész Apple Sign In integrációval és real-time funkciókkal.
+Modern, reszponzív chat interfész Apple Sign In integrációval, vendég móddal és real-time funkciókkal.
+
+**Főbb funkciók:**
+- Apple Sign In integráció
+- **Vendég mód**: Fiók nélküli használat lehetősége
+- Hibrid AI chat interfész
+- Real-time üzenetküldés
+- Reszponzív design
 
 ### templates/admin.html
 ```html
