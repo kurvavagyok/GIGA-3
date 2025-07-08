@@ -4,6 +4,11 @@ from typing import List, Dict, Any, Optional
 import asyncio
 import httpx # Aszinkron HTTP kérésekhez
 import logging
+import sqlite3
+import hashlib
+import time
+from datetime import datetime, timedelta
+from functools import wraps
 
 # Google Cloud kliensekhez
 from google.cloud import aiplatform
@@ -132,6 +137,17 @@ class ChatRequest(BaseModel):
     message: str
     user_id: str = Field(..., description="A felhasználó egyedi azonosítója a beszélgetési előzményekhez.")
 
+class UserSubscriptionRequest(BaseModel):
+    user_id: str
+    subscription_type: str = Field(..., regex="^(basic|pro|enterprise)$")
+    
+class UserUsageResponse(BaseModel):
+    user_id: str
+    subscription_type: str
+    api_calls_today: int
+    api_calls_limit: int
+    remaining_calls: int
+
 class ScientificInsightRequest(BaseModel):
     query: str = Field(..., min_length=5, description="A tudományos vagy innovációs lekérdezés.")
     num_results: int = Field(default=5, ge=1, le=10, description="Hány releváns találatot keressen az Exa AI.")
@@ -157,6 +173,218 @@ class AlphaGenomeRequest(BaseModel):
     organism: str = Field(..., description="A szervezet, amelyből a genom származik (pl. 'Homo sapiens').")
     analysis_type: str = Field(..., description="Az elemzés típusa ('átfogó', 'génkódoló régiók', 'funkcionális elemek').")
     include_predictions: bool = Field(default=False, description="Tartalmazzon-e fehérje struktúra előrejelzéseket (AlphaFold).")
+
+# === ADATBÁZIS ÉS CACHE RENDSZER ===
+
+# Adatbázis inicializálás
+def init_database():
+    """Adatbázis táblák létrehozása"""
+    conn = sqlite3.connect('deep_discovery.db')
+    cursor = conn.cursor()
+    
+    # Felhasználók tábla
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id TEXT PRIMARY KEY,
+            email TEXT UNIQUE,
+            name TEXT,
+            subscription_type TEXT DEFAULT 'basic',
+            api_calls_today INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            last_active TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    # Chat előzmények tábla
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS chat_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT,
+            message TEXT,
+            response TEXT,
+            model_used TEXT,
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+    ''')
+    
+    # Kutatási eredmények cache tábla
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS research_cache (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            query_hash TEXT UNIQUE,
+            query TEXT,
+            results TEXT,
+            model_used TEXT,
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    # API használati statisztikák
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS api_usage (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT,
+            endpoint TEXT,
+            model_used TEXT,
+            tokens_used INTEGER,
+            cost REAL,
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+    ''')
+    
+    conn.commit()
+    conn.close()
+
+# Adatbázis inicializálás
+init_database()
+
+# === PIACI FUNKCIÓK ===
+
+# Előfizetési limitek
+SUBSCRIPTION_LIMITS = {
+    'basic': {
+        'daily_api_calls': 50,
+        'max_sequence_length': 1000,
+        'concurrent_requests': 1,
+        'advanced_models': False
+    },
+    'pro': {
+        'daily_api_calls': 500,
+        'max_sequence_length': 10000,
+        'concurrent_requests': 3,
+        'advanced_models': True
+    },
+    'enterprise': {
+        'daily_api_calls': 10000,
+        'max_sequence_length': 50000,
+        'concurrent_requests': 10,
+        'advanced_models': True
+    }
+}
+
+# Rate limiting decorator
+def rate_limit(func):
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        # Implementáció a rate limiting logikához
+        return await func(*args, **kwargs)
+    return wrapper
+
+# Felhasználó validáció
+def validate_user_limits(user_id: str, endpoint: str) -> bool:
+    """Ellenőrzi, hogy a felhasználó túllépi-e a limiteket"""
+    conn = sqlite3.connect('deep_discovery.db')
+    cursor = conn.cursor()
+    
+    cursor.execute('SELECT subscription_type, api_calls_today FROM users WHERE id = ?', (user_id,))
+    result = cursor.fetchone()
+    
+    if not result:
+        # Új felhasználó létrehozása
+        cursor.execute('INSERT INTO users (id, subscription_type) VALUES (?, ?)', (user_id, 'basic'))
+        conn.commit()
+        subscription_type = 'basic'
+        api_calls_today = 0
+    else:
+        subscription_type, api_calls_today = result
+    
+    conn.close()
+    
+    limits = SUBSCRIPTION_LIMITS[subscription_type]
+    return api_calls_today < limits['daily_api_calls']
+
+# Cache rendszer
+def get_cached_result(query: str) -> Optional[Dict]:
+    """Cached eredmény lekérése"""
+    query_hash = hashlib.md5(query.encode()).hexdigest()
+    conn = sqlite3.connect('deep_discovery.db')
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        SELECT results, model_used, timestamp 
+        FROM research_cache 
+        WHERE query_hash = ? AND timestamp > datetime('now', '-1 hour')
+    ''', (query_hash,))
+    
+    result = cursor.fetchone()
+    conn.close()
+    
+    if result:
+        return {
+            'results': json.loads(result[0]),
+            'model_used': result[1],
+            'cached': True,
+            'timestamp': result[2]
+        }
+    return None
+
+def save_to_cache(query: str, results: Dict, model_used: str):
+    """Eredmény mentése cache-be"""
+    query_hash = hashlib.md5(query.encode()).hexdigest()
+    conn = sqlite3.connect('deep_discovery.db')
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        INSERT OR REPLACE INTO research_cache (query_hash, query, results, model_used)
+        VALUES (?, ?, ?, ?)
+    ''', (query_hash, query, json.dumps(results), model_used))
+    
+    conn.commit()
+    conn.close()
+
+# === HIBRID AI ORCHESTRATOR ===
+
+class AIOrchestrator:
+    def __init__(self):
+        self.model_performance = {
+            'qwen3': {'avg_response_time': 2.5, 'success_rate': 0.95, 'cost': 0.001},
+            'llama4': {'avg_response_time': 3.0, 'success_rate': 0.93, 'cost': 0.0012},
+            'gemini': {'avg_response_time': 4.0, 'success_rate': 0.98, 'cost': 0.002}
+        }
+        
+    def select_optimal_model(self, task_type: str, user_subscription: str) -> str:
+        """Optimális modell kiválasztása feladat és előfizetés alapján"""
+        if user_subscription == 'basic':
+            return 'qwen3'  # Leggyorsabb és legolcsóbb
+        elif task_type == 'research':
+            return 'gemini'  # Legjobb pontosság kutatáshoz
+        elif task_type == 'chat':
+            return 'llama4'  # Jó beszélgetési képességek
+        else:
+            return 'qwen3'  # Alapértelmezett
+    
+    async def execute_with_fallback(self, task, primary_model: str, fallback_models: List[str]):
+        """Feladat végrehajtása fallback rendszerrel"""
+        models_to_try = [primary_model] + fallback_models
+        
+        for model in models_to_try:
+            try:
+                start_time = time.time()
+                result = await task(model)
+                end_time = time.time()
+                
+                # Teljesítmény frissítése
+                self.update_model_performance(model, end_time - start_time, True)
+                return result, model
+                
+            except Exception as e:
+                logger.warning(f"Modell {model} sikertelen: {e}")
+                self.update_model_performance(model, 0, False)
+                continue
+                
+        raise Exception("Minden AI modell sikertelen volt")
+    
+    def update_model_performance(self, model: str, response_time: float, success: bool):
+        """Modell teljesítmény frissítése"""
+        if model in self.model_performance:
+            perf = self.model_performance[model]
+            perf['avg_response_time'] = (perf['avg_response_time'] + response_time) / 2
+            perf['success_rate'] = (perf['success_rate'] + (1 if success else 0)) / 2
+
+# AI Orchestrator instance
+ai_orchestrator = AIOrchestrator()
 
 # Beszélgetési előzmények tárolása memóriában (egyszerű prototípushoz)
 # Ezt éles környezetben adatbázisra (pl. Firestore) kell cserélni!
@@ -217,11 +445,19 @@ async def health_check_endpoint():
     return {"status": "healthy", "version": app.version, "creator": DIGITAL_FINGERPRINT}
 
 @app.post("/api/deep_discovery/chat")
+@rate_limit
 async def deep_discovery_chat(req: ChatRequest):
     """
-    Kezeli a beszélgetéseket, a Cerebras Llama 4 és a Gemini 2.5 Pro modelleket használva.
-    A beszélgetési előzményeket a szerver tárolja user_id alapján.
+    Kezeli a beszélgetéseket hibrid AI rendszerrel és felhasználói limitekkel.
+    A beszélgetési előzményeket az adatbázis tárolja user_id alapján.
     """
+    # Felhasználói limitek ellenőrzése
+    if not validate_user_limits(req.user_id, 'chat'):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="API hívás limit elérve. Frissítsd az előfizetésed a további használathoz!"
+        )
+    
     if not cerebras_client and not gemini_model:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -340,6 +576,23 @@ async def deep_discovery_chat(req: ChatRequest):
         history.append({"role": "user", "content": current_message})
         history.append({"role": "assistant", "content": response_text})
         chat_histories[user_id] = history # Mentés memóriába
+        
+        # Adatbázisba mentés
+        conn = sqlite3.connect('deep_discovery.db')
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO chat_history (user_id, message, response, model_used)
+            VALUES (?, ?, ?, ?)
+        ''', (user_id, current_message, response_text, model_used))
+        
+        # API használat frissítése
+        cursor.execute('''
+            UPDATE users SET api_calls_today = api_calls_today + 1, last_active = CURRENT_TIMESTAMP
+            WHERE id = ?
+        ''', (user_id,))
+        
+        conn.commit()
+        conn.close()
 
         return {
             'response': response_text,
@@ -353,6 +606,97 @@ async def deep_discovery_chat(req: ChatRequest):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Hiba történt a beszélgetés során: {e}"
         )
+
+@app.post("/api/subscription/upgrade")
+async def upgrade_subscription(req: UserSubscriptionRequest):
+    """Felhasználói előfizetés frissítése"""
+    conn = sqlite3.connect('deep_discovery.db')
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        UPDATE users 
+        SET subscription_type = ?, api_calls_today = 0
+        WHERE id = ?
+    ''', (req.subscription_type, req.user_id))
+    
+    conn.commit()
+    conn.close()
+    
+    return {
+        'message': f'Előfizetés sikeresen frissítve: {req.subscription_type}',
+        'new_limits': SUBSCRIPTION_LIMITS[req.subscription_type]
+    }
+
+@app.get("/api/user/usage/{user_id}")
+async def get_user_usage(user_id: str):
+    """Felhasználói használati statisztikák lekérése"""
+    conn = sqlite3.connect('deep_discovery.db')
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        SELECT subscription_type, api_calls_today 
+        FROM users 
+        WHERE id = ?
+    ''', (user_id,))
+    
+    result = cursor.fetchone()
+    conn.close()
+    
+    if not result:
+        return UserUsageResponse(
+            user_id=user_id,
+            subscription_type='basic',
+            api_calls_today=0,
+            api_calls_limit=SUBSCRIPTION_LIMITS['basic']['daily_api_calls'],
+            remaining_calls=SUBSCRIPTION_LIMITS['basic']['daily_api_calls']
+        )
+    
+    subscription_type, api_calls_today = result
+    limit = SUBSCRIPTION_LIMITS[subscription_type]['daily_api_calls']
+    
+    return UserUsageResponse(
+        user_id=user_id,
+        subscription_type=subscription_type,
+        api_calls_today=api_calls_today,
+        api_calls_limit=limit,
+        remaining_calls=max(0, limit - api_calls_today)
+    )
+
+@app.get("/api/analytics/dashboard")
+async def analytics_dashboard():
+    """Platformstatisztikák dashboard"""
+    conn = sqlite3.connect('deep_discovery.db')
+    cursor = conn.cursor()
+    
+    # Aktív felhasználók
+    cursor.execute('''
+        SELECT COUNT(*) FROM users 
+        WHERE last_active > datetime('now', '-7 days')
+    ''')
+    active_users = cursor.fetchone()[0]
+    
+    # Összes API hívás ma
+    cursor.execute('''
+        SELECT SUM(api_calls_today) FROM users
+    ''')
+    total_api_calls = cursor.fetchone()[0] or 0
+    
+    # Előfizetési megoszlás
+    cursor.execute('''
+        SELECT subscription_type, COUNT(*) 
+        FROM users 
+        GROUP BY subscription_type
+    ''')
+    subscription_stats = dict(cursor.fetchall())
+    
+    conn.close()
+    
+    return {
+        'active_users_week': active_users,
+        'total_api_calls_today': total_api_calls,
+        'subscription_distribution': subscription_stats,
+        'model_performance': ai_orchestrator.model_performance
+    }
 
 @app.get("/api/deep_discovery/chat_history/{user_id}")
 async def get_chat_history_endpoint(user_id: str):
