@@ -660,7 +660,6 @@ async def alphagenome_analysis(req: AlphaGenomeRequest):
             "alphafold_predictions": alphafold_data[0] if alphafold_data and isinstance(alphafold_data, list) else alphafold_data,
             "metadata": {
                 "timestamp": "2024-01-01T00:00:00Z",
-```python
                 "version": "AlphaGenome v1.0",
                 "creator": DIGITAL_FINGERPRINT
             },
