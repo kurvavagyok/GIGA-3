@@ -186,10 +186,15 @@ Az alkalmazás összes Python függősége.
 A projekt konfigurációs fájlja.
 
 ## Hibrid AI Működése
-1. **Chat funkció**: Qwen 3 → Llama 4 → Gemini prioritási sorrend
-2. **Tudományos elemzés**: Qwen 3 → Gemini → Llama 4 optimalizált sorrend
-3. **Szimuláció optimalizálás**: Qwen 3 → Llama 4 → Gemini fallback
-4. **Genomikai elemzés**: Hibrid megközelítés minden modellel
+1. **Chat funkció**: Qwen 3 ⚡ Llama 4 párhuzamos futtatás (gyorsabb nyer) → Gemini fallback
+2. **Tudományos elemzés**: Qwen 3 ⚡ Llama 4 párhuzamos → Gemini fallback
+3. **Szimuláció optimalizálás**: Qwen 3 ⚡ Llama 4 párhuzamos → Gemini fallback
+4. **Genomikai elemzés**: Qwen 3 ⚡ Llama 4 párhuzamos → Gemini fallback
+
+### Párhuzamos Futtatás Előnyei
+- **Gyorsabb válaszidő**: Az első válaszadó modell eredménye kerül felhasználásra
+- **Magasabb rendelkezésre állás**: Ha az egyik modell nem elérhető, a másik továbbra is működik
+- **Optimalizált erőforrás-használat**: Automatikus feladat-megszakítás a gyorsabb válasz után
 
 ## API végpontok
 - `/api/deep_discovery/chat` - Hibrid chat funkció

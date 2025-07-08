@@ -247,28 +247,31 @@ async def deep_discovery_chat(req: ChatRequest):
     model_used = ""
 
     try:
-        # Intelligens modell választás: Qwen 3 > Llama 4 > Gemini (prioritási sorrend)
+        # Párhuzamos modell futtatás: Qwen 3 és Llama 4 egyenrangú elsődleges modellek
         if cerebras_client:
-            # Próbáljuk meg a Qwen 3-at először
-            try:
-                logger.info(f"Using Cerebras Qwen 3 for user {user_id}")
-                stream = cerebras_client.chat.completions.create(
-                    messages=messages_for_llm,
-                    model="qwen2.5-72b-instruct", # Qwen 3 modell
-                    stream=True,
-                    max_completion_tokens=2048,
-                    temperature=0.2,
-                    top_p=1
-                )
-                for chunk in stream:
-                    if chunk.choices[0].delta.content:
-                        response_text += chunk.choices[0].delta.content
-                model_used = "Cerebras Qwen 3"
-            except Exception as qwen_error:
-                logger.warning(f"Qwen 3 nem elérhető, visszaváltás Llama 4-re: {qwen_error}")
-                # Ha Qwen 3 nem működik, használjuk a Llama 4-et
+            async def run_qwen3():
                 try:
-                    logger.info(f"Using Cerebras Llama 4 for user {user_id}")
+                    logger.info(f"Starting Cerebras Qwen 3 for user {user_id}")
+                    stream = cerebras_client.chat.completions.create(
+                        messages=messages_for_llm,
+                        model="qwen2.5-72b-instruct",
+                        stream=True,
+                        max_completion_tokens=2048,
+                        temperature=0.2,
+                        top_p=1
+                    )
+                    content = ""
+                    for chunk in stream:
+                        if chunk.choices[0].delta.content:
+                            content += chunk.choices[0].delta.content
+                    return content, "Cerebras Qwen 3"
+                except Exception as e:
+                    logger.warning(f"Qwen 3 hiba: {e}")
+                    return None, None
+
+            async def run_llama4():
+                try:
+                    logger.info(f"Starting Cerebras Llama 4 for user {user_id}")
                     stream = cerebras_client.chat.completions.create(
                         messages=messages_for_llm,
                         model="llama-4-scout-17b-16e-instruct",
@@ -277,13 +280,42 @@ async def deep_discovery_chat(req: ChatRequest):
                         temperature=0.2,
                         top_p=1
                     )
+                    content = ""
                     for chunk in stream:
                         if chunk.choices[0].delta.content:
-                            response_text += chunk.choices[0].delta.content
-                    model_used = "Cerebras Llama 4"
-                except Exception as llama_error:
-                    logger.warning(f"Llama 4 sem elérhető: {llama_error}")
-                    response_text = ""  # Jelezzük, hogy hibridként a Gemini-re váltunk
+                            content += chunk.choices[0].delta.content
+                    return content, "Cerebras Llama 4"
+                except Exception as e:
+                    logger.warning(f"Llama 4 hiba: {e}")
+                    return None, None
+
+            # Párhuzamos futtatás - az első válasz nyer
+            try:
+                tasks = [run_qwen3(), run_llama4()]
+                done, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+                
+                # Töröljük a függőben lévő feladatokat
+                for task in pending:
+                    task.cancel()
+                
+                # Első sikeres válasz feldolgozása
+                for task in done:
+                    result = await task
+                    if result[0]:  # Ha van válasz
+                        response_text, model_used = result
+                        logger.info(f"Első válasz: {model_used}")
+                        break
+                
+                # Ha egyik sem adott választ, próbáljuk őket szekvenciálisan
+                if not response_text:
+                    logger.warning("Párhuzamos futtatás sikertelen, szekvenciális próbálkozás")
+                    response_text, model_used = await run_qwen3()
+                    if not response_text:
+                        response_text, model_used = await run_llama4()
+                        
+            except Exception as parallel_error:
+                logger.error(f"Párhuzamos futtatás hiba: {parallel_error}")
+                response_text = ""
         
         # Ha a Cerebras modellek nem működnek, használjuk a Gemini-t
         if not response_text and gemini_model:
@@ -558,25 +590,29 @@ async def simulation_optimizer(req: SimulationOptimizerRequest):
 
     try:
         if cerebras_client:
-            # Próbáljuk meg a Qwen 3-at először szimulációhoz
-            try:
-                logger.info(f"Using Cerebras Qwen 3 for simulation optimization: {req.simulation_type}")
-                stream = cerebras_client.chat.completions.create(
-                    messages=[{"role": "user", "content": prompt}],
-                    model="qwen2.5-72b-instruct",
-                    stream=True,
-                    max_completion_tokens=1024,
-                    temperature=0.3,
-                    top_p=1
-                )
-                for chunk in stream:
-                    if chunk.choices[0].delta.content:
-                        response_text += chunk.choices[0].delta.content
-                model_used = "Cerebras Qwen 3"
-            except Exception as qwen_error:
-                logger.warning(f"Qwen 3 nem elérhető szimulációhoz, Llama 4 használata: {qwen_error}")
+            async def run_qwen3_sim():
                 try:
-                    logger.info(f"Using Cerebras Llama 4 for simulation optimization: {req.simulation_type}")
+                    logger.info(f"Starting Qwen 3 for simulation: {req.simulation_type}")
+                    stream = cerebras_client.chat.completions.create(
+                        messages=[{"role": "user", "content": prompt}],
+                        model="qwen2.5-72b-instruct",
+                        stream=True,
+                        max_completion_tokens=1024,
+                        temperature=0.3,
+                        top_p=1
+                    )
+                    content = ""
+                    for chunk in stream:
+                        if chunk.choices[0].delta.content:
+                            content += chunk.choices[0].delta.content
+                    return content, "Cerebras Qwen 3"
+                except Exception as e:
+                    logger.warning(f"Qwen 3 szimulációs hiba: {e}")
+                    return None, None
+
+            async def run_llama4_sim():
+                try:
+                    logger.info(f"Starting Llama 4 for simulation: {req.simulation_type}")
                     stream = cerebras_client.chat.completions.create(
                         messages=[{"role": "user", "content": prompt}],
                         model="llama-4-scout-17b-16e-instruct",
@@ -585,12 +621,33 @@ async def simulation_optimizer(req: SimulationOptimizerRequest):
                         temperature=0.3,
                         top_p=1
                     )
+                    content = ""
                     for chunk in stream:
                         if chunk.choices[0].delta.content:
-                            response_text += chunk.choices[0].delta.content
-                    model_used = "Cerebras Llama 4"
-                except Exception:
-                    response_text = ""  # Gemini-re váltás
+                            content += chunk.choices[0].delta.content
+                    return content, "Cerebras Llama 4"
+                except Exception as e:
+                    logger.warning(f"Llama 4 szimulációs hiba: {e}")
+                    return None, None
+
+            # Párhuzamos futtatás szimulációhoz
+            try:
+                tasks = [run_qwen3_sim(), run_llama4_sim()]
+                done, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+                
+                for task in pending:
+                    task.cancel()
+                
+                for task in done:
+                    result = await task
+                    if result[0]:
+                        response_text, model_used = result
+                        logger.info(f"Szimulációs első válasz: {model_used}")
+                        break
+                        
+            except Exception as parallel_error:
+                logger.error(f"Szimulációs párhuzamos hiba: {parallel_error}")
+                response_text = ""
         elif gemini_model:
             logger.info(f"Using Gemini 2.5 Pro for simulation optimization: {req.simulation_type}")
             response = await gemini_model.generate_content_async(
@@ -673,24 +730,65 @@ async def alphagenome_analysis(req: AlphaGenomeRequest):
         response_text = ""
         model_used = ""
 
-        # Hibrid megközelítés: Qwen 3 > Gemini > Llama 4 (tudományos elemzéshez)
+        # Párhuzamos genomikai elemzés: Qwen 3 és Llama 4 egyenrangú
         if cerebras_client:
+            async def run_qwen3_genome():
+                try:
+                    logger.info(f"Starting Qwen 3 for genome analysis: {req.analysis_type}")
+                    stream = cerebras_client.chat.completions.create(
+                        messages=[{"role": "user", "content": analysis_prompt}],
+                        model="qwen2.5-72b-instruct",
+                        stream=True,
+                        max_completion_tokens=2048,
+                        temperature=0.1,
+                        top_p=0.9
+                    )
+                    content = ""
+                    for chunk in stream:
+                        if chunk.choices[0].delta.content:
+                            content += chunk.choices[0].delta.content
+                    return content, "Cerebras Qwen 3"
+                except Exception as e:
+                    logger.warning(f"Qwen 3 genomikai hiba: {e}")
+                    return None, None
+
+            async def run_llama4_genome():
+                try:
+                    logger.info(f"Starting Llama 4 for genome analysis: {req.analysis_type}")
+                    stream = cerebras_client.chat.completions.create(
+                        messages=[{"role": "user", "content": analysis_prompt}],
+                        model="llama-4-scout-17b-16e-instruct",
+                        stream=True,
+                        max_completion_tokens=2048,
+                        temperature=0.1,
+                        top_p=0.9
+                    )
+                    content = ""
+                    for chunk in stream:
+                        if chunk.choices[0].delta.content:
+                            content += chunk.choices[0].delta.content
+                    return content, "Cerebras Llama 4"
+                except Exception as e:
+                    logger.warning(f"Llama 4 genomikai hiba: {e}")
+                    return None, None
+
+            # Párhuzamos futtatás genomikai elemzéshez
             try:
-                logger.info(f"Using Cerebras Qwen 3 for AlphaGenome analysis: {req.analysis_type}")
-                stream = cerebras_client.chat.completions.create(
-                    messages=[{"role": "user", "content": analysis_prompt}],
-                    model="qwen2.5-72b-instruct",
-                    stream=True,
-                    max_completion_tokens=2048,
-                    temperature=0.1,
-                    top_p=0.9
-                )
-                for chunk in stream:
-                    if chunk.choices[0].delta.content:
-                        response_text += chunk.choices[0].delta.content
-                model_used = "Cerebras Qwen 3"
-            except Exception as qwen_error:
-                logger.warning(f"Qwen 3 nem elérhető genomikai elemzéshez: {qwen_error}")
+                tasks = [run_qwen3_genome(), run_llama4_genome()]
+                done, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+                
+                for task in pending:
+                    task.cancel()
+                
+                for task in done:
+                    result = await task
+                    if result[0]:
+                        response_text, model_used = result
+                        logger.info(f"Genomikai első válasz: {model_used}")
+                        break
+                        
+            except Exception as parallel_error:
+                logger.error(f"Genomikai párhuzamos hiba: {parallel_error}")
                 response_text = ""
         
         # Ha Qwen 3 nem működik, próbáljuk a Gemini-t
