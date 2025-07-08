@@ -22,6 +22,8 @@ from exa_py import Exa
 # FastAPI
 from fastapi import FastAPI, HTTPException, status, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 # --- Konfiguráció és Titkok Betöltése ---
@@ -118,6 +120,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Statikus fájlok kiszolgálása
+app.mount("/static", StaticFiles(directory="templates"), name="static")
+
 # --- Segédmodellek a Pydantic-hoz ---
 class Message(BaseModel):
     role: str
@@ -153,6 +158,11 @@ chat_histories: Dict[str, List[Message]] = {}
 # --- API Végpontok ---
 
 @app.get("/")
+async def serve_frontend():
+    """A frontend HTML oldal kiszolgálása."""
+    return FileResponse("templates/index.html")
+
+@app.get("/api")
 async def root_endpoint():
     """Alapvető üdvözlő végpont."""
     return {
