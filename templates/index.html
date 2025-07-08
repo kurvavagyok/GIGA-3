@@ -643,24 +643,28 @@
         const currentModelBadge = document.getElementById('currentModelBadge');
 
         // --- APPLE SIGN IN SETUP ---
-        AppleID.auth.init({
-            clientId: 'demo.example',
-            scope: 'name email',
-            redirectURI: window.location.origin + '/auth/apple/callback',
-            state: 'login',
-            usePopup: true
-        });
+        try {
+            AppleID.auth.init({
+                clientId: 'demo.example',
+                scope: 'name email',
+                redirectURI: window.location.origin + '/auth/apple/callback',
+                state: 'login',
+                usePopup: true
+            });
 
-        document.addEventListener('AppleIDSignInOnSuccess', (event) => {
-            console.log('Apple Sign In sikeres:', event.detail);
-            handleAppleSignIn(event.detail);
-        });
+            document.addEventListener('AppleIDSignInOnSuccess', (event) => {
+                console.log('Apple Sign In sikeres:', event.detail);
+                handleAppleSignIn(event.detail);
+            });
 
-        document.addEventListener('AppleIDSignInOnFailure', (event) => {
-            console.log('Apple Sign In hiba:', event.detail);
-            showLoginMessage('Hiba történt az Apple bejelentkezés során.', false);
-            loginLoading.style.display = 'none';
-        });
+            document.addEventListener('AppleIDSignInOnFailure', (event) => {
+                console.log('Apple Sign In hiba:', event.detail);
+                showLoginMessage('Hiba történt az Apple bejelentkezés során.', false);
+                if (loginLoading) loginLoading.style.display = 'none';
+            });
+        } catch (appleError) {
+            console.log('Apple Sign In inicializálás hiba:', appleError);
+        }
 
         function handleAppleSignIn(data) {
             loginLoading.style.display = 'block';
@@ -720,7 +724,7 @@
                 chatApp.classList.add('visible');
                 document.body.style.overflow = 'auto';
                 messageInput.focus();
-                
+
                 // Vendég mód jelzése, ha szükséges
                 if (currentUserId.startsWith('guest_')) {
                     const guestNotice = document.getElementById('guestModeNotice');
@@ -869,9 +873,9 @@
             currentUserId = `guest_${Math.random().toString(36).substring(2, 15)}`;
             localStorage.setItem('jadeUserId', currentUserId);
             isAuthenticated = false; // Vendég módban nincs teljes autentikáció
-            
+
             showLoginMessage('Vendég módban folytatás...', true);
-            
+
             // Átmenet a chat felületre
             setTimeout(() => {
                 transitionToChat();

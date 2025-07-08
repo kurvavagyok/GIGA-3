@@ -731,14 +731,22 @@ async def get_chat_history_endpoint(user_id: str):
 @app.post("/api/deep_discovery/clear_chat_history/{user_id}")
 async def clear_chat_history_endpoint(user_id: str):
     """Törli egy adott felhasználó beszélgetési előzményeit."""
+    # Memóriából törlés
     if user_id in chat_histories:
         del chat_histories[user_id]
-        logger.info(f"Chat history cleared for user {user_id}")
-        return {'message': f'Beszélgetési előzmények törölve a felhasználó számára: {user_id}'}
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail=f"Nincs beszélgetési előzmény a felhasználó számára: {user_id}"
-    )
+    
+    # Adatbázisból törlés
+    try:
+        conn = sqlite3.connect('deep_discovery.db')
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM chat_history WHERE user_id = ?', (user_id,))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        logger.warning(f"Database cleanup error for {user_id}: {e}")
+    
+    logger.info(f"Chat history cleared for user {user_id}")
+    return {'message': f'Beszélgetési előzmények törölve a felhasználó számára: {user_id}'}
 
 @app.post("/api/deep_discovery/research_trends")
 async def get_research_trends(req: ScientificInsightRequest):
