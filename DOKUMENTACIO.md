@@ -1,3 +1,13 @@
+
+# Deep Discovery AI - Jade Asszisztens Dokumentáció
+
+## Alkalmazás áttekintése
+A Deep Discovery AI platform egy fejlett mesterséges intelligencia alapú tudományos és innovációs katalizátor alkalmazás.
+
+## Fájlok és funkcióik
+
+### main.py
+```python
 import os
 import json
 from typing import List, Dict, Any, Optional
@@ -168,8 +178,6 @@ chat_histories: Dict[str, List[Message]] = {}
 async def serve_frontend():
     """A frontend HTML oldal kiszolgálása."""
     return FileResponse("templates/index.html")
-
-
 
 @app.post("/api/auth/apple")
 async def apple_signin(request: Request):
@@ -713,3 +721,32 @@ async def alphagenome_analysis(req: AlphaGenomeRequest):
 if __name__ == '__main__':
     import uvicorn
     uvicorn.run(app, host='0.0.0.0', port=5000)
+```
+
+### templates/index.html
+Teljes frontend HTML fájl a chat alkalmazáshoz Apple Sign In integrációval és modern dark UI-val.
+
+### templates/login.html  
+Bejelentkezési oldal Apple Sign In és hagyományos email/jelszó opcióval.
+
+### requirements.txt
+Az alkalmazás összes Python függősége.
+
+### pyproject.toml
+A projekt konfigurációs fájlja.
+
+## API végpontok
+- `/api/deep_discovery/chat` - Chat funkcionalitás
+- `/api/deep_discovery/research_trends` - Tudományos trendek elemzése
+- `/api/deep_discovery/protein_structure` - Fehérje struktúra lekérdezés
+- `/api/deep_discovery/alphagenome` - Genomikai elemzés
+- `/api/deep_discovery/simulation_optimizer` - Szimuláció optimalizálás
+- `/api/deep_discovery/custom_gcp_model` - Egyedi GCP modellek
+
+## Környezeti változók
+- `GCP_SERVICE_ACCOUNT_KEY` - Google Cloud Platform hitelesítő kulcs
+- `CEREBRAS_API_KEY` - Cerebras AI API kulcs
+- `GEMINI_API_KEY` - Google Gemini API kulcs
+- `EXA_API_KEY` - Exa AI keresési API kulcs
+
+Az alkalmazás a http://0.0.0.0:5000 címen fut és teljes AI-alapú tudományos elemzési platformot biztosít.

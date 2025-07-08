@@ -217,6 +217,7 @@
             font-size: 0.875rem;
         }
     </style>
+    <script type="text/javascript" src="https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js"></script>
 </head>
 <body class="gradient-bg">
     <div class="min-h-screen flex items-center justify-center p-4">
@@ -422,6 +423,17 @@
         function showMessage(message, type = 'error') {
             const container = document.getElementById('messageContainer');
             const messageClass = type === 'error' ? 'error-message' : 'success-message';
+            container.innerHTML = `<div class="${messageClass}">${message}</div>`;
+        }
+
+        // Apple Sign In konfiguráció
+        AppleID.auth.init({
+            clientId: 'demo.example',
+            scope: 'name email',
+            redirectURI: window.location.origin,
+            state: 'login',
+            usePopup: true
+        });message';
             
             container.innerHTML = `<div class="${messageClass}">${message}</div>`;
             
