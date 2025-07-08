@@ -1,4 +1,3 @@
-
 # Jade - Deep Discovery AI Platform Dokumentáció
 
 ## Alkalmazás Leírása
@@ -649,6 +648,7 @@ if __name__ == '__main__':
                     <button id="proteinStructureBtn" class="w-full text-left text-sm text-gray-300 p-2 rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-3"><i class="fas fa-dna w-5 text-center text-blue-400"></i> Fehérje Struktúra</button>
                     <button id="customGCPModelBtn" class="w-full text-left text-sm text-gray-300 p-2 rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-3"><i class="fas fa-cloud w-5 text-center text-pink-400"></i> Egyedi GCP Modell</button>
                     <button id="simulationOptimizerBtn" class="w-full text-left text-sm text-gray-300 p-2 rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-3"><i class="fas fa-microchip w-5 text-center text-yellow-400"></i> Szimuláció Optimalizáló</button>
+                    <button id="alphaGenomeBtn" class="w-full text-left text-sm text-gray-300 p-2 rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-3"><i class="fas fa-circle-nodes w-5 text-center text-orange-400"></i> AlphaGenome Elemzés</button>
                 </div>
             </div>
             <div class="flex-1"></div>
@@ -697,6 +697,10 @@ if __name__ == '__main__':
                             <div class="flex items-center gap-3 p-3 bg-gray-800/50 rounded-lg">
                                 <i class="fas fa-cogs text-yellow-400"></i>
                                 <span>Szimuláció optimalizálás</span>
+                            </div>
+                            <div class="flex items-center gap-3 p-3 bg-gray-800/50 rounded-lg">
+                                <i class="fas fa-circle-nodes text-orange-400"></i>
+                                <span>AlphaGenome Elemzés</span>
                             </div>
                         </div>
                     </div>
@@ -826,6 +830,26 @@ if __name__ == '__main__':
         </div>
     </div>
 
+     <!-- AlphaGenome Modal -->
+     <div class="modal-overlay" id="alphaGenomeModal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold modal-title">AlphaGenome Elemzés</h2>
+                <button class="modal-close p-2 rounded-full" data-modal-id="alphaGenomeModal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-message-container"></div>
+            <form id="alphaGenomeForm" class="flex flex-col gap-4">
+                <textarea class="modal-input rounded-lg p-3" id="genomeSequence" placeholder="DNS/RNS szekvencia" rows="5" required></textarea>
+                <button type="submit" class="modal-button font-bold py-3 rounded-lg" id="alphaGenomeSubmitBtn">Elemzés Indítása</button>
+            </form>
+            <div id="alphaGenomeResult" class="mt-4 pt-4 border-t border-gray-700 text-gray-300" style="display: none;">
+                <h3 class="text-lg font-semibold mb-2 flex items-center gap-2 text-green-400"><i class="fas fa-circle-nodes"></i> Genomikai Elemzés Eredménye</h3>
+                <div id="alphaGenomeDetails"></div>
+                <p class="text-xs text-gray-500 mt-2">Modell: <span id="alphaGenomeModelUsed"></span></p>
+            </div>
+        </div>
+    </div>
+
 
     <script>
         // --- STATE & DOM ELEMENTS ---
@@ -850,6 +874,7 @@ if __name__ == '__main__':
         const proteinStructureBtn = document.getElementById('proteinStructureBtn');
         const customGCPModelBtn = document.getElementById('customGCPModelBtn');
         const simulationOptimizerBtn = document.getElementById('simulationOptimizerBtn');
+        const alphaGenomeBtn = document.getElementById('alphaGenomeBtn');
 
 
         // --- CORE FUNCTIONS ---
@@ -928,6 +953,12 @@ if __name__ == '__main__':
                             <i class="fas fa-microchip text-yellow-400"></i> Szimuláció Optimalizáló
                         </button>`;
                 }
+                if (lowerCaseAnswer.includes('genom') || lowerCaseAnswer.includes('dns') || lowerCaseAnswer.includes('rns') || lowerCaseAnswer.includes('szekvencia')) {
+                    suggestedActionsHtml += `
+                        <button class="mb-2" onclick="showModal('alphaGenomeModal'); addMessage('ai', 'Rendben, indítsuk el az AlphaGenome elemzést. Kérlek, add meg a DNS/RNS szekvenciát.');">
+                            <i class="fas fa-circle-nodes text-orange-400"></i> AlphaGenome Elemzés
+                        </button>`;
+                }
 
                 messageDiv.innerHTML = `
                     <div class="ai-answer-card">
@@ -1004,6 +1035,7 @@ if __name__ == '__main__':
         proteinStructureBtn.addEventListener('click', () => showModal('proteinStructureModal'));
         customGCPModelBtn.addEventListener('click', () => showModal('customGCPModelModal'));
         simulationOptimizerBtn.addEventListener('click', () => showModal('simulationOptimizerModal'));
+        alphaGenomeBtn.addEventListener('click', () => showModal('alphaGenomeModal'));
 
         function showModalMessage(modalId, message, isError = true) {
             const container = document.getElementById(modalId).querySelector('.modal-message-container');
@@ -1044,7 +1076,7 @@ if __name__ == '__main__':
 
                 const sourcesContainer = document.getElementById('researchSources');
                 sourcesContainer.innerHTML = '';
-                
+
                 if (data.sources && data.sources.length > 0) {
                     data.sources.forEach((source, index) => {
                         const sourceLink = document.createElement('a');
@@ -1121,127 +1153,7 @@ if __name__ == '__main__':
                         </div>
                     `;
                 } else {
-                    detailsContainer.innerHTML = `<p class="text-yellow-400">${data.message}</p>`;
-                }
-
-                resultDiv.style.display = 'block';
-                showModalMessage('proteinStructureModal', 'Keresés sikeresen befejezve!', false);
-            } catch (error) {
-                showModalMessage('proteinStructureModal', `Hiba: ${error.message}`);
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = 'Keresés Indítása';
-            }
-        });
-
-        // Custom GCP Model Form
-        document.getElementById('customGCPModelForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const endpointId = document.getElementById('gcpEndpointId').value.trim();
-            const inputDataRaw = document.getElementById('gcpInputData').value.trim();
-            const submitBtn = document.getElementById('customGCPModelSubmitBtn');
-            const resultDiv = document.getElementById('gcpModelResult');
-
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = 'Modell futtatása...';
-            resultDiv.style.display = 'none';
-
-            try {
-                const inputData = JSON.parse(inputDataRaw);
-                
-                const response = await fetch(`${API_BASE_URL}/api/deep_discovery/custom_gcp_model`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ gcp_endpoint_id: endpointId, input_data: inputData })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-
-                const data = await response.json();
-                const detailsContainer = document.getElementById('gcpModelDetails');
-
-                detailsContainer.innerHTML = `
-                    <div class="space-y-3">
-                        <div><strong>Modell ID:</strong> ${data.model_id}</div>
-                        <div><strong>Válasz:</strong></div>
-                        <pre class="bg-gray-800 p-3 rounded text-sm overflow-x-auto">${JSON.stringify(data.model_response, null, 2)}</pre>
-                    </div>
-                `;
-
-                resultDiv.style.display = 'block';
-                showModalMessage('customGCPModelModal', 'Modell sikeresen lefutott!', false);
-            } catch (error) {
-                if (error instanceof SyntaxError) {
-                    showModalMessage('customGCPModelModal', 'Hibás JSON formátum a bemeneti adatokban.');
-                } else {
-                    showModalMessage('customGCPModelModal', `Hiba: ${error.message}`);
-                }
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = 'Modell Futtatása';
-            }
-        });
-
-        // Simulation Optimizer Form
-        document.getElementById('simulationOptimizerForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const simulationType = document.getElementById('simulationType').value;
-            const parametersRaw = document.getElementById('simulationParameters').value.trim();
-            const optimizationGoal = document.getElementById('optimizationGoal').value.trim();
-            const submitBtn = document.getElementById('simulationOptimizerSubmitBtn');
-            const resultDiv = document.getElementById('simulationResult');
-
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = 'Optimalizálás...';
-            resultDiv.style.display = 'none';
-
-            try {
-                const inputParameters = JSON.parse(parametersRaw);
-                
-                const response = await fetch(`${API_BASE_URL}/api/deep_discovery/simulation_optimizer`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        simulation_type: simulationType, 
-                        input_parameters: inputParameters, 
-                        optimization_goal: optimizationGoal 
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-
-                const data = await response.json();
-                document.getElementById('simulationDetails').innerHTML = `
-                    <pre class="bg-gray-800 p-3 rounded text-sm whitespace-pre-wrap">${data.optimized_output}</pre>
-                `;
-                document.getElementById('simulationModelUsed').textContent = data.model_used;
-
-                resultDiv.style.display = 'block';
-                showModalMessage('simulationOptimizerModal', 'Optimalizálás sikeresen befejezve!', false);
-            } catch (error) {
-                if (error instanceof SyntaxError) {
-                    showModalMessage('simulationOptimizerModal', 'Hibás JSON formátum a bemeneti paraméterekben.');
-                } else {
-                    showModalMessage('simulationOptimizerModal', `Hiba: ${error.message}`);
-                }
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = 'Optimalizálás Indítása';
-            }
-        });
-
-        // Initialize focus
-        messageInput.focus();
-    </script>
-</body>
-</html>
-```
-
-### 3. `requirements.txt` - Python Függőségek
+                    detailsContainer.innerHTML = `<p class="text-### 3. `requirements.txt` - Python Függőségek
 ```
 fastapi>=0.104.0
 uvicorn[standard]>=0.24.0
@@ -1317,26 +1229,3 @@ dependencies = [
     pkgs.python311Packages.wheel
   ];
 }
-```
-
----
-
-## Szükséges API Kulcsok (Replit Secrets)
-
-1. **CEREBRAS_API_KEY** - Cerebras Llama 4 modellhez
-2. **GEMINI_API_KEY** - Google Gemini 2.5 Pro modellhez  
-3. **EXA_API_KEY** - Exa AI kereséshez
-4. **GCP_SERVICE_ACCOUNT_KEY** - Google Cloud hozzáféréshez (JSON)
-5. **GCP_PROJECT_ID** - Google Cloud projekt azonosító
-6. **GCP_REGION** - Google Cloud régió (pl. "us-central1")
-
----
-
-## Telepítési Útmutató
-
-1. **Klónozd a projektet** Repliten
-2. **Állítsd be az API kulcsokat** a Secrets tool-ban
-3. **Kattints a Run gombra** az alkalmazás indításához
-4. **Nyisd meg a weboldalt** a megjelenő URL-en
-
-Az alkalmazás elérhető lesz a `https://[your-repl-name].[your-username].repl.co` címen.

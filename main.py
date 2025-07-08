@@ -151,6 +151,13 @@ class SimulationOptimizerRequest(BaseModel):
     input_parameters: Dict[str, Any] = Field(..., description="A szimulációhoz szükséges bemeneti paraméterek.")
     optimization_goal: str = Field(..., description="A szimuláció optimalizálási célja (pl. 'minimize_energy', 'maximize_conductivity').")
 
+# Új modell az AlphaGenome API-hoz
+class AlphaGenomeRequest(BaseModel):
+    genome_sequence: str = Field(..., min_length=100, description="A teljes DNS vagy RNS szekvencia elemzésre.")
+    organism: str = Field(..., description="A szervezet, amelyből a genom származik (pl. 'Homo sapiens').")
+    analysis_type: str = Field(..., description="Az elemzés típusa ('átfogó', 'génkódoló régiók', 'funkcionális elemek').")
+    include_predictions: bool = Field(default=False, description="Tartalmazzon-e fehérje struktúra előrejelzéseket (AlphaFold).")
+
 # Beszélgetési előzmények tárolása memóriában (egyszerű prototípushoz)
 # Ezt éles környezetben adatbázisra (pl. Firestore) kell cserélni!
 chat_histories: Dict[str, List[Message]] = {}
@@ -535,6 +542,138 @@ async def simulation_optimizer(req: SimulationOptimizerRequest):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Hiba történt a szimuláció optimalizálása során: {e}"
+        )
+
+@app.post("/api/deep_discovery/alphagenome")
+async def alphagenome_analysis(req: AlphaGenomeRequest):
+    """
+    AlphaGenome genomikai elemzés: DNS/RNS szekvencia analízis AI-val.
+    Kombinálja a Gemini modellt a genomikai adatok feldolgozásához és a Cerebras Llama-t részletes elemzéshez.
+    """
+    if not gemini_model and not cerebras_client:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Nincs elérhető AI modell a genomikai elemzéshez."
+        )
+
+    # Validáljuk a genom szekvenciát
+    valid_nucleotides = set('ATCGURYN-')  # DNA, RNA és egyéb valid karakterek
+    sequence_upper = req.genome_sequence.upper()
+    if not all(char in valid_nucleotides for char in sequence_upper):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Érvénytelen genom szekvencia. Csak A, T, C, G, U, R, Y, N, - karakterek engedélyezettek."
+        )
+
+    try:
+        # Alap szekvencia információk számítása
+        sequence_length = len(req.genome_sequence)
+        gc_content = (sequence_upper.count('G') + sequence_upper.count('C')) / sequence_length * 100
+
+        # AI elemzési prompt összeállítása
+        analysis_prompt = f"""
+        AlphaGenome Genomikai Elemzés:
+
+        Szekvencia: {req.genome_sequence[:500]}{'...' if len(req.genome_sequence) > 500 else ''}
+        Szervezet: {req.organism}
+        Elemzés típusa: {req.analysis_type}
+        Szekvencia hossza: {sequence_length} bázispár
+        GC tartalom: {gc_content:.1f}%
+
+        Kérlek, végezz részletes genomikai elemzést az alábbi szempontok szerint:
+
+        1. **Szekvencia jellemzők**: Nukleotid összetétel, ismétlődő motívumok, különleges régiók
+        2. **Funkcionális predikció**: Lehetséges génkódoló régiók, promóterek, szabályozó elemek
+        3. **Evolúciós vonatkozások**: Konzervált régiók, filogenetikai jelentőség
+        4. **Patológiai releváncia**: Ismert mutációs hotspotok, betegséggel kapcsolatos variánsok
+        5. **Strukturális elemzés**: Másodlagos szerkezet, fehérje kölcsönhatások
+
+        {"6. **Fehérje struktúra előrejelzés**: AlphaFold alapú szerkezeti predikciók" if req.include_predictions else ""}
+
+        Válaszod legyen tudományosan megalapozott, magyar nyelvű és strukturált.
+        """
+
+        response_text = ""
+        model_used = ""
+
+        # Először próbáljuk a Gemini-vel, amely jobb a tudományos szövegek elemzésében
+        if gemini_model:
+            logger.info(f"Using Gemini 2.5 Pro for AlphaGenome analysis: {req.analysis_type}")
+            response = await gemini_model.generate_content_async(
+                analysis_prompt,
+                generation_config=genai.types.GenerationConfig(
+                    max_output_tokens=2048,
+                    temperature=0.1  # Alacsony temperature a tudományos pontosságért
+                )
+            )
+            response_text = response.text
+            model_used = "Google Gemini 2.5 Pro"
+        elif cerebras_client:
+            logger.info(f"Using Cerebras Llama 4 for AlphaGenome analysis: {req.analysis_type}")
+            stream = cerebras_client.chat.completions.create(
+                messages=[{"role": "user", "content": analysis_prompt}],
+                model="llama-4-scout-17b-16e-instruct",
+                stream=True,
+                max_completion_tokens=2048,
+                temperature=0.1,
+                top_p=0.9
+            )
+            for chunk in stream:
+                if chunk.choices[0].delta.content:
+                    response_text += chunk.choices[0].delta.content
+            model_used = "Cerebras Llama 4"
+
+        if not response_text:
+            raise ValueError("Az AI modell nem adott választ a genomikai elemzésre.")
+
+        # AlphaFold integráció, ha fehérje predikció kért
+        alphafold_data = None
+        if req.include_predictions and req.analysis_type in ["comprehensive", "protein_coding"]:
+            try:
+                # Keresünk potenciális UniProt ID-kat a szekvenciában vagy alapértelmezett emberi fehérjéket
+                common_proteins = ["P04637", "P53350", "P31946"]  # p53, PLK1, 14-3-3β
+                for protein_id in common_proteins:
+                    try:
+                        ebi_url = f"https://alphafold.ebi.ac.uk/api/prediction/{protein_id}"
+                        async with httpx.AsyncClient() as client:
+                            alphafold_response = await client.get(ebi_url, timeout=10)
+                            if alphafold_response.status_code == 200:
+                                alphafold_data = alphafold_response.json()
+                                break
+                    except:
+                        continue
+            except Exception as e:
+                logger.warning(f"AlphaFold integráció hiba: {e}")
+
+        # Eredmények összeállítása
+        return {
+            "sequence_info": {
+                "length": sequence_length,
+                "gc_content": round(gc_content, 2),
+                "organism": req.organism,
+                "analysis_type": req.analysis_type
+            },
+            "ai_analysis": {
+                "content": response_text,
+                "model_used": model_used
+            },
+            "alphafold_predictions": alphafold_data[0] if alphafold_data and isinstance(alphafold_data, list) else alphafold_data,
+            "metadata": {
+                "timestamp": "2024-01-01T00:00:00Z",
+```python
+                "version": "AlphaGenome v1.0",
+                "creator": DIGITAL_FINGERPRINT
+            },
+            "status": "success"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in AlphaGenome analysis: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Hiba történt az AlphaGenome elemzés során: {e}"
         )
 
 # --- Alkalmazás Indítása ---

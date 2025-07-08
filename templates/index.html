@@ -199,6 +199,7 @@
                      <button id="proteinStructureBtn" class="w-full text-left text-sm text-gray-300 p-2 rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-3"><i class="fas fa-dna w-5 text-center text-blue-400"></i> Fehérje Struktúra</button>
                      <button id="customGCPModelBtn" class="w-full text-left text-sm text-gray-300 p-2 rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-3"><i class="fas fa-cloud w-5 text-center text-pink-400"></i> Egyedi GCP Modell</button>
                      <button id="simulationOptimizerBtn" class="w-full text-left text-sm text-gray-300 p-2 rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-3"><i class="fas fa-microchip w-5 text-center text-yellow-400"></i> Szimuláció Optimalizáló</button>
+                     <button id="alphaGenomeBtn" class="w-full text-left text-sm text-gray-300 p-2 rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-3"><i class="fas fa-dna w-5 text-center text-purple-400"></i> AlphaGenome Elemzés</button>
                  </div>
             </div>
              <div class="flex-1"></div>
@@ -353,6 +354,57 @@
         </div>
     </div>
 
+    <!-- AlphaGenome Modal -->
+    <div class="modal-overlay" id="alphaGenomeModal">
+        <div class="modal-content max-w-4xl">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold modal-title">AlphaGenome Genomikai Elemzés</h2>
+                <button class="modal-close p-2 rounded-full" data-modal-id="alphaGenomeModal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-message-container"></div>
+            <form id="alphaGenomeForm" class="flex flex-col gap-4">
+                <textarea class="modal-input rounded-lg p-3" id="genomeSequence" placeholder="Genom szekvencia (DNA/RNA, pl: ATCGATCGATCG...)" rows="6" required></textarea>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <select class="modal-input rounded-lg p-3" id="analysisType" required>
+                        <option value="comprehensive">Átfogó elemzés</option>
+                        <option value="protein_coding">Fehérje kódoló</option>
+                        <option value="regulatory">Szabályozó elemek</option>
+                        <option value="structural">Strukturális elemzés</option>
+                    </select>
+                    <select class="modal-input rounded-lg p-3" id="organism" required>
+                        <option value="human">Ember</option>
+                        <option value="mouse">Egér</option>
+                        <option value="plant">Növény</option>
+                        <option value="bacteria">Baktérium</option>
+                    </select>
+                    <label class="flex items-center text-gray-300">
+                        <input type="checkbox" id="includePredictions" class="mr-2" checked>
+                        Fehérje előrejelzések
+                    </label>
+                </div>
+                <button type="submit" class="modal-button font-bold py-3 rounded-lg" id="alphaGenomeButton">
+                    <i class="fas fa-dna mr-2"></i> Genomikai Elemzés Indítása
+                </button>
+            </form>
+            <div id="alphaGenomeResult" class="mt-4 pt-4 border-t border-gray-700 text-gray-300" style="display: none;">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-lg font-semibold mb-2 flex items-center gap-2 text-green-400"><i class="fas fa-info-circle"></i> Szekvencia Információk</h3>
+                        <div id="sequenceInfo" class="bg-gray-800 p-4 rounded-lg text-sm"></div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold mb-2 flex items-center gap-2 text-blue-400"><i class="fas fa-robot"></i> AI Elemzés</h3>
+                        <div id="aiAnalysis" class="bg-gray-800 p-4 rounded-lg text-sm max-h-96 overflow-auto"></div>
+                    </div>
+                </div>
+                <div id="alphafoldSection" class="mt-4" style="display: none;">
+                    <h3 class="text-lg font-semibold mb-2 flex items-center gap-2 text-purple-400"><i class="fas fa-cube"></i> AlphaFold Predikciók</h3>
+                    <div id="alphafoldData" class="bg-gray-800 p-4 rounded-lg text-sm"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <script>
         // --- STATE & DOM ELEMENTS ---
@@ -377,6 +429,7 @@
         const proteinStructureBtn = document.getElementById('proteinStructureBtn');
         const customGCPModelBtn = document.getElementById('customGCPModelBtn');
         const simulationOptimizerBtn = document.getElementById('simulationOptimizerBtn');
+        const alphaGenomeBtn = document.getElementById('alphaGenomeBtn');
 
 
         // --- CORE FUNCTIONS ---
@@ -504,6 +557,13 @@
                     </button>`;
             }
 
+            if (lowerCaseAnswer.includes('genom') || lowerCaseAnswer.includes('szekvencia') || lowerCaseAnswer.includes('dns') || lowerCaseAnswer.includes('rns')) {
+                suggestedActionsHtml += `
+                    <button class="mb-2" onclick="showModal('alphaGenomeModal'); addMessage('ai', 'Készen állok a Genomikai Elemzésre. Add meg a genom szekvenciát.');">
+                        <i class="fas fa-dna text-purple-400"></i> AlphaGenome Elemzés
+                    </button>`;
+            }
+
 
             const content = `
                 <div class="ai-answer-card">
@@ -609,6 +669,7 @@
         proteinStructureBtn.addEventListener('click', () => showModal('proteinStructureModal'));
         customGCPModelBtn.addEventListener('click', () => showModal('customGCPModelModal'));
         simulationOptimizerBtn.addEventListener('click', () => showModal('simulationOptimizerModal'));
+        alphaGenomeBtn.addEventListener('click', () => showModal('alphaGenomeModal'));
 
         function showModalMessage(modalId, message, isError = true) {
             const container = document.getElementById(modalId).querySelector('.modal-message-container');
@@ -817,6 +878,90 @@
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = 'Optimalizálás';
+            }
+        });
+
+        // AlphaGenome form handling
+        document.getElementById('alphaGenomeForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const genomeSequence = document.getElementById('genomeSequence').value.trim();
+            const analysisType = document.getElementById('analysisType').value;
+            const organism = document.getElementById('organism').value;
+            const includePredictions = document.getElementById('includePredictions').checked;
+
+            if (genomeSequence.length < 10) {
+                showModalMessage('alphaGenomeModal', 'A genom szekvencia túl rövid! Minimum 10 karakter szükséges.', 'error');
+                return;
+            }
+
+            const button = document.getElementById('alphaGenomeButton');
+            const originalText = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Elemzés folyamatban...';
+            button.disabled = true;
+
+            try {
+                const response = await fetch('/api/deep_discovery/alphagenome', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        genome_sequence: genomeSequence,
+                        analysis_type: analysisType,
+                        organism: organism,
+                        include_predictions: includePredictions
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Szekvencia információk megjelenítése
+                    const sequenceInfo = data.sequence_info;
+                    document.getElementById('sequenceInfo').innerHTML = `
+                        <div class="space-y-2">
+                            <p><strong>Hossz:</strong> ${sequenceInfo.length} bázispár</p>
+                            <p><strong>GC tartalom:</strong> ${sequenceInfo.gc_content}%</p>
+                            <p><strong>Organizmus:</strong> ${sequenceInfo.organism}</p>
+                            <p><strong>Elemzés típusa:</strong> ${sequenceInfo.analysis_type}</p>
+                        </div>
+                    `;
+
+                    // AI elemzés megjelenítése
+                    document.getElementById('aiAnalysis').innerHTML = `
+                        <div class="space-y-2">
+                            <div class="whitespace-pre-wrap">${data.ai_analysis.content}</div>
+                            <p class="text-blue-400 text-xs mt-2">Modell: ${data.ai_analysis.model_used}</p>
+                        </div>
+                    `;
+
+                    // AlphaFold adatok megjelenítése, ha vannak
+                    if (data.alphafold_predictions) {
+                        const alphafoldData = data.alphafold_predictions;
+                        document.getElementById('alphafoldData').innerHTML = `
+                            <div class="space-y-2">
+                                <p><strong>Modell ID:</strong> ${alphafoldData.model_id || 'N/A'}</p>
+                                <p><strong>UniProt ID:</strong> ${alphafoldData.uniprot_id || 'N/A'}</p>
+                                <p><strong>Konfidencia (pLDDT):</strong> ${alphafoldData.plddt || 'N/A'}</p>
+                                ${alphafoldData.protein_url ? `<p><strong>Struktúra URL:</strong> <a href="${alphafoldData.protein_url}" target="_blank" class="text-blue-400 hover:underline">Letöltés</a></p>` : ''}
+                            </div>
+                        `;
+                        document.getElementById('alphafoldSection').style.display = 'block';
+                    } else {
+                        document.getElementById('alphafoldSection').style.display = 'none';
+                    }
+
+                    document.getElementById('alphaGenomeResult').style.display = 'block';
+                    showModalMessage('alphaGenomeModal', 'AlphaGenome elemzés sikeresen befejezve!', 'success');
+                } else {
+                    showModalMessage('alphaGenomeModal', data.detail || 'Hiba történt az AlphaGenome elemzés során!', 'error');
+                }
+            } catch (error) {
+                showModalMessage('alphaGenomeModal', 'Hálózati hiba történt!', 'error');
+            } finally {
+                button.innerHTML = originalText;
+                button.disabled = false;
             }
         });
 
