@@ -965,8 +965,21 @@
             }
         });
 
+        // Check authentication and redirect if needed
+        function checkAuth() {
+            // Itt ellenőriznéd a tényleges autentikációt
+            // Demo célokra most mindig átirányítunk a login oldalra
+            const isAuthenticated = localStorage.getItem('jadeAuthenticated') === 'true';
+            if (!isAuthenticated) {
+                window.location.href = '/login';
+                return false;
+            }
+            return true;
+        }
+
         // Focus input on load
         window.addEventListener('load', () => {
+            if (!checkAuth()) return;
             messageInput.focus();
             // Ha van mentett előzmény, töltsük be
             // fetch(`${API_BASE_URL}/api/deep_discovery/chat_history/${currentUserId}`)
