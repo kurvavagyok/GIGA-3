@@ -36,24 +36,59 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: radial-gradient(circle at 20% 50%, rgba(0, 255, 136, 0.1) 0%, transparent 60%),
-                        radial-gradient(circle at 80% 80%, rgba(0, 136, 255, 0.08) 0%, transparent 60%);
-            animation: floatGradient 15s ease-in-out infinite;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(0, 255, 136, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(0, 136, 255, 0.12) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(255, 20, 147, 0.08) 0%, transparent 50%);
+            animation: floatGradient 20s ease-in-out infinite;
             pointer-events: none;
-            filter: blur(40px);
+            filter: blur(60px);
+            z-index: 1;
+        }
+
+        .gradient-bg::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 60% 40%, rgba(0, 255, 136, 0.02) 0%, transparent 40%),
+                radial-gradient(circle at 20% 80%, rgba(0, 136, 255, 0.03) 0%, transparent 40%);
+            animation: floatGradient 25s ease-in-out infinite reverse;
+            pointer-events: none;
             z-index: 1;
         }
 
         @keyframes floatGradient {
-            0%, 100% { transform: rotate(0deg) translate(10%, -10%); }
-            50% { transform: rotate(180deg) translate(-10%, 10%); }
+            0%, 100% { 
+                transform: rotate(0deg) translate(10%, -10%) scale(1); 
+                opacity: 0.8;
+            }
+            33% { 
+                transform: rotate(120deg) translate(-5%, 15%) scale(1.1); 
+                opacity: 1;
+            }
+            66% { 
+                transform: rotate(240deg) translate(15%, -5%) scale(0.9); 
+                opacity: 0.9;
+            }
         }
 
         .neon-gradient-text {
-            background: linear-gradient(135deg, var(--color-green) 0%, var(--color-blue) 100%);
+            background: linear-gradient(135deg, var(--color-green) 0%, var(--color-blue) 50%, var(--color-pink) 100%);
+            background-size: 200% 200%;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            animation: gradientShift 8s ease-in-out infinite;
+            filter: drop-shadow(0 0 10px rgba(0, 255, 136, 0.3));
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
         }
 
         /* Kezdő képernyő stílusok */
@@ -116,28 +151,73 @@
         }
 
         .logo-glow {
-            animation: logoGlow 3s ease-in-out infinite;
+            animation: logoGlow 4s ease-in-out infinite;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .logo-glow::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, var(--color-green), var(--color-blue), var(--color-pink), var(--color-green));
+            background-size: 400% 400%;
+            border-radius: inherit;
+            z-index: -1;
+            animation: gradientBorder 6s ease-in-out infinite;
         }
 
         @keyframes logoGlow {
             0%, 100% { 
-                box-shadow: 0 0 20px rgba(0, 255, 136, 0.3), 0 0 40px rgba(0, 136, 255, 0.2);
-                transform: scale(1);
+                box-shadow: 
+                    0 0 20px rgba(0, 255, 136, 0.4), 
+                    0 0 40px rgba(0, 136, 255, 0.3),
+                    0 0 80px rgba(255, 20, 147, 0.2);
+                transform: scale(1) rotate(0deg);
             }
             50% { 
-                box-shadow: 0 0 30px rgba(0, 255, 136, 0.5), 0 0 60px rgba(0, 136, 255, 0.3);
-                transform: scale(1.05);
+                box-shadow: 
+                    0 0 30px rgba(0, 255, 136, 0.6), 
+                    0 0 60px rgba(0, 136, 255, 0.4),
+                    0 0 120px rgba(255, 20, 147, 0.3);
+                transform: scale(1.05) rotate(1deg);
             }
         }
 
+        @keyframes gradientBorder {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
         .login-box {
-            background: var(--color-surface);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--color-border);
-            border-radius: 20px;
-            padding: 2rem;
-            min-width: 350px;
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.1) 0%, 
+                rgba(255, 255, 255, 0.05) 100%);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 24px;
+            padding: 2.5rem;
+            min-width: 380px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .login-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            z-index: 1;
         }
 
         .signin-apple-button {
@@ -163,12 +243,30 @@
         }
 
         .sidebar {
-            background: var(--color-surface);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-right: 1px solid var(--color-border);
-            transition: transform 0.3s ease;
+            background: linear-gradient(180deg, 
+                rgba(10, 10, 10, 0.9) 0%, 
+                rgba(15, 15, 15, 0.8) 100%);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 100;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, 
+                rgba(0, 255, 136, 0.05) 0%, 
+                transparent 50%);
+            pointer-events: none;
+            z-index: 1;
         }
 
         .chat-container {
@@ -177,19 +275,59 @@
             scroll-behavior: smooth;
         }
 
-        .chat-container::-webkit-scrollbar { width: 6px; }
-        .chat-container::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); }
-        .chat-container::-webkit-scrollbar-thumb { background: linear-gradient(135deg, var(--color-green) 0%, var(--color-blue) 100%); border-radius: 3px; }
-
-        .message { animation: fadeInUp 0.4s ease-out; }
-
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
+        .chat-container::-webkit-scrollbar { width: 8px; }
+        .chat-container::-webkit-scrollbar-track { 
+            background: rgba(255, 255, 255, 0.03); 
+            border-radius: 4px;
+        }
+        .chat-container::-webkit-scrollbar-thumb { 
+            background: linear-gradient(135deg, var(--color-green) 0%, var(--color-blue) 50%, var(--color-pink) 100%); 
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+        .chat-container::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, var(--color-green) 0%, var(--color-blue) 100%);
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
         }
 
-        .user-message { background: rgba(0, 255, 136, 0.1); border: 1px solid rgba(0, 255, 136, 0.2); }
-        .ai-message { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .message { 
+            animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s ease;
+        }
+
+        .message:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.05);
+        }
+
+        @keyframes fadeInUp {
+            from { 
+                opacity: 0; 
+                transform: translateY(20px) scale(0.95); 
+                filter: blur(5px);
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0) scale(1); 
+                filter: blur(0);
+            }
+        }
+
+        .user-message { 
+            background: linear-gradient(135deg, 
+                rgba(0, 255, 136, 0.15) 0%, 
+                rgba(0, 255, 136, 0.08) 100%);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            box-shadow: 0 4px 20px rgba(0, 255, 136, 0.1);
+        }
+
+        .ai-message { 
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.08) 0%, 
+                rgba(255, 255, 255, 0.03) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
 
         .input-container {
             background: rgba(0, 0, 0, 0.5);
@@ -199,24 +337,62 @@
         }
 
         .input-field {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.08) 0%, 
+                rgba(255, 255, 255, 0.03) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             color: var(--color-text);
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
         }
 
         .input-field:focus {
             outline: none;
-            border-color: rgba(0, 255, 136, 0.5);
-            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(0, 255, 136, 0.6);
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.12) 0%, 
+                rgba(255, 255, 255, 0.06) 100%);
+            box-shadow: 
+                0 0 20px rgba(0, 255, 136, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
         }
 
         .send-button {
-            background: linear-gradient(135deg, var(--color-green) 0%, var(--color-blue) 100%);
-            transition: all 0.2s ease;
+            background: linear-gradient(135deg, var(--color-green) 0%, var(--color-blue) 50%, var(--color-pink) 100%);
+            background-size: 200% 200%;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
         }
-        .send-button:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(0, 255, 136, 0.3); }
-        .send-button:active { transform: scale(0.98); }
+
+        .send-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .send-button:hover { 
+            transform: scale(1.08) rotate(2deg); 
+            box-shadow: 0 8px 30px rgba(0, 255, 136, 0.4);
+            background-position: 100% 0;
+        }
+
+        .send-button:hover::before {
+            left: 100%;
+        }
+
+        .send-button:active { 
+            transform: scale(0.95) rotate(0deg); 
+            transition: all 0.1s ease;
+        }
 
         .typing-indicator { display: flex; gap: 4px; padding: 8px; }
         .typing-dot { width: 8px; height: 8px; background: linear-gradient(135deg, var(--color-green) 0%, var(--color-blue) 100%); border-radius: 50%; animation: typing 1.4s infinite ease-in-out; }
@@ -229,13 +405,30 @@
         }
 
         .model-badge {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(0, 255, 136, 0.2);
+            background: linear-gradient(135deg, 
+                rgba(0, 255, 136, 0.15) 0%, 
+                rgba(0, 136, 255, 0.10) 100%);
+            border: 1px solid rgba(0, 255, 136, 0.3);
             font-size: 10px;
-            padding: 4px 10px;
+            padding: 6px 12px;
             border-radius: 20px;
-            color: rgba(0, 255, 136, 0.9);
+            color: rgba(0, 255, 136, 1);
             font-weight: 600;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0, 255, 136, 0.2);
+            animation: badgePulse 3s ease-in-out infinite;
+        }
+
+        @keyframes badgePulse {
+            0%, 100% { 
+                box-shadow: 0 4px 15px rgba(0, 255, 136, 0.2);
+                transform: scale(1);
+            }
+            50% { 
+                box-shadow: 0 6px 20px rgba(0, 255, 136, 0.3);
+                transform: scale(1.02);
+            }
         }
 
         .loading-spinner {
@@ -385,11 +578,26 @@
             <div id="chatContainer" class="chat-container flex-1 p-4 lg:p-6">
                 <!-- Welcome Message -->
                 <div id="welcomeScreen" class="max-w-3xl mx-auto text-center py-20">
-                    <div class="mb-8">
-                        <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/75125ca6-b626-4035-b3d2-c7d2b10d3f55.png" alt="Jade AI Logo" class="w-24 h-24 mx-auto rounded-2xl" style="box-shadow: 0 0 20px rgba(0, 255, 136, 0.3), 0 0 40px rgba(0, 136, 255, 0.2);" />
+                    <div class="mb-8 relative">
+                        <div class="absolute inset-0 rounded-3xl bg-gradient-to-br from-green-400 to-blue-500 opacity-20 blur-xl animate-pulse"></div>
+                        <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/75125ca6-b626-4035-b3d2-c7d2b10d3f55.png" alt="Jade AI Logo" class="w-28 h-28 mx-auto rounded-3xl relative z-10 logo-glow" />
                     </div>
-                    <h2 class="text-3xl font-bold mb-4 neon-gradient-text">Üdvözöl a Jade</h2>
-                    <p class="text-gray-400 mb-8">Fejlett AI asszisztensed, a Deep Discovery erejével.</p>
+                    <h2 class="text-4xl font-bold mb-4 neon-gradient-text">Üdvözöl a Jade</h2>
+                    <p class="text-gray-400 mb-8 text-lg">Fejlett AI asszisztensed, a Deep Discovery erejével.</p>
+                    <div class="flex justify-center gap-4 text-sm text-gray-500">
+                        <div class="flex items-center gap-2">
+                            <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                            <span>Hibrid AI</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                            <span>Deep Discovery</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-2 h-2 bg-pink-400 rounded-full animate-pulse"></div>
+                            <span>Kutatás</span>
+                        </div>
+                    </div>
                 </div>
                 <div id="messagesContainer"></div>
             </div>
