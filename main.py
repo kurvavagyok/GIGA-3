@@ -225,7 +225,7 @@ async def deep_discovery_chat(req: ChatRequest):
     if not cerebras_client and not gemini_model:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Nincs elérhető chat modell (Cerebras Llama vagy Gemini)."
+            detail="Nincs elérhető chat modell (Cerebras Qwen 3/Llama 4 vagy Gemini)."
         )
 
     user_id = req.user_id
@@ -237,7 +237,7 @@ async def deep_discovery_chat(req: ChatRequest):
     # Rendszerüzenet (csak egyszer az elején)
     system_message = {
         "role": "system",
-        "content": "Te egy rendkívül intelligens és szakértő AI asszisztens vagy, aki magyarul válaszol. A neved Jade. Segítőkész, részletes és innovatív válaszokat adsz a legújabb tudományos és technológiai fejleményekről, különös tekintettel a biológia, kémia, anyagtudomány, orvostudomány és mesterséges intelligencia területére. Használd a tudásodat a legjobb válaszok megadásához."
+        "content": "Te egy rendkívül intelligens és szakértő AI asszisztens vagy, aki magyarul válaszol. A neved Jade. Hibrid AI képességekkel rendelkezel (Qwen 3, Llama 4, Gemini), és segítőkész, részletes és innovatív válaszokat adsz a legújabb tudományos és technológiai fejleményekről, különös tekintettel a biológia, kémia, anyagtudomány, orvostudomány és mesterséges intelligencia területére. Használd a tudásodat a legjobb válaszok megadásához."
     }
 
     # Építsük fel a teljes üzenetlistát
@@ -247,23 +247,46 @@ async def deep_discovery_chat(req: ChatRequest):
     model_used = ""
 
     try:
-        # Próbáljuk meg a Cerebras Llama 4-gyel először (ha elérhető)
+        # Intelligens modell választás: Qwen 3 > Llama 4 > Gemini (prioritási sorrend)
         if cerebras_client:
-            logger.info(f"Using Cerebras Llama 4 for user {user_id}")
-            # A Cerebras chat API-ja is streamel, de a FastAPI csak a teljes választ küldi el egyben itt.
-            stream = cerebras_client.chat.completions.create(
-                messages=messages_for_llm,
-                model="llama-4-scout-17b-16e-instruct", # Használjuk a megadott modellt
-                stream=True,
-                max_completion_tokens=2048,
-                temperature=0.2,
-                top_p=1
-            )
-            for chunk in stream:
-                if chunk.choices[0].delta.content:
-                    response_text += chunk.choices[0].delta.content
-            model_used = "Cerebras Llama 4"
-        elif gemini_model:
+            # Próbáljuk meg a Qwen 3-at először
+            try:
+                logger.info(f"Using Cerebras Qwen 3 for user {user_id}")
+                stream = cerebras_client.chat.completions.create(
+                    messages=messages_for_llm,
+                    model="qwen2.5-72b-instruct", # Qwen 3 modell
+                    stream=True,
+                    max_completion_tokens=2048,
+                    temperature=0.2,
+                    top_p=1
+                )
+                for chunk in stream:
+                    if chunk.choices[0].delta.content:
+                        response_text += chunk.choices[0].delta.content
+                model_used = "Cerebras Qwen 3"
+            except Exception as qwen_error:
+                logger.warning(f"Qwen 3 nem elérhető, visszaváltás Llama 4-re: {qwen_error}")
+                # Ha Qwen 3 nem működik, használjuk a Llama 4-et
+                try:
+                    logger.info(f"Using Cerebras Llama 4 for user {user_id}")
+                    stream = cerebras_client.chat.completions.create(
+                        messages=messages_for_llm,
+                        model="llama-4-scout-17b-16e-instruct",
+                        stream=True,
+                        max_completion_tokens=2048,
+                        temperature=0.2,
+                        top_p=1
+                    )
+                    for chunk in stream:
+                        if chunk.choices[0].delta.content:
+                            response_text += chunk.choices[0].delta.content
+                    model_used = "Cerebras Llama 4"
+                except Exception as llama_error:
+                    logger.warning(f"Llama 4 sem elérhető: {llama_error}")
+                    response_text = ""  # Jelezzük, hogy hibridként a Gemini-re váltunk
+        
+        # Ha a Cerebras modellek nem működnek, használjuk a Gemini-t
+        if not response_text and gemini_model:
             # Ha a Cerebras nem elérhető, használjuk a Gemini 2.5 Pro-t
             logger.info(f"Using Gemini 2.5 Pro for user {user_id}")
             # Gemini esetén a messages formátum átalakítása szükséges
@@ -535,19 +558,39 @@ async def simulation_optimizer(req: SimulationOptimizerRequest):
 
     try:
         if cerebras_client:
-            logger.info(f"Using Cerebras Llama 4 for simulation optimization: {req.simulation_type}")
-            stream = cerebras_client.chat.completions.create(
-                messages=[{"role": "user", "content": prompt}],
-                model="llama-4-scout-17b-16e-instruct",
-                stream=True,
-                max_completion_tokens=1024,
-                temperature=0.3,
-                top_p=1
-            )
-            for chunk in stream:
-                if chunk.choices[0].delta.content:
-                    response_text += chunk.choices[0].delta.content
-            model_used = "Cerebras Llama 4"
+            # Próbáljuk meg a Qwen 3-at először szimulációhoz
+            try:
+                logger.info(f"Using Cerebras Qwen 3 for simulation optimization: {req.simulation_type}")
+                stream = cerebras_client.chat.completions.create(
+                    messages=[{"role": "user", "content": prompt}],
+                    model="qwen2.5-72b-instruct",
+                    stream=True,
+                    max_completion_tokens=1024,
+                    temperature=0.3,
+                    top_p=1
+                )
+                for chunk in stream:
+                    if chunk.choices[0].delta.content:
+                        response_text += chunk.choices[0].delta.content
+                model_used = "Cerebras Qwen 3"
+            except Exception as qwen_error:
+                logger.warning(f"Qwen 3 nem elérhető szimulációhoz, Llama 4 használata: {qwen_error}")
+                try:
+                    logger.info(f"Using Cerebras Llama 4 for simulation optimization: {req.simulation_type}")
+                    stream = cerebras_client.chat.completions.create(
+                        messages=[{"role": "user", "content": prompt}],
+                        model="llama-4-scout-17b-16e-instruct",
+                        stream=True,
+                        max_completion_tokens=1024,
+                        temperature=0.3,
+                        top_p=1
+                    )
+                    for chunk in stream:
+                        if chunk.choices[0].delta.content:
+                            response_text += chunk.choices[0].delta.content
+                    model_used = "Cerebras Llama 4"
+                except Exception:
+                    response_text = ""  # Gemini-re váltás
         elif gemini_model:
             logger.info(f"Using Gemini 2.5 Pro for simulation optimization: {req.simulation_type}")
             response = await gemini_model.generate_content_async(
@@ -630,8 +673,28 @@ async def alphagenome_analysis(req: AlphaGenomeRequest):
         response_text = ""
         model_used = ""
 
-        # Először próbáljuk a Gemini-vel, amely jobb a tudományos szövegek elemzésében
-        if gemini_model:
+        # Hibrid megközelítés: Qwen 3 > Gemini > Llama 4 (tudományos elemzéshez)
+        if cerebras_client:
+            try:
+                logger.info(f"Using Cerebras Qwen 3 for AlphaGenome analysis: {req.analysis_type}")
+                stream = cerebras_client.chat.completions.create(
+                    messages=[{"role": "user", "content": analysis_prompt}],
+                    model="qwen2.5-72b-instruct",
+                    stream=True,
+                    max_completion_tokens=2048,
+                    temperature=0.1,
+                    top_p=0.9
+                )
+                for chunk in stream:
+                    if chunk.choices[0].delta.content:
+                        response_text += chunk.choices[0].delta.content
+                model_used = "Cerebras Qwen 3"
+            except Exception as qwen_error:
+                logger.warning(f"Qwen 3 nem elérhető genomikai elemzéshez: {qwen_error}")
+                response_text = ""
+        
+        # Ha Qwen 3 nem működik, próbáljuk a Gemini-t
+        if not response_text and gemini_model:
             logger.info(f"Using Gemini 2.5 Pro for AlphaGenome analysis: {req.analysis_type}")
             response = await gemini_model.generate_content_async(
                 analysis_prompt,
@@ -642,7 +705,7 @@ async def alphagenome_analysis(req: AlphaGenomeRequest):
             )
             response_text = response.text
             model_used = "Google Gemini 2.5 Pro"
-        elif cerebras_client:
+        elif not response_text and cerebras_client:
             logger.info(f"Using Cerebras Llama 4 for AlphaGenome analysis: {req.analysis_type}")
             stream = cerebras_client.chat.completions.create(
                 messages=[{"role": "user", "content": analysis_prompt}],
