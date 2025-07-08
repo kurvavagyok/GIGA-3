@@ -1,846 +1,1090 @@
+
 <!DOCTYPE html>
 <html lang="hu">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jade - DeeAI</title>
+    <title>Jade - Intelligens Kutatási Asszisztens</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
         :root {
-            --color-green: #00ff88;
-            --color-blue: #0088ff;
-            --color-pink: #ff1493;
-            --color-bg: #000000;
-            --color-surface: rgba(10, 10, 10, 0.8);
-            --color-glass: rgba(255, 255, 255, 0.03);
-            --color-border: rgba(255, 255, 255, 0.08);
-            --color-text: #ffffff;
-            --color-text-muted: #a0aec0;
+            --jade-primary: #10b981;
+            --jade-secondary: #3b82f6;
+            --jade-accent: #8b5cf6;
+            --jade-bg: #000000;
+            --jade-surface: rgba(15, 15, 15, 0.95);
+            --jade-glass: rgba(255, 255, 255, 0.05);
+            --jade-border: rgba(255, 255, 255, 0.1);
+            --jade-text: #ffffff;
+            --jade-muted: #9ca3af;
         }
 
+        * { box-sizing: border-box; }
+        
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: var(--color-bg);
-            color: var(--color-text);
+            font-family: 'Inter', sans-serif;
+            background: var(--jade-bg);
+            color: var(--jade-text);
+            margin: 0;
+            padding: 0;
             overflow: hidden;
         }
 
-        .gradient-bg::before {
-            content: '';
+        .gradient-bg {
+            background: radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+                        radial-gradient(circle at 40% 60%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
+            animation: gradientShift 20s ease-in-out infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { filter: hue-rotate(0deg); }
+            50% { filter: hue-rotate(30deg); }
+        }
+
+        .glass-effect {
+            background: var(--jade-surface);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--jade-border);
+        }
+
+        .chat-window {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--jade-border);
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            scroll-behavior: smooth;
+        }
+
+        .chat-messages::-webkit-scrollbar { width: 4px; }
+        .chat-messages::-webkit-scrollbar-track { background: transparent; }
+        .chat-messages::-webkit-scrollbar-thumb { 
+            background: linear-gradient(135deg, var(--jade-primary), var(--jade-secondary)); 
+            border-radius: 2px; 
+        }
+
+        .message {
+            margin-bottom: 1.5rem;
+            animation: messageSlideIn 0.3s ease-out;
+        }
+
+        @keyframes messageSlideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .ai-message {
+            display: flex;
+            justify-content: flex-start;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 1rem 1.25rem;
+            border-radius: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .user-content {
+            background: linear-gradient(135deg, var(--jade-primary), var(--jade-secondary));
+            color: white;
+            border-bottom-right-radius: 0.5rem;
+        }
+
+        .ai-content {
+            background: var(--jade-glass);
+            border: 1px solid var(--jade-border);
+            border-bottom-left-radius: 0.5rem;
+        }
+
+        .ai-avatar {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--jade-primary), var(--jade-secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 0.25rem;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .quick-action-btn {
+            padding: 0.5rem 1rem;
+            background: var(--jade-glass);
+            border: 1px solid var(--jade-border);
+            border-radius: 2rem;
+            color: var(--jade-text);
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .quick-action-btn:hover {
+            background: var(--jade-border);
+            transform: translateY(-1px);
+        }
+
+        .chat-input-area {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--jade-border);
+        }
+
+        .input-container {
+            display: flex;
+            align-items: flex-end;
+            gap: 1rem;
+            max-width: 50rem;
+            margin: 0 auto;
+        }
+
+        .message-input {
+            flex: 1;
+            background: var(--jade-glass);
+            border: 1px solid var(--jade-border);
+            border-radius: 1.5rem;
+            padding: 1rem 1.5rem;
+            color: var(--jade-text);
+            resize: none;
+            outline: none;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            line-height: 1.5;
+        }
+
+        .message-input:focus {
+            border-color: var(--jade-primary);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, var(--jade-primary), var(--jade-secondary));
+            border: none;
+            border-radius: 50%;
+            width: 3rem;
+            height: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .tools-floating-menu {
             position: fixed;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle at 20% 50%, rgba(0, 255, 136, 0.1) 0%, transparent 60%),
-                        radial-gradient(circle at 80% 80%, rgba(0, 136, 255, 0.08) 0%, transparent 60%);
-            animation: floatGradient 15s ease-in-out infinite;
-            pointer-events: none;
-            filter: blur(40px);
+            right: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            z-index: 100;
         }
 
-        @keyframes floatGradient {
-            0%, 100% { transform: rotate(0deg) translate(10%, -10%); }
-            50% { transform: rotate(180deg) translate(-10%, 10%); }
+        .tool-btn {
+            width: 3.5rem;
+            height: 3.5rem;
+            border-radius: 50%;
+            background: var(--jade-surface);
+            border: 1px solid var(--jade-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
         }
 
-        .neon-gradient-text {
-            background: linear-gradient(135deg, var(--color-green) 0%, var(--color-blue) 100%);
+        .tool-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.2);
+        }
+
+        .tool-btn i {
+            font-size: 1.25rem;
+            color: var(--jade-primary);
+        }
+
+        .welcome-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .welcome-logo {
+            width: 5rem;
+            height: 5rem;
+            border-radius: 1.5rem;
+            background: linear-gradient(135deg, var(--jade-primary), var(--jade-secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2rem;
+            box-shadow: 0 0 40px rgba(16, 185, 129, 0.3);
+        }
+
+        .welcome-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--jade-primary), var(--jade-secondary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
 
-        .sidebar {
-            background: var(--color-surface);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-right: 1px solid var(--color-border);
-            transition: transform 0.3s ease;
+        .welcome-subtitle {
+            font-size: 1.125rem;
+            color: var(--jade-muted);
+            margin-bottom: 2rem;
+            max-width: 32rem;
         }
 
-        .chat-container {
-            height: calc(100vh - 80px);
-            overflow-y: auto;
-            scroll-behavior: smooth;
+        .welcome-suggestions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+            gap: 1rem;
+            max-width: 60rem;
+            width: 100%;
         }
 
-        .chat-container::-webkit-scrollbar { width: 6px; }
-        .chat-container::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); }
-        .chat-container::-webkit-scrollbar-thumb { background: linear-gradient(135deg, var(--color-green) 0%, var(--color-blue) 100%); border-radius: 3px; }
-
-        .message { animation: fadeInUp 0.4s ease-out; }
-
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
+        .suggestion-card {
+            background: var(--jade-glass);
+            border: 1px solid var(--jade-border);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
         }
 
-        .user-message { background: rgba(0, 255, 136, 0.1); border: 1px solid rgba(0, 255, 136, 0.2); }
-        .ai-message { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); }
-
-        .input-container {
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-top: 1px solid var(--color-border);
+        .suggestion-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--jade-primary);
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.1);
         }
 
-        .input-field {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: var(--color-text);
-            transition: all 0.2s ease;
+        .suggestion-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 0.75rem;
+            background: linear-gradient(135deg, var(--jade-primary), var(--jade-secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
         }
 
-        .input-field:focus {
-            outline: none;
-            border-color: rgba(0, 255, 136, 0.5);
-            background: rgba(255, 255, 255, 0.08);
+        .suggestion-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--jade-text);
         }
 
-        .send-button {
-            background: linear-gradient(135deg, var(--color-green) 0%, var(--color-blue) 100%);
-            transition: all 0.2s ease;
+        .suggestion-description {
+            font-size: 0.875rem;
+            color: var(--jade-muted);
+            line-height: 1.5;
         }
-        .send-button:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(0, 255, 136, 0.3); }
-        .send-button:active { transform: scale(0.98); }
 
-        .typing-indicator { display: flex; gap: 4px; padding: 8px; }
-        .typing-dot { width: 8px; height: 8px; background: linear-gradient(135deg, var(--color-green) 0%, var(--color-blue) 100%); border-radius: 50%; animation: typing 1.4s infinite ease-in-out; }
+        .typing-indicator {
+            display: flex;
+            gap: 0.25rem;
+            padding: 1rem;
+        }
+
+        .typing-dot {
+            width: 0.5rem;
+            height: 0.5rem;
+            border-radius: 50%;
+            background: var(--jade-primary);
+            animation: typingDot 1.4s infinite ease-in-out;
+        }
+
         .typing-dot:nth-child(2) { animation-delay: 0.2s; }
         .typing-dot:nth-child(3) { animation-delay: 0.4s; }
 
-        @keyframes typing {
+        @keyframes typingDot {
             0%, 60%, 100% { transform: scale(0.8); opacity: 0.5; }
             30% { transform: scale(1); opacity: 1; }
         }
 
-        .neon-glow { box-shadow: 0 0 20px rgba(0, 255, 136, 0.3), 0 0 40px rgba(0, 136, 255, 0.2); }
-
-        .model-badge {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(0, 255, 136, 0.2);
-            font-size: 10px;
-            padding: 4px 10px;
-            border-radius: 20px;
-            color: rgba(0, 255, 136, 0.9);
-            font-weight: 600;
-        }
-
         .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             background: rgba(0, 0, 0, 0.8);
-            display: none; justify-content: center; align-items: center;
-            z-index: 2000; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            animation: fadeIn 0.3s ease-out;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
         }
 
         .modal-content {
-            background: #0A0E19;
-            border-radius: 16px; padding: 2rem; width: 90%; max-width: 500px;
-            max-height: 80vh; overflow-y: auto; border: 1px solid var(--color-border);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-            animation: slideInFromTop 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            background: var(--jade-surface);
+            border: 1px solid var(--jade-border);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            width: 90%;
+            max-width: 35rem;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
         }
 
         .modal-title {
-            background: linear-gradient(135deg, var(--color-green), var(--color-blue));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--jade-primary), var(--jade-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
-        .modal-close:hover { color: var(--color-pink); background: rgba(255, 255, 255, 0.1); }
-        .modal-input { background: #000; border: 1px solid var(--color-border); }
-        .modal-button { background: linear-gradient(135deg, var(--color-green), var(--color-blue)); }
-        .modal-button:hover { box-shadow: 0 0 20px rgba(0, 255, 136, 0.4); }
-
-        .ai-answer-card { background: rgba(255, 255, 255, 0.05); border: 1px solid var(--color-border); border-radius: 12px; padding: 1rem; }
-        .ai-answer-card h3 { color: var(--color-green); }
-        .related-actions-card { margin-top: 1rem; }
-        .related-actions-card button { 
-            display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; border-radius: 8px; 
-            transition: background 0.2s; width: 100%; text-align: left;
-            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
-            color: var(--color-text);
-            font-size: 0.875rem; /* text-sm */
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--jade-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.2s ease;
         }
-        .related-actions-card button:hover { background: rgba(255, 255, 255, 0.1); }
-        .related-actions-card i { color: var(--color-blue); }
 
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideInFromTop { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .modal-close:hover {
+            color: var(--jade-text);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--jade-text);
+        }
+
+        .form-input {
+            width: 100%;
+            background: var(--jade-glass);
+            border: 1px solid var(--jade-border);
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            color: var(--jade-text);
+            outline: none;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .form-input:focus {
+            border-color: var(--jade-primary);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 4rem;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, var(--jade-primary), var(--jade-secondary));
+            border: none;
+            border-radius: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result-section {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--jade-border);
+        }
+
+        .result-title {
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--jade-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .result-content {
+            background: var(--jade-glass);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
 
         @media (max-width: 768px) {
-            .sidebar { position: fixed; z-index: 50; transform: translateX(-100%); }
-            .sidebar.open { transform: translateX(0); }
+            .tools-floating-menu {
+                position: fixed;
+                bottom: 6rem;
+                right: 1rem;
+                flex-direction: row;
+                transform: none;
+                top: auto;
+            }
+
+            .tool-btn {
+                width: 3rem;
+                height: 3rem;
+            }
+
+            .message-content {
+                max-width: 85%;
+            }
+
+            .welcome-suggestions {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body class="gradient-bg">
-    <div class="flex h-screen">
-        <!-- Sidebar -->
-        <aside id="sidebar" class="sidebar w-64 lg:w-80 h-full flex flex-col">
-            <!-- Header -->
-            <div class="p-4 border-b border-gray-800">
-                <button id="newChatBtn" class="w-full bg-gradient-to-r from-green-500 to-blue-500 text-black font-semibold rounded-xl px-4 py-3 flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-green-500/20 transition-all duration-200">
-                    <i class="fas fa-plus"></i>
-                    <span>Új beszélgetés</span>
-                </button>
-            </div>
-
-            <!-- Deep Discovery Tools -->
-            <div class="p-4">
-                 <h3 class="text-xs uppercase tracking-wider text-gray-500 mb-3">Deep Discovery Eszközök</h3>
-                 <div class="space-y-2">
-                     <button id="researchTrendsBtn" class="w-full text-left text-sm text-gray-300 p-2 rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-3"><i class="fas fa-flask w-5 text-center text-green-400"></i> Kutatási Trendek</button>
-                     <button id="proteinStructureBtn" class="w-full text-left text-sm text-gray-300 p-2 rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-3"><i class="fas fa-dna w-5 text-center text-blue-400"></i> Fehérje Struktúra</button>
-                     <button id="customGCPModelBtn" class="w-full text-left text-sm text-gray-300 p-2 rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-3"><i class="fas fa-cloud w-5 text-center text-pink-400"></i> Egyedi GCP Modell</button>
-                     <button id="simulationOptimizerBtn" class="w-full text-left text-sm text-gray-300 p-2 rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-3"><i class="fas fa-microchip w-5 text-center text-yellow-400"></i> Szimuláció Optimalizáló</button>
-                 </div>
-            </div>
-             <div class="flex-1"></div>
-            <!-- Settings -->
-            <div class="p-4 border-t border-gray-800">
-                <button class="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-gray-800 transition-colors">
-                    <i class="fas fa-cog text-gray-400"></i>
-                    <span class="text-gray-300 text-sm font-medium">Beállítások</span>
-                </button>
-            </div>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="flex-1 flex flex-col">
-            <!-- Top Bar -->
-            <header class="h-16 flex items-center justify-between px-4 lg:px-6 border-b border-gray-800">
-                <button id="menuToggle" class="lg:hidden p-2 rounded-lg hover:bg-gray-800">
-                    <i class="fas fa-bars text-gray-400"></i>
-                </button>
-                <div class="flex items-center gap-3">
-                    <h1 class="text-xl font-semibold neon-gradient-text">Jade</h1>
-                    <span id="currentModelBadge" class="model-badge">Hibrid AI</span>
+    <div class="chat-window glass-effect">
+        <!-- Chat Header -->
+        <div class="chat-header">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-blue-500 flex items-center justify-center">
+                    <i class="fas fa-gem text-white text-sm"></i>
                 </div>
-                <div class="w-6"></div>
-            </header>
-
-            <!-- Chat Container -->
-            <div id="chatContainer" class="chat-container flex-1 p-4 lg:p-6">
-                <!-- Welcome Message -->
-                <div id="welcomeScreen" class="max-w-3xl mx-auto text-center py-20">
-                    <div class="mb-8">
-                        <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/75125ca6-b626-4035-b3d2-c7d2b10d3f55.png" alt="Jade AI Logo" class="w-24 h-24 mx-auto rounded-2xl neon-glow" />
-                    </div>
-                    <h2 class="text-3xl font-bold mb-4 neon-gradient-text">Üdvözöl a Jade</h2>
-                    <p class="text-gray-400 mb-8">Fejlett AI asszisztensed, a Deep Discovery erejével.</p>
-                </div>
-                <div id="messagesContainer"></div>
+                <h1 class="text-xl font-bold">Jade</h1>
+                <span id="modelBadge" class="px-2 py-1 text-xs bg-white/10 rounded-full">Hibrid AI</span>
             </div>
+            <button id="newChatBtn" class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors text-sm">
+                <i class="fas fa-plus mr-2"></i>Új chat
+            </button>
+        </div>
 
-            <!-- Input Container -->
-            <div class="input-container px-4 lg:px-6 py-4">
-                <div class="max-w-3xl mx-auto">
-                    <div class="flex items-end gap-3">
-                        <div class="flex-1">
-                            <textarea id="messageInput" class="input-field w-full px-4 py-3 rounded-xl resize-none" placeholder="Írj egy üzenetet..." rows="1" style="max-height: 120px;"></textarea>
+        <!-- Chat Messages -->
+        <div class="chat-messages" id="chatMessages">
+            <!-- Welcome Screen -->
+            <div id="welcomeScreen" class="welcome-container">
+                <div class="welcome-logo">
+                    <i class="fas fa-gem text-white text-2xl"></i>
+                </div>
+                <h1 class="welcome-title">Üdvözöl a Jade</h1>
+                <p class="welcome-subtitle">
+                    Fejlett AI kutatási asszisztensed. Kérdezz bármit, vagy válassz az alábbi lehetőségek közül.
+                </p>
+                <div class="welcome-suggestions">
+                    <div class="suggestion-card" onclick="startChat('Mi a legújabb a kvantumszámítástechnikában?')">
+                        <div class="suggestion-icon">
+                            <i class="fas fa-atom text-white"></i>
                         </div>
-                        <button id="sendButton" class="send-button p-3 rounded-xl">
-                            <i class="fas fa-paper-plane text-black"></i>
-                        </button>
+                        <div class="suggestion-title">Kutatási Trendek</div>
+                        <div class="suggestion-description">Fedezd fel a legfrissebb tudományos áttöréseket</div>
                     </div>
-                    <div class="mt-3 text-xs text-gray-500 text-center">
-                        A Jade tévedhet. Fontos információkat ellenőrizz.
+                    <div class="suggestion-card" onclick="openTool('protein')">
+                        <div class="suggestion-icon">
+                            <i class="fas fa-dna text-white"></i>
+                        </div>
+                        <div class="suggestion-title">Fehérje Elemzés</div>
+                        <div class="suggestion-description">AlphaFold struktúrák és előrejelzések</div>
+                    </div>
+                    <div class="suggestion-card" onclick="startChat('Hogyan optimalizálhatok molekuláris szimulációkat?')">
+                        <div class="suggestion-icon">
+                            <i class="fas fa-flask text-white"></i>
+                        </div>
+                        <div class="suggestion-title">Szimuláció Segítség</div>
+                        <div class="suggestion-description">Optimalizálj tudományos számításokat</div>
+                    </div>
+                    <div class="suggestion-card" onclick="openTool('gcp')">
+                        <div class="suggestion-icon">
+                            <i class="fas fa-cloud text-white"></i>
+                        </div>
+                        <div class="suggestion-title">Egyedi Modellek</div>
+                        <div class="suggestion-description">Saját AI modellek futtatása</div>
                     </div>
                 </div>
             </div>
-        </main>
+        </div>
+
+        <!-- Chat Input -->
+        <div class="chat-input-area">
+            <div class="input-container">
+                <textarea 
+                    id="messageInput" 
+                    class="message-input" 
+                    placeholder="Írj üzenetet a Jade-nek..."
+                    rows="1"
+                    maxlength="2000"
+                ></textarea>
+                <button id="sendBtn" class="send-btn">
+                    <i class="fas fa-paper-plane text-white"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Tools Menu -->
+    <div class="tools-floating-menu">
+        <div class="tool-btn" onclick="openTool('research')" title="Kutatási Trendek">
+            <i class="fas fa-search"></i>
+        </div>
+        <div class="tool-btn" onclick="openTool('protein')" title="Fehérje Struktúra">
+            <i class="fas fa-dna"></i>
+        </div>
+        <div class="tool-btn" onclick="openTool('simulation')" title="Szimuláció Optimalizáló">
+            <i class="fas fa-cogs"></i>
+        </div>
+        <div class="tool-btn" onclick="openTool('gcp')" title="GCP Modellek">
+            <i class="fas fa-cloud"></i>
+        </div>
     </div>
 
     <!-- Modals -->
-    <!-- Research Trends Modal -->
-    <div class="modal-overlay" id="researchTrendsModal">
+    <div class="modal-overlay" id="researchModal">
         <div class="modal-content">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold modal-title">Kutatási Trendek Elemzése</h2>
-                <button class="modal-close p-2 rounded-full" data-modal-id="researchTrendsModal"><i class="fas fa-times"></i></button>
+            <div class="modal-header">
+                <h2 class="modal-title">Kutatási Trendek</h2>
+                <button class="modal-close" onclick="closeModal('researchModal')">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-            <div class="modal-message-container"></div>
-            <form id="researchTrendsForm" class="flex flex-col gap-4">
-                <textarea class="modal-input rounded-lg p-3" id="researchQuery" placeholder="Milyen tudományos/innovációs trendeket vizsgálnál?" rows="3" required></textarea>
-                <input type="number" class="modal-input rounded-lg p-3" id="numResults" placeholder="Találatok száma (1-10)" value="5" min="1" max="10">
-                <input type="number" class="modal-input rounded-lg p-3" id="summaryLength" placeholder="Összefoglaló hossza (szóban, 50-500)" value="200" min="50" max="500">
-                <button type="submit" class="modal-button font-bold py-3 rounded-lg" id="researchTrendsSubmitBtn">Elemzés Indítása</button>
+            <form id="researchForm">
+                <div class="form-group">
+                    <label class="form-label">Kutatási kérdés</label>
+                    <textarea class="form-input form-textarea" id="researchQuery" placeholder="Pl. legújabb fejlemények a gépi tanulásban"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Találatok száma</label>
+                    <input type="number" class="form-input" id="researchCount" value="5" min="1" max="10">
+                </div>
+                <button type="submit" class="submit-btn" id="researchSubmit">
+                    <i class="fas fa-search mr-2"></i>Keresés
+                </button>
             </form>
-            <div id="researchResult" class="mt-4 pt-4 border-t border-gray-700 text-gray-300" style="display: none;">
-                <h3 class="text-lg font-semibold mb-2 flex items-center gap-2 text-green-400"><i class="fas fa-chart-line"></i> Összefoglaló</h3>
-                <p id="researchSummary" class="mb-4"></p>
-                <h4 class="text-md font-semibold my-2 text-blue-400">Források</h4>
-                <div id="researchSources" class="space-y-2"></div>
+            <div id="researchResults" class="result-section" style="display: none;">
+                <div class="result-title">
+                    <i class="fas fa-chart-line"></i>Eredmények
+                </div>
+                <div id="researchContent" class="result-content"></div>
             </div>
         </div>
     </div>
 
-    <!-- Protein Structure Modal -->
-    <div class="modal-overlay" id="proteinStructureModal">
+    <div class="modal-overlay" id="proteinModal">
         <div class="modal-content">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold modal-title">Fehérje Struktúra Keresése</h2>
-                <button class="modal-close p-2 rounded-full" data-modal-id="proteinStructureModal"><i class="fas fa-times"></i></button>
+            <div class="modal-header">
+                <h2 class="modal-title">Fehérje Keresés</h2>
+                <button class="modal-close" onclick="closeModal('proteinModal')">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-            <div class="modal-message-container"></div>
-            <form id="proteinStructureForm" class="flex flex-col gap-4">
-                <input type="text" class="modal-input rounded-lg p-3" id="proteinId" placeholder="Fehérje azonosító (pl. UniProt ID: P0DTC2)" required>
-                <button type="submit" class="modal-button font-bold py-3 rounded-lg" id="proteinStructureSubmitBtn">Keresés</button>
+            <form id="proteinForm">
+                <div class="form-group">
+                    <label class="form-label">Fehérje azonosító</label>
+                    <input type="text" class="form-input" id="proteinId" placeholder="Pl. P0DTC2">
+                </div>
+                <button type="submit" class="submit-btn" id="proteinSubmit">
+                    <i class="fas fa-dna mr-2"></i>Keresés
+                </button>
             </form>
-            <div id="proteinResult" class="mt-4 pt-4 border-t border-gray-700 text-gray-300" style="display: none;">
-                <h3 class="text-lg font-semibold mb-2 flex items-center gap-2 text-green-400"><i class="fas fa-microscope"></i> Struktúra Részletek</h3>
-                <p><strong>UniProt ID:</strong> <span id="resultUniProtId"></span></p>
-                <p><strong>Modell Konfidencia (pLDDT):</strong> <span id="resultPlddt"></span></p>
-                <p class="mt-2">
-                    <a id="resultProteinUrl" href="#" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline flex items-center gap-2">
-                        <i class="fas fa-external-link-alt"></i> Struktúra letöltése (CIF/PDB)
-                    </a>
-                </p>
-                <p class="mt-1">
-                    <a id="resultPaeUrl" href="#" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline flex items-center gap-2">
-                        <i class="fas fa-chart-area"></i> PAE Diagram
-                    </a>
-                </p>
+            <div id="proteinResults" class="result-section" style="display: none;">
+                <div class="result-title">
+                    <i class="fas fa-microscope"></i>Struktúra
+                </div>
+                <div id="proteinContent" class="result-content"></div>
             </div>
         </div>
     </div>
 
-    <!-- Custom GCP Model Modal -->
-    <div class="modal-overlay" id="customGCPModelModal">
+    <div class="modal-overlay" id="simulationModal">
         <div class="modal-content">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold modal-title">Egyedi GCP Modell Hívása</h2>
-                <button class="modal-close p-2 rounded-full" data-modal-id="customGCPModelModal"><i class="fas fa-times"></i></button>
+            <div class="modal-header">
+                <h2 class="modal-title">Szimuláció Optimalizáló</h2>
+                <button class="modal-close" onclick="closeModal('simulationModal')">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-            <div class="modal-message-container"></div>
-            <form id="customGCPModelForm" class="flex flex-col gap-4">
-                <input type="text" class="modal-input rounded-lg p-3" id="gcpEndpointId" placeholder="GCP Endpoint ID" required>
-                <textarea class="modal-input rounded-lg p-3" id="gcpInputData" placeholder="Bemeneti JSON adat (pl. {'smiles': 'CCO'})" rows="5" required></textarea>
-                <button type="submit" class="modal-button font-bold py-3 rounded-lg" id="customGCPModelSubmitBtn">Hívás</button>
+            <form id="simulationForm">
+                <div class="form-group">
+                    <label class="form-label">Szimuláció típusa</label>
+                    <input type="text" class="form-input" id="simulationType" placeholder="Pl. molecular_dynamics">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Paraméterek (JSON)</label>
+                    <textarea class="form-input form-textarea" id="simulationParams" placeholder='{"temperature": 300, "steps": 10000}'></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Optimalizálási cél</label>
+                    <input type="text" class="form-input" id="simulationGoal" placeholder="Pl. minimize_energy">
+                </div>
+                <button type="submit" class="submit-btn" id="simulationSubmit">
+                    <i class="fas fa-cogs mr-2"></i>Optimalizálás
+                </button>
             </form>
-            <div id="gcpResult" class="mt-4 pt-4 border-t border-gray-700 text-gray-300" style="display: none;">
-                <h3 class="text-lg font-semibold mb-2 flex items-center gap-2 text-green-400"><i class="fas fa-cloud-upload-alt"></i> Modell Válasz</h3>
-                <pre id="gcpResponseData" class="bg-gray-900 p-3 rounded-lg text-xs overflow-x-auto"></pre>
+            <div id="simulationResults" class="result-section" style="display: none;">
+                <div class="result-title">
+                    <i class="fas fa-chart-bar"></i>Optimalizált kimenet
+                </div>
+                <div id="simulationContent" class="result-content"></div>
             </div>
         </div>
     </div>
 
-    <!-- Simulation Optimizer Modal -->
-    <div class="modal-overlay" id="simulationOptimizerModal">
+    <div class="modal-overlay" id="gcpModal">
         <div class="modal-content">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold modal-title">Szimuláció Optimalizáló</h2>
-                <button class="modal-close p-2 rounded-full" data-modal-id="simulationOptimizerModal"><i class="fas fa-times"></i></button>
+            <div class="modal-header">
+                <h2 class="modal-title">GCP Modell</h2>
+                <button class="modal-close" onclick="closeModal('gcpModal')">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-            <div class="modal-message-container"></div>
-            <form id="simulationOptimizerForm" class="flex flex-col gap-4">
-                <input type="text" class="modal-input rounded-lg p-3" id="simulationType" placeholder="Szimuláció típusa (pl. molecular_dynamics)" required>
-                <textarea class="modal-input rounded-lg p-3" id="simulationInputParams" placeholder="Bemeneti paraméterek JSON formátumban" rows="3" required></textarea>
-                <input type="text" class="modal-input rounded-lg p-3" id="optimizationGoal" placeholder="Optimalizálási cél (pl. minimize_energy)" required>
-                <button type="submit" class="modal-button font-bold py-3 rounded-lg" id="simulationOptimizerSubmitBtn">Optimalizálás</button>
+            <form id="gcpForm">
+                <div class="form-group">
+                    <label class="form-label">Endpoint ID</label>
+                    <input type="text" class="form-input" id="gcpEndpoint" placeholder="GCP endpoint azonosító">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Bemeneti adatok (JSON)</label>
+                    <textarea class="form-input form-textarea" id="gcpData" placeholder='{"input": "value"}'></textarea>
+                </div>
+                <button type="submit" class="submit-btn" id="gcpSubmit">
+                    <i class="fas fa-cloud mr-2"></i>Futtatás
+                </button>
             </form>
-            <div id="simulationResult" class="mt-4 pt-4 border-t border-gray-700 text-gray-300" style="display: none;">
-                <h3 class="text-lg font-semibold mb-2 flex items-center gap-2 text-green-400"><i class="fas fa-cogs"></i> Optimalizált Kimenet</h3>
-                <pre id="simulationOptimizedOutput" class="bg-gray-900 p-3 rounded-lg text-xs overflow-x-auto"></pre>
-                <p class="text-xs text-gray-500 mt-2">Modell használva: <span id="simulationModelUsed"></span></p>
+            <div id="gcpResults" class="result-section" style="display: none;">
+                <div class="result-title">
+                    <i class="fas fa-server"></i>Modell válasz
+                </div>
+                <div id="gcpContent" class="result-content"></div>
             </div>
         </div>
     </div>
-
 
     <script>
-        // --- STATE & DOM ELEMENTS ---
+        // --- Globális változók ---
         let isTyping = false;
-        let currentUserId = localStorage.getItem('jadeUserId') || `user_${Math.random().toString(36).substring(2, 15)}`;
-        localStorage.setItem('jadeUserId', currentUserId); // Mentjük a felhasználó ID-t
+        const userId = localStorage.getItem('jadeUserId') || `user_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+        localStorage.setItem('jadeUserId', userId);
 
-        const API_BASE_URL = window.location.origin; // A Repliten ez a Repl URL-je lesz
+        const API_BASE = window.location.origin;
+        const elements = {
+            chatMessages: document.getElementById('chatMessages'),
+            messageInput: document.getElementById('messageInput'),
+            sendBtn: document.getElementById('sendBtn'),
+            welcomeScreen: document.getElementById('welcomeScreen'),
+            modelBadge: document.getElementById('modelBadge'),
+            newChatBtn: document.getElementById('newChatBtn')
+        };
 
-        const chatContainer = document.getElementById('chatContainer');
-        const messagesContainer = document.getElementById('messagesContainer');
-        const messageInput = document.getElementById('messageInput');
-        const sendButton = document.getElementById('sendButton');
-        const welcomeScreen = document.getElementById('welcomeScreen');
-        const sidebar = document.getElementById('sidebar');
-        const menuToggle = document.getElementById('menuToggle');
-        const newChatBtn = document.getElementById('newChatBtn');
-        const currentModelBadge = document.getElementById('currentModelBadge');
+        // --- Főbb funkciók ---
+        async function sendMessage(message = null) {
+            const text = message || elements.messageInput.value.trim();
+            if (!text || isTyping) return;
 
-        // Deep Discovery Tool Buttons
-        const researchTrendsBtn = document.getElementById('researchTrendsBtn');
-        const proteinStructureBtn = document.getElementById('proteinStructureBtn');
-        const customGCPModelBtn = document.getElementById('customGCPModelBtn');
-        const simulationOptimizerBtn = document.getElementById('simulationOptimizerBtn');
-
-
-        // --- CORE FUNCTIONS ---
-
-        /**
-         * Sends a message from the user input, triggers AI response.
-         */
-        async function sendMessage() {
-            const message = messageInput.value.trim();
-            if (!message || isTyping) return;
-
-            if (messagesContainer.children.length === 0) {
-                welcomeScreen.style.display = 'none';
+            hideWelcome();
+            addUserMessage(text);
+            
+            if (!message) {
+                elements.messageInput.value = '';
+                elements.messageInput.style.height = 'auto';
             }
 
-            addMessage('user', message);
-            messageInput.value = '';
-            messageInput.style.height = 'auto';
-
-            showTypingIndicator();
+            showTyping();
 
             try {
-                // Beszélgetési előzmények lekérése a backendről
-                const historyRes = await fetch(`${API_BASE_URL}/api/deep_discovery/chat_history/${currentUserId}`);
-                const historyData = await historyRes.json();
-                const currentHistory = historyData.history || [];
-
-                const payload = {
-                    message: message,
-                    user_id: currentUserId,
-                    history: currentHistory.map(msg => ({ role: msg.role, content: msg.content })) // Csak a role és content
-                };
-
-                const response = await fetch(`${API_BASE_URL}/api/deep_discovery/chat`, {
+                const response = await fetch(`${API_BASE}/api/deep_discovery/chat`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({ message: text, user_id: userId })
                 });
 
                 if (!response.ok) {
-                    const errorBody = await response.json();
-                    throw new Error(errorBody.detail || response.statusText);
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Hiba történt');
                 }
 
-                const result = await response.json();
-                addAiChatResponse(result.response, result.model_used);
+                const data = await response.json();
+                hideTyping();
+                addAiMessage(data.response, data.model_used);
+                elements.modelBadge.textContent = data.model_used;
 
             } catch (error) {
-                console.error("Chat Error:", error);
-                addMessage('ai', `<div class="text-red-400">Hoppá, hiba történt a válasszal: ${error.message}. Kérjük, próbálja újra később.</div>`);
-            } finally {
-                hideTypingIndicator();
+                hideTyping();
+                addAiMessage(`Hiba: ${error.message}`, 'Hiba');
             }
         }
 
-        /**
-         * Adds a message to the chat UI.
-         * @param {'user' | 'ai'} sender - The sender of the message.
-         * @param {string} content - The HTML content of the message.
-         */
-        function addMessage(sender, content) {
+        function addUserMessage(text) {
             const messageDiv = document.createElement('div');
-            messageDiv.className = 'message mb-6';
-
-            const isUser = sender === 'user';
-
+            messageDiv.className = 'message user-message';
             messageDiv.innerHTML = `
-                <div class="max-w-3xl mx-auto">
-                    <div class="flex ${isUser ? 'justify-end' : 'justify-start'} gap-3">
-                        ${!isUser ? `
-                        <div class="flex-shrink-0">
-                            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
-                                <i class="fas fa-robot text-black"></i>
-                            </div>
-                        </div>` : ''}
-                        <div class="${isUser ? 'user-message' : 'ai-message'} max-w-[80%] px-4 py-3 rounded-2xl">
-                            <div class="text-sm ${isUser ? 'text-white' : 'text-gray-200'}">${content}</div>
-                        </div>
-                    </div>
-                </div>`;
-
-            messagesContainer.appendChild(messageDiv);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-
-        /**
-         * Adds a structured AI chat response to the chat, including model used and suggested actions.
-         * @param {string} answer - The AI's answer.
-         * @param {string} modelUsed - The AI model that generated the response.
-         */
-        function addAiChatResponse(answer, modelUsed) {
-            currentModelBadge.textContent = modelUsed; // Frissítjük a badge-et
-
-            // Itt a "Deep Discovery" logika: a Gemini javasolhat további műveleteket
-            // Ez a logika a backendben, a Gemini promptban lenne a legcélszerűbb,
-            // hogy a Gemini maga dönti el, releváns-e egy speciális eszköz.
-            // Például, ha a Gemini válaszában kulcsszavak vannak, vagy egy bizonyos formátum.
-
-            // DEMÓ CÉLJÁRA: Kézzel javasolunk műveleteket, vagy egy egyszerű kulcsszó alapú felismerést.
-            let suggestedActionsHtml = '';
-            const lowerCaseAnswer = answer.toLowerCase();
-
-            if (lowerCaseAnswer.includes('fehérje') || lowerCaseAnswer.includes('struktúra') || lowerCaseAnswer.includes('biológia')) {
-                suggestedActionsHtml += `
-                    <button class="mb-2" onclick="showModal('proteinStructureModal'); addMessage('ai', 'Rendben, indítsuk el a Fehérje Struktúra Keresőt. Melyik fehérje ID-t szeretnéd lekérdezni?');">
-                        <i class="fas fa-dna text-blue-400"></i> Fehérje Struktúra Keresése
-                    </button>`;
-            }
-            if (lowerCaseAnswer.includes('anyag') || lowerCaseAnswer.includes('kémia') || lowerCaseAnswer.includes('molekula')) {
-                suggestedActionsHtml += `
-                    <button class="mb-2" onclick="showModal('customGCPModelModal'); addMessage('ai', 'Értem, indítsuk el az Egyedi GCP Modellt. Kérlek, add meg a végpont ID-t és a bemeneti adatokat.');">
-                        <i class="fas fa-cloud text-pink-400"></i> Egyedi GCP Modell Hívása
-                    </button>`;
-            }
-            if (lowerCaseAnswer.includes('szimuláció') || lowerCaseAnswer.includes('optimalizálás') || lowerCaseAnswer.includes('tervezés')) {
-                suggestedActionsHtml += `
-                    <button class="mb-2" onclick="showModal('simulationOptimizerModal'); addMessage('ai', 'Készen állok a Szimuláció Optimalizálásra. Milyen típusú szimulációról van szó?');">
-                        <i class="fas fa-microchip text-yellow-400"></i> Szimuláció Optimalizáló
-                    </button>`;
-            }
-            if (lowerCaseAnswer.includes('kutatás') || lowerCaseAnswer.includes('trend') || lowerCaseAnswer.includes('felfedezés')) {
-                suggestedActionsHtml += `
-                    <button class="mb-2" onclick="showModal('researchTrendsModal'); addMessage('ai', 'Indítsuk el a Kutatási Trendek Elemzőt. Milyen témában szeretnél kutatni?');">
-                        <i class="fas fa-flask text-green-400"></i> Kutatási Trendek Elemzése
-                    </button>`;
-            }
-
-
-            const content = `
-                <div class="ai-answer-card">
-                    <h3 class="text-lg font-semibold mb-2 flex items-center gap-2"><i class="fas fa-sparkles"></i> Válasz</h3>
-                    <p class="text-gray-300">${answer.replace(/\n/g, '<br>')}</p>
+                <div class="message-content user-content">
+                    ${escapeHtml(text)}
                 </div>
-                ${suggestedActionsHtml ? `
-                <div class="related-actions-card space-y-2">
-                    <h4 class="text-md font-semibold my-2 text-blue-400">Javasolt Deep Discovery Műveletek</h4>
-                    ${suggestedActionsHtml}
-                </div>` : ''}
             `;
-            addMessage('ai', content);
+            elements.chatMessages.appendChild(messageDiv);
+            scrollToBottom();
         }
 
+        function addAiMessage(text, model) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ai-message';
+            
+            // Intelligens gyorsműveletek generálása
+            const quickActions = generateQuickActions(text);
+            
+            messageDiv.innerHTML = `
+                <div class="ai-avatar">
+                    <i class="fas fa-gem text-white"></i>
+                </div>
+                <div class="message-content ai-content">
+                    ${formatAiResponse(text)}
+                    ${quickActions ? `<div class="quick-actions">${quickActions}</div>` : ''}
+                </div>
+            `;
+            elements.chatMessages.appendChild(messageDiv);
+            scrollToBottom();
+        }
 
-        /**
-         * Shows the typing indicator in the chat.
-         */
-        function showTypingIndicator() {
+        function generateQuickActions(text) {
+            const actions = [];
+            const lowerText = text.toLowerCase();
+
+            if (lowerText.includes('fehérje') || lowerText.includes('protein')) {
+                actions.push(`<button class="quick-action-btn" onclick="openTool('protein')"><i class="fas fa-dna"></i>Fehérje keresés</button>`);
+            }
+            if (lowerText.includes('kutatás') || lowerText.includes('trend')) {
+                actions.push(`<button class="quick-action-btn" onclick="openTool('research')"><i class="fas fa-search"></i>Kutatási trendek</button>`);
+            }
+            if (lowerText.includes('szimuláció') || lowerText.includes('optimalizálás')) {
+                actions.push(`<button class="quick-action-btn" onclick="openTool('simulation')"><i class="fas fa-cogs"></i>Szimuláció</button>`);
+            }
+            if (lowerText.includes('modell') || lowerText.includes('gcp')) {
+                actions.push(`<button class="quick-action-btn" onclick="openTool('gcp')"><i class="fas fa-cloud"></i>GCP modell</button>`);
+            }
+
+            return actions.join('');
+        }
+
+        function showTyping() {
             isTyping = true;
             const typingDiv = document.createElement('div');
             typingDiv.id = 'typingIndicator';
-            typingDiv.className = 'message mb-6';
+            typingDiv.className = 'message ai-message';
             typingDiv.innerHTML = `
-                <div class="max-w-3xl mx-auto">
-                    <div class="flex justify-start gap-3">
-                        <div class="flex-shrink-0">
-                            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
-                                <i class="fas fa-robot text-black"></i>
-                            </div>
-                        </div>
-                        <div class="ai-message px-4 py-3 rounded-2xl">
-                            <div class="typing-indicator">
-                                <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
-                            </div>
-                        </div>
+                <div class="ai-avatar">
+                    <i class="fas fa-gem text-white"></i>
+                </div>
+                <div class="message-content ai-content">
+                    <div class="typing-indicator">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
                     </div>
-                </div>`;
-            messagesContainer.appendChild(typingDiv);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
+                </div>
+            `;
+            elements.chatMessages.appendChild(typingDiv);
+            scrollToBottom();
         }
 
-        /**
-         * Hides the typing indicator.
-         */
-        function hideTypingIndicator() {
+        function hideTyping() {
             isTyping = false;
-            const indicator = document.getElementById('typingIndicator');
-            if (indicator) indicator.remove();
+            const typing = document.getElementById('typingIndicator');
+            if (typing) typing.remove();
         }
 
-        // --- UI & EVENT LISTENERS ---
+        function hideWelcome() {
+            elements.welcomeScreen.style.display = 'none';
+        }
 
-        // Auto-resize textarea
-        messageInput.addEventListener('input', function() {
+        function scrollToBottom() {
+            elements.chatMessages.scrollTop = elements.chatMessages.scrollHeight;
+        }
+
+        function formatAiResponse(text) {
+            return text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // --- Eszközök és modálok ---
+        function openTool(tool) {
+            const modals = {
+                'research': 'researchModal',
+                'protein': 'proteinModal',
+                'simulation': 'simulationModal',
+                'gcp': 'gcpModal'
+            };
+            
+            if (modals[tool]) {
+                document.getElementById(modals[tool]).style.display = 'flex';
+            }
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+            // Reset eredmények
+            const results = document.getElementById(modalId.replace('Modal', 'Results'));
+            if (results) results.style.display = 'none';
+        }
+
+        function startChat(message) {
+            sendMessage(message);
+        }
+
+        // --- Event listeners ---
+        elements.messageInput.addEventListener('input', function() {
             this.style.height = 'auto';
             this.style.height = Math.min(this.scrollHeight, 120) + 'px';
         });
 
-        // Handle enter key
-        messageInput.addEventListener('keydown', (e) => {
+        elements.messageInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 sendMessage();
             }
         });
 
-        // Send button click
-        sendButton.addEventListener('click', sendMessage);
+        elements.sendBtn.addEventListener('click', () => sendMessage());
 
-        // New chat button
-        newChatBtn.addEventListener('click', async () => {
-            await fetch(`${API_BASE_URL}/api/deep_discovery/clear_chat_history/${currentUserId}`, { method: 'POST' });
-            messagesContainer.innerHTML = '';
-            welcomeScreen.style.display = 'block';
-            messageInput.focus();
-            currentModelBadge.textContent = 'Hibrid AI';
-        });
-
-        // Toggle sidebar on mobile
-        menuToggle.addEventListener('click', () => sidebar.classList.toggle('open'));
-        document.addEventListener('click', (e) => {
-            if (window.innerWidth < 1024 && !sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
-                sidebar.classList.remove('open');
+        elements.newChatBtn.addEventListener('click', async () => {
+            try {
+                await fetch(`${API_BASE}/api/deep_discovery/clear_chat_history/${userId}`, { method: 'POST' });
+                elements.chatMessages.innerHTML = '';
+                elements.welcomeScreen.style.display = 'block';
+                elements.modelBadge.textContent = 'Hibrid AI';
+                elements.messageInput.focus();
+            } catch (error) {
+                console.error('Hiba az előzmények törlésekor:', error);
             }
         });
 
-        // --- MODAL & TOOLS LOGIC ---
-
-        function showModal(modalId) { document.getElementById(modalId).style.display = 'flex'; }
-        function closeModal(modalId) { 
-            document.getElementById(modalId).style.display = 'none'; 
-            // Reset modal messages
-            const container = document.getElementById(modalId).querySelector('.modal-message-container');
-            if (container) container.innerHTML = '';
-        }
-
-        document.querySelectorAll('.modal-close').forEach(btn => btn.addEventListener('click', () => closeModal(btn.dataset.modalId)));
-
-        // Assign Deep Discovery Tool buttons to modals
-        researchTrendsBtn.addEventListener('click', () => showModal('researchTrendsModal'));
-        proteinStructureBtn.addEventListener('click', () => showModal('proteinStructureModal'));
-        customGCPModelBtn.addEventListener('click', () => showModal('customGCPModelModal'));
-        simulationOptimizerBtn.addEventListener('click', () => showModal('simulationOptimizerModal'));
-
-        function showModalMessage(modalId, message, isError = true) {
-            const container = document.getElementById(modalId).querySelector('.modal-message-container');
-            if (!container) return;
-            container.innerHTML = `<div class="p-3 mb-4 ${isError ? 'text-red-300 bg-red-500/20' : 'text-green-300 bg-green-500/20'} rounded-lg">${message}</div>`;
-        }
-
-        // Research Trends Form
-        document.getElementById('researchTrendsForm').addEventListener('submit', async (e) => {
+        // --- Form handlers ---
+        document.getElementById('researchForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const query = document.getElementById('researchQuery').value;
-            const numResults = parseInt(document.getElementById('numResults').value);
-            const summaryLength = parseInt(document.getElementById('summaryLength').value);
-            const submitBtn = document.getElementById('researchTrendsSubmitBtn');
-            const resultDiv = document.getElementById('researchResult');
-
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = 'Elemzés...';
-            resultDiv.style.display = 'none';
+            const count = document.getElementById('researchCount').value;
+            const btn = document.getElementById('researchSubmit');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Keresés...';
 
             try {
-                const response = await fetch(`${API_BASE_URL}/api/deep_discovery/research_trends`, {
+                const response = await fetch(`${API_BASE}/api/deep_discovery/research_trends`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query, num_results: numResults, summary_length: summaryLength })
+                    body: JSON.stringify({ 
+                        query, 
+                        num_results: parseInt(count),
+                        summary_length: 300 
+                    })
                 });
 
-                if (!response.ok) {
-                    const errorBody = await response.json();
-                    throw new Error(errorBody.detail || response.statusText);
-                }
-
                 const data = await response.json();
-                document.getElementById('researchSummary').innerHTML = data.summary.replace(/\n/g, '<br>');
-
-                const sourcesContainer = document.getElementById('researchSources');
-                sourcesContainer.innerHTML = '';
-                if (data.sources && data.sources.length > 0) {
-                    data.sources.forEach(source => {
-                        const sourceLink = document.createElement('a');
-                        sourceLink.href = source.url;
-                        sourceLink.target = "_blank";
-                        sourceLink.rel = "noopener noreferrer";
-                        sourceLink.className = "flex items-center gap-2 p-2 rounded-lg hover:bg-gray-800 transition-colors";
-                        sourceLink.innerHTML = `<i class="fas fa-external-link-alt text-blue-400"></i> <span class="text-gray-300 text-sm">${source.title}</span>`;
-                        sourcesContainer.appendChild(sourceLink);
-                    });
-                } else {
-                    sourcesContainer.innerHTML = '<p class="text-gray-500 text-sm">Nincsenek források.</p>';
-                }
-
-                resultDiv.style.display = 'block';
-                showModalMessage('researchTrendsModal', 'Elemzés sikeresen befejezve!', false);
+                document.getElementById('researchContent').innerHTML = `
+                    <h4>Összefoglaló:</h4>
+                    <p>${data.summary}</p>
+                    <h4>Források:</h4>
+                    ${data.sources.map(s => `<a href="${s.url}" target="_blank">${s.title}</a>`).join('<br>')}
+                `;
+                document.getElementById('researchResults').style.display = 'block';
             } catch (error) {
-                showModalMessage('researchTrendsModal', `Hiba: ${error.message}`);
+                document.getElementById('researchContent').innerHTML = `Hiba: ${error.message}`;
+                document.getElementById('researchResults').style.display = 'block';
             } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = 'Elemzés Indítása';
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-search mr-2"></i>Keresés';
             }
         });
 
-        // Protein Structure Form
-        document.getElementById('proteinStructureForm').addEventListener('submit', async (e) => {
+        document.getElementById('proteinForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const proteinId = document.getElementById('proteinId').value.trim();
-            const submitBtn = document.getElementById('proteinStructureSubmitBtn');
-            const resultDiv = document.getElementById('proteinResult');
-
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = 'Keresés...';
-            resultDiv.style.display = 'none';
+            const proteinId = document.getElementById('proteinId').value;
+            const btn = document.getElementById('proteinSubmit');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Keresés...';
 
             try {
-                const response = await fetch(`${API_BASE_URL}/api/deep_discovery/protein_structure`, {
+                const response = await fetch(`${API_BASE}/api/deep_discovery/protein_structure`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ protein_id: proteinId })
                 });
 
-                if (!response.ok) {
-                    const errorBody = await response.json();
-                    throw new Error(errorBody.detail || response.statusText);
-                }
-
                 const data = await response.json();
                 if (data.details) {
-                    document.getElementById('resultUniProtId').textContent = data.details.uniprot_id || 'N/A';
-                    document.getElementById('resultPlddt').textContent = data.details.plddt ? data.details.plddt.toFixed(2) : 'N/A';
-
-                    const proteinUrlLink = document.getElementById('resultProteinUrl');
-                    proteinUrlLink.href = data.details.protein_url || '#';
-                    proteinUrlLink.style.display = data.details.protein_url ? 'flex' : 'none';
-
-                    const paeUrlLink = document.getElementById('resultPaeUrl');
-                    paeUrlLink.href = data.details.pae_url || '#';
-                    paeUrlLink.style.display = data.details.pae_url ? 'flex' : 'none';
-
-                    resultDiv.style.display = 'block';
-                    showModalMessage('proteinStructureModal', 'Fehérje struktúra sikeresen lekérdezve!', false);
+                    document.getElementById('proteinContent').innerHTML = `
+                        <strong>UniProt ID:</strong> ${data.details.uniprot_id}<br>
+                        <strong>Konfidencia:</strong> ${data.details.plddt}<br>
+                        <a href="${data.details.protein_url}" target="_blank">Struktúra letöltése</a>
+                    `;
                 } else {
-                    showModalMessage('proteinStructureModal', data.message || 'Nem található adat a megadott fehérje ID-hez.');
+                    document.getElementById('proteinContent').innerHTML = data.message;
                 }
+                document.getElementById('proteinResults').style.display = 'block';
             } catch (error) {
-                showModalMessage('proteinStructureModal', `Hiba: ${error.message}`);
+                document.getElementById('proteinContent').innerHTML = `Hiba: ${error.message}`;
+                document.getElementById('proteinResults').style.display = 'block';
             } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = 'Keresés';
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-dna mr-2"></i>Keresés';
             }
         });
 
-        // Custom GCP Model Form
-        document.getElementById('customGCPModelForm').addEventListener('submit', async (e) => {
+        document.getElementById('simulationForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const gcpEndpointId = document.getElementById('gcpEndpointId').value.trim();
-            const gcpInputDataRaw = document.getElementById('gcpInputData').value.trim();
-            const submitBtn = document.getElementById('customGCPModelSubmitBtn');
-            const resultDiv = document.getElementById('gcpResult');
-
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = 'Hívás...';
-            resultDiv.style.display = 'none';
-
-            let inputData;
-            try {
-                inputData = JSON.parse(gcpInputDataRaw);
-            } catch (jsonError) {
-                showModalMessage('customGCPModelModal', `Érvénytelen JSON bemeneti adat: ${jsonError.message}`);
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = 'Hívás';
-                return;
-            }
+            const type = document.getElementById('simulationType').value;
+            const params = document.getElementById('simulationParams').value;
+            const goal = document.getElementById('simulationGoal').value;
+            const btn = document.getElementById('simulationSubmit');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Optimalizálás...';
 
             try {
-                const response = await fetch(`${API_BASE_URL}/api/deep_discovery/custom_gcp_model`, {
+                const response = await fetch(`${API_BASE}/api/deep_discovery/simulation_optimizer`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
-                        gcp_endpoint_id: gcpEndpointId, 
-                        input_data: inputData 
+                        simulation_type: type,
+                        input_parameters: JSON.parse(params),
+                        optimization_goal: goal
                     })
                 });
 
-                if (!response.ok) {
-                    const errorBody = await response.json();
-                    throw new Error(errorBody.detail || response.statusText);
-                }
-
                 const data = await response.json();
-                document.getElementById('gcpResponseData').textContent = JSON.stringify(data.model_response, null, 2);
-                resultDiv.style.display = 'block';
-                showModalMessage('customGCPModelModal', 'GCP modell hívás sikeres!', false);
+                document.getElementById('simulationContent').textContent = data.optimized_output;
+                document.getElementById('simulationResults').style.display = 'block';
             } catch (error) {
-                showModalMessage('customGCPModelModal', `Hiba: ${error.message}`);
+                document.getElementById('simulationContent').innerHTML = `Hiba: ${error.message}`;
+                document.getElementById('simulationResults').style.display = 'block';
             } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = 'Hívás';
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-cogs mr-2"></i>Optimalizálás';
             }
         });
 
-        // Simulation Optimizer Form
-        document.getElementById('simulationOptimizerForm').addEventListener('submit', async (e) => {
+        document.getElementById('gcpForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const simulationType = document.getElementById('simulationType').value.trim();
-            const simulationInputParamsRaw = document.getElementById('simulationInputParams').value.trim();
-            const optimizationGoal = document.getElementById('optimizationGoal').value.trim();
-            const submitBtn = document.getElementById('simulationOptimizerSubmitBtn');
-            const resultDiv = document.getElementById('simulationResult');
-
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = 'Optimalizálás...';
-            resultDiv.style.display = 'none';
-
-            let inputParams;
-            try {
-                inputParams = JSON.parse(simulationInputParamsRaw);
-            } catch (jsonError) {
-                showModalMessage('simulationOptimizerModal', `Érvénytelen JSON bemeneti paraméterek: ${jsonError.message}`);
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = 'Optimalizálás';
-                return;
-            }
+            const endpoint = document.getElementById('gcpEndpoint').value;
+            const data = document.getElementById('gcpData').value;
+            const btn = document.getElementById('gcpSubmit');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Futtatás...';
 
             try {
-                const response = await fetch(`${API_BASE_URL}/api/deep_discovery/simulation_optimizer`, {
+                const response = await fetch(`${API_BASE}/api/deep_discovery/custom_gcp_model`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
-                        simulation_type: simulationType, 
-                        input_parameters: inputParams,
-                        optimization_goal: optimizationGoal
+                        gcp_endpoint_id: endpoint,
+                        input_data: JSON.parse(data)
                     })
                 });
 
-                if (!response.ok) {
-                    const errorBody = await response.json();
-                    throw new Error(errorBody.detail || response.statusText);
-                }
-
-                const data = await response.json();
-                document.getElementById('simulationOptimizedOutput').textContent = data.optimized_output;
-                document.getElementById('simulationModelUsed').textContent = data.model_used;
-                resultDiv.style.display = 'block';
-                showModalMessage('simulationOptimizerModal', 'Szimuláció optimalizálás sikeres!', false);
+                const result = await response.json();
+                document.getElementById('gcpContent').textContent = JSON.stringify(result.model_response, null, 2);
+                document.getElementById('gcpResults').style.display = 'block';
             } catch (error) {
-                showModalMessage('simulationOptimizerModal', `Hiba: ${error.message}`);
+                document.getElementById('gcpContent').innerHTML = `Hiba: ${error.message}`;
+                document.getElementById('gcpResults').style.display = 'block';
             } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = 'Optimalizálás';
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-cloud mr-2"></i>Futtatás';
             }
         });
 
-        // Focus input on load
+        // Inicializálás
         window.addEventListener('load', () => {
-            messageInput.focus();
-            // Ha van mentett előzmény, töltsük be
-            // fetch(`${API_BASE_URL}/api/deep_discovery/chat_history/${currentUserId}`)
-            //     .then(res => res.json())
-            //     .then(data => {
-            //         if (data.history && data.history.length > 0) {
-            //             welcomeScreen.style.display = 'none';
-            //             data.history.forEach(msg => {
-            //                 if (msg.role === 'user') {
-            //                     addMessage('user', msg.content);
-            //                 } else if (msg.role === 'assistant') {
-            //                     // Itt kellene újra feldolgozni a válaszokat, hogy a javaslatok is megjelenjenek.
-            //                     // Egyszerűsítésként most csak a szöveget adjuk hozzá.
-            //                     addMessage('ai', msg.content); 
-            //                 }
-            //             });
-            //         }
-            //     })
-            //     .catch(error => console.error("Error loading chat history:", error));
+            elements.messageInput.focus();
+        });
+
+        // Modal bezárása ESC-re
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay').forEach(modal => {
+                    modal.style.display = 'none';
+                });
+            }
         });
     </script>
 </body>
