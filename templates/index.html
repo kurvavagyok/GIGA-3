@@ -29,7 +29,7 @@
             overflow: hidden;
         }
 
-        /* Fejlett háttér rendszer részecske animációkkal */
+        /* Statikus háttér rendszer - nincs forgás */
         .gradient-bg::before {
             content: '';
             position: fixed;
@@ -38,11 +38,9 @@
             width: 160%;
             height: 160%;
             background: 
-                radial-gradient(circle at 25% 60%, rgba(16, 185, 129, 0.12) 0%, transparent 70%),
-                radial-gradient(circle at 75% 30%, rgba(59, 130, 246, 0.08) 0%, transparent 70%),
-                radial-gradient(circle at 50% 80%, rgba(139, 92, 246, 0.06) 0%, transparent 70%),
-                radial-gradient(circle at 90% 10%, rgba(236, 72, 153, 0.04) 0%, transparent 60%);
-            animation: cosmicDrift 45s ease-in-out infinite;
+                radial-gradient(circle at 25% 60%, rgba(16, 185, 129, 0.08) 0%, transparent 70%),
+                radial-gradient(circle at 75% 30%, rgba(59, 130, 246, 0.06) 0%, transparent 70%),
+                radial-gradient(circle at 50% 80%, rgba(139, 92, 246, 0.04) 0%, transparent 70%);
             pointer-events: none;
             filter: blur(90px);
             z-index: 1;
@@ -56,10 +54,8 @@
             width: 100%;
             height: 100%;
             background: 
-                radial-gradient(circle at 70% 50%, rgba(16, 185, 129, 0.05) 0%, transparent 60%),
-                radial-gradient(circle at 30% 70%, rgba(59, 130, 246, 0.04) 0%, transparent 60%),
-                conic-gradient(from 180deg at 50% 50%, transparent 0deg, rgba(16, 185, 129, 0.02) 90deg, transparent 180deg);
-            animation: cosmicDrift 60s ease-in-out infinite reverse;
+                radial-gradient(circle at 70% 50%, rgba(16, 185, 129, 0.03) 0%, transparent 60%),
+                radial-gradient(circle at 30% 70%, rgba(59, 130, 246, 0.02) 0%, transparent 60%);
             pointer-events: none;
             z-index: 1;
         }
@@ -97,24 +93,7 @@
             animation: particleGlow 3s ease-in-out infinite alternate;
         }
 
-        @keyframes cosmicDrift {
-            0%, 100% { 
-                transform: rotate(0deg) translate(8%, -8%) scale(1) skew(0deg, 0deg); 
-                opacity: 0.7;
-            }
-            25% { 
-                transform: rotate(90deg) translate(-8%, 8%) scale(1.03) skew(2deg, -1deg); 
-                opacity: 0.9;
-            }
-            50% { 
-                transform: rotate(180deg) translate(-8%, -8%) scale(1.08) skew(0deg, 2deg); 
-                opacity: 1;
-            }
-            75% { 
-                transform: rotate(270deg) translate(8%, -8%) scale(1.02) skew(-1deg, 0deg); 
-                opacity: 0.8;
-            }
-        }
+        
 
         @keyframes particleFloat {
             0%, 100% { 
@@ -292,54 +271,28 @@
                     0 0 50px rgba(59, 130, 246, 0.4),
                     0 0 100px rgba(236, 72, 153, 0.3),
                     inset 0 0 20px rgba(255, 255, 255, 0.1);
-                transform: scale(1) rotate(0deg) perspective(1000px) rotateY(0deg);
+                transform: scale(1);
             }
-            25% { 
+            50% { 
                 box-shadow: 
                     0 0 35px rgba(16, 185, 129, 0.7), 
                     0 0 70px rgba(59, 130, 246, 0.5),
                     0 0 140px rgba(236, 72, 153, 0.4),
                     inset 0 0 30px rgba(255, 255, 255, 0.15);
-                transform: scale(1.03) rotate(2deg) perspective(1000px) rotateY(5deg);
-            }
-            50% { 
-                box-shadow: 
-                    0 0 45px rgba(16, 185, 129, 0.8), 
-                    0 0 90px rgba(59, 130, 246, 0.6),
-                    0 0 180px rgba(236, 72, 153, 0.5),
-                    inset 0 0 40px rgba(255, 255, 255, 0.2);
-                transform: scale(1.08) rotate(-1deg) perspective(1000px) rotateY(-3deg);
-            }
-            75% { 
-                box-shadow: 
-                    0 0 30px rgba(16, 185, 129, 0.6), 
-                    0 0 60px rgba(59, 130, 246, 0.4),
-                    0 0 120px rgba(236, 72, 153, 0.3),
-                    inset 0 0 25px rgba(255, 255, 255, 0.12);
-                transform: scale(1.02) rotate(1deg) perspective(1000px) rotateY(2deg);
+                transform: scale(1.02);
             }
         }
 
         @keyframes quantumBorder {
             0%, 100% { 
                 background-position: 0% 50%; 
-                transform: rotate(0deg) scale(1);
-                filter: blur(1px) hue-rotate(0deg);
-            }
-            25% { 
-                background-position: 25% 25%; 
-                transform: rotate(90deg) scale(1.02);
-                filter: blur(1.5px) hue-rotate(90deg);
+                transform: scale(1);
+                filter: blur(1px);
             }
             50% { 
                 background-position: 100% 50%; 
-                transform: rotate(180deg) scale(1.05);
-                filter: blur(2px) hue-rotate(180deg);
-            }
-            75% { 
-                background-position: 75% 75%; 
-                transform: rotate(270deg) scale(1.01);
-                filter: blur(1.2px) hue-rotate(270deg);
+                transform: scale(1.02);
+                filter: blur(1.5px);
             }
         }
 
