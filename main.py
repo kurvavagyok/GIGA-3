@@ -169,38 +169,6 @@ async def serve_frontend():
     """A frontend HTML oldal kiszolgálása."""
     return FileResponse("templates/index.html")
 
-
-
-@app.post("/api/auth/apple")
-async def apple_signin(request: Request):
-    """Apple Sign In autentikáció kezelése."""
-    try:
-        data = await request.json()
-        authorization = data.get('authorization', {})
-        user_data = data.get('user', {})
-        
-        # Itt normálisan validálnád az Apple token-t
-        # Most demo célokra egyszerűen elfogadjuk
-        
-        # Felhasználói adatok mentése/lekérése
-        user_id = f"apple_{authorization.get('code', 'demo')[:10]}"
-        
-        logger.info(f"Apple Sign In successful for user: {user_id}")
-        
-        return {
-            "success": True,
-            "message": "Sikeres Apple bejelentkezés",
-            "user_id": user_id,
-            "user_data": user_data
-        }
-        
-    except Exception as e:
-        logger.error(f"Apple Sign In error: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Apple bejelentkezési hiba: {e}"
-        )
-
 @app.get("/api")
 async def root_endpoint():
     """Alapvető üdvözlő végpont."""

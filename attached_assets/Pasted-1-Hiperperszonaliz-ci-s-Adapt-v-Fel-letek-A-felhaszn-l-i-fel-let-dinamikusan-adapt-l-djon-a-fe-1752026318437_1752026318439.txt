@@ -1,0 +1,20 @@
+1. Hiperperszonalizáció és Adaptív Felületek
+ * A felhasználói felület dinamikusan adaptálódjon a felhasználó egyéni igényeihez és aktuális hangulatához.
+ * Alkalmazzon kontextuális memóriát: a korábbi interakciók alapján biztosítson relevánsabb és személyre szabottabb javaslatokat.
+ * Az interfész elemeit (pl. menüpontok, vezérlők) a használati szokások alapján rendezze át, előtérbe helyezve a leggyakrabban használt funkciókat.
+2. Proaktív és Környezetbe Integrált Interakciók
+ * Ne korlátozódjon reaktív működésre; proaktívan kínáljon fel segítséget és releváns információkat a felhasználói kontextus alapján.
+ * Integrálja a funkcionalitást a felhasználó digitális munkakörnyezetébe, hogy az asszisztencia ne egy elkülönült alkalmazásban, hanem a feladatvégzés helyén valósuljon meg.
+ * Kezdeményezzen interakciót (pl. diszkrét hangjelzéssel vagy vizuális értesítéssel) fontos események vagy releváns információk esetén.
+3. Multimodális Kommunikáció
+ * Biztosítson zökkenőmentes átmenetet a különböző beviteli módok (szöveg, hang, kép, vázlat) között egyazon interakciós folyamaton belül.
+ * A generált válaszok ne korlátozódjanak szöveges formátumra. Hozzon létre multimodális kimeneteket, például diagramokat, infografikákat vagy interaktív modelleket a tartalom hatékonyabb közvetítésére.
+ * A válaszokba építsen be interaktív vezérlőelemeket (pl. csúszkák, gombok), amelyek lehetővé teszik a paraméterek finomhangolását és a további opciók felfedezését.
+4. Vizuális Esztétika és Felhasználói Élmény
+ * Alkalmazzon kortárs vizuális irányelveket, mint a "glassmorphism" és az "aurora" stílusjegyek, félig áttetsző felületekkel és organikus színátmenetekkel a prémium esztétikai élményért.
+ * Használjon dinamikus tipográfiát, ahol a betűk mérete, vastagsága és stílusa a tartalom hangsúlyozását szolgálja.
+ * Tervezzen célzott mikrointerakciókat: minden felhasználói művelet kapjon finom, de informatív vizuális visszajelzést a reszponzív élmény fokozása érdekében.
+5. Átláthatóság és Felhasználói Irányítás
+ * Tegye lehetővé a forráskövetést: minden közölt adat mellett biztosítson egyértelmű hivatkozást az eredeti forrásra az információk ellenőrizhetősége érdekében.
+ * Biztosítson a felhasználó számára lehetőséget a generatív modellek paramétereinek szabályozására, például egy "kreativitás-szabályozóval" a tényszerű és az ötletgazdag kimenetek közötti váltáshoz.
+ * Fejlesszen ki intuitív hibajavítási mechanizmusokat, amelyek lehetővé teszik a felhasználók számára, hogy közvetlen visszajelzést adjanak a pontatlan információkról, ezzel elősegítve a rendszer folyamatos tanulását.

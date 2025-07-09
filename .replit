@@ -1,5 +1,5 @@
 entrypoint = "main.py"
-modules = ["python-3.11", "postgresql-16"]
+modules = ["python-3.11"]
 
 [nix]
 channel = "stable-24_05"
@@ -11,7 +11,7 @@ language = "python3"
 requiredFiles = [".replit", "replit.nix"]
 
 [deployment]
-run = ["sh", "-c", "python main.py"]
+run = ["python3", "main.py"]
 deploymentTarget = "cloudrun"
 
 [workflows]
@@ -33,6 +33,3 @@ externalPort = 80
 [[ports]]
 localPort = 34397
 externalPort = 3000
-
-[objectStorage]
-defaultBucketID = "replit-objstore-6d29450d-0880-4954-bc03-4446b1be0d7c"
