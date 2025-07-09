@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="hu">
 <head>
@@ -582,16 +581,96 @@
             border-color: transparent;
         }
 
+        .ai-content {
+            line-height: 1.6;
+            color: var(--color-text);
+        }
+
+        .ai-actions {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--color-border);
+        }
+
+        .deep-research-btn {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            color: #000;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .deep-research-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .deep-research-btn:active {
+            transform: translateY(0);
+        }
+
+        .ai-content h1, .ai-content h2, .ai-content h3 {
+            color: var(--color-primary);
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .ai-content h1 { font-size: 1.5rem; }
+        .ai-content h2 { font-size: 1.3rem; }
+        .ai-content h3 { font-size: 1.1rem; }
+
+        .ai-content p {
+            margin-bottom: 1rem;
+        }
+
+        .ai-content ul, .ai-content ol {
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .ai-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .ai-content code {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .ai-content pre {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        .ai-content blockquote {
+            border-left: 3px solid var(--color-primary);
+            padding-left: 1rem;
+            margin: 1rem 0;
+            font-style: italic;
+        }
+
         @media (max-width: 1200px) {
             .sidebar {
                 transform: translateX(-100%);
                 transition: transform 0.3s ease;
             }
-            
+
             .sidebar.open {
                 transform: translateX(0);
             }
-            
+
             .main-content {
                 margin-left: 0;
             }
@@ -601,7 +680,7 @@
             .sidebar {
                 width: 100%;
             }
-            
+
             .welcome-title {
                 font-size: 2rem;
             }
@@ -621,7 +700,7 @@
                     <p class="text-xs text-gray-400">Deep Discovery AI</p>
                 </div>
             </div>
-            
+
             <button id="newChatBtn" class="w-full bg-gradient-to-r from-green-500 to-blue-500 text-black font-semibold rounded-xl px-4 py-3 flex items-center justify-center gap-2 hover:shadow-lg transition-all">
                 <i class="fas fa-plus"></i>
                 <span>Új beszélgetés</span>
@@ -631,7 +710,7 @@
         <!-- Exa AI Search Functions -->
         <div class="p-4" id="exaSearchFunctions">
             <h3 class="text-xs uppercase tracking-wider text-gray-500 mb-4">Exa AI Keresési Funkciók</h3>
-            
+
             <!-- Neural Search -->
             <div class="exa-section">
                 <div class="exa-header" onclick="toggleExaSection('neural')">
@@ -828,27 +907,22 @@
                     Fejlett AI platform Exa intelligens kereséssel és 150+ Alpha szolgáltatással. 
                     Válassz a bal menüből, vagy beszélgess velem szabadon.
                 </p>
-                
+
                 <div class="quick-actions">
                     <div class="quick-action" onclick="quickExaSearch()">
                         <div class="quick-action-icon">🔍</div>
                         <div class="quick-action-title">Gyors Exa Keresés</div>
                         <div class="quick-action-desc">Neurális keresés a weben</div>
                     </div>
-                    <div class="quick-action" onclick="showRAGDemo()">
-                        <div class="quick-action-icon">🤖</div>
-                        <div class="quick-action-title">RAG Demó</div>
-                        <div class="quick-action-desc">Keresés + AI elemzés</div>
+                    <div class="quick-action" onclick="quickAlphaService()">
+                        <div class="quick-action-icon">⚡</div>
+                        <div class="quick-action-title">Alpha Szolgáltatás</div>
+                        <div class="quick-action-desc">Egyszerű hozzáférés 150+ szolgáltatáshoz</div>
                     </div>
-                    <div class="quick-action" onclick="showSimilaritySearch()">
-                        <div class="quick-action-icon">🔗</div>
-                        <div class="quick-action-title">Hasonlóság Keresés</div>
-                        <div class="quick-action-desc">Hasonló oldalak keresése</div>
-                    </div>
-                    <div class="quick-action" onclick="showResearchAPI()">
-                        <div class="quick-action-icon">📚</div>
-                        <div class="quick-action-title">Kutatási API</div>
-                        <div class="quick-action-desc">Automatizált webes kutatás</div>
+                    <div class="quick-action" onclick="quickProteinLookup()">
+                        <div class="quick-action-icon">🧬</div>
+                        <div class="quick-action-title">Fehérje Struktúra</div>
+                        <div class="quick-action-desc">AlphaFold adatbázis lekérdezés</div>
                     </div>
                 </div>
             </div>
@@ -882,11 +956,11 @@
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            
+
             <div id="exaModalContent">
                 <!-- Dynamic content based on search type -->
             </div>
-            
+
             <div id="exaModalResult" style="display: none;">
                 <div class="mt-6 p-4 bg-gray-800 rounded-lg">
                     <h3 class="text-lg font-semibold mb-2 text-green-400">Keresési Eredmények</h3>
@@ -905,14 +979,14 @@
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            
+
             <div id="alphaModalContent">
                 <form id="alphaServiceForm">
                     <div class="form-group">
                         <label class="form-label" for="serviceDescription">Szolgáltatás leírása</label>
                         <p id="serviceDescription" class="text-gray-400 text-sm mb-4"></p>
                     </div>
-                    
+
                     <div class="form-group">
                         <label class="form-label" for="inputData">Bemeneti adatok (JSON)</label>
                         <textarea 
@@ -922,7 +996,7 @@
                             required
                         ></textarea>
                     </div>
-                    
+
                     <div class="form-group">
                         <label class="form-label" for="parameters">Paraméterek (opcionális)</label>
                         <textarea 
@@ -931,14 +1005,14 @@
                             placeholder='{"temperature": 0.1, "max_tokens": 1000}'
                         ></textarea>
                     </div>
-                    
+
                     <button type="submit" class="form-button" id="executeButton">
                         <i class="fas fa-play mr-2"></i>
                         Szolgáltatás futtatása
                     </button>
                 </form>
             </div>
-            
+
             <div id="alphaModalResult" style="display: none;">
                 <div class="mt-6 p-4 bg-gray-800 rounded-lg">
                     <h3 class="text-lg font-semibold mb-2 text-green-400">Eredmény</h3>
@@ -955,7 +1029,7 @@
         let currentService = null;
         let currentExaFunction = null;
         let alphaServices = {};
-        
+
         localStorage.setItem('jadeUserId', currentUserId);
 
         // DOM elements
@@ -1014,7 +1088,7 @@
             for (const [categoryKey, services] of Object.entries(alphaServices)) {
                 const categoryDiv = document.createElement('div');
                 categoryDiv.className = 'exa-section';
-                
+
                 const header = document.createElement('div');
                 header.className = 'exa-header';
                 header.innerHTML = `
@@ -1025,11 +1099,11 @@
                     </div>
                     <i class="fas fa-chevron-down transition-transform transform" id="alpha-chevron-${categoryKey}"></i>
                 `;
-                
+
                 const servicesDiv = document.createElement('div');
                 servicesDiv.className = 'exa-content';
                 servicesDiv.id = `alpha-services-${categoryKey}`;
-                
+
                 for (const [serviceName, serviceDesc] of Object.entries(services)) {
                     const serviceItem = document.createElement('div');
                     serviceItem.className = 'exa-option';
@@ -1042,18 +1116,18 @@
                             <div class="exa-desc">${serviceDesc}</div>
                         </div>
                     `;
-                    
+
                     serviceItem.addEventListener('click', () => {
                         openAlphaService(serviceName, serviceDesc, categoryKey);
                     });
-                    
+
                     servicesDiv.appendChild(serviceItem);
                 }
-                
+
                 header.addEventListener('click', () => {
                     toggleAlphaCategory(categoryKey);
                 });
-                
+
                 categoryDiv.appendChild(header);
                 categoryDiv.appendChild(servicesDiv);
                 container.appendChild(categoryDiv);
@@ -1064,7 +1138,7 @@
         function toggleExaSection(sectionKey) {
             const contentDiv = document.getElementById(`content-${sectionKey}`);
             const chevron = document.getElementById(`chevron-${sectionKey}`);
-            
+
             if (contentDiv.classList.contains('expanded')) {
                 contentDiv.classList.remove('expanded');
                 chevron.style.transform = 'rotate(0deg)';
@@ -1078,7 +1152,7 @@
         function toggleAlphaCategory(categoryKey) {
             const servicesDiv = document.getElementById(`alpha-services-${categoryKey}`);
             const chevron = document.getElementById(`alpha-chevron-${categoryKey}`);
-            
+
             if (servicesDiv.classList.contains('expanded')) {
                 servicesDiv.classList.remove('expanded');
                 chevron.style.transform = 'rotate(0deg)';
@@ -1094,7 +1168,7 @@
             const modal = document.getElementById('exaSearchModal');
             const title = document.getElementById('exaModalTitle');
             const content = document.getElementById('exaModalContent');
-            
+
             const functionConfigs = {
                 'neural_search': {
                     title: 'Neurális Keresés',
@@ -1137,11 +1211,11 @@
                     content: createLangChainForm()
                 }
             };
-            
+
             const config = functionConfigs[functionType];
             title.textContent = config.title;
             content.innerHTML = config.content;
-            
+
             modal.style.display = 'flex';
             document.getElementById('exaModalResult').style.display = 'none';
         }
@@ -1154,7 +1228,7 @@
                         <label class="form-label">Keresési lekérdezés</label>
                         <input type="text" class="form-input" id="searchQuery" placeholder="Mire vagy kíváncsi?" required>
                     </div>
-                    
+
                     <div class="form-group">
                         <label class="form-label">Találatok száma</label>
                         <select class="form-select" id="numResults">
@@ -1164,7 +1238,7 @@
                             <option value="50">50 találat</option>
                         </select>
                     </div>
-                    
+
                     <div class="form-group">
                         <label class="form-label">Tudományos domainok</label>
                         <div id="domainTags">
@@ -1176,7 +1250,7 @@
                             <span class="domain-tag" onclick="toggleDomain(this)" data-domain="springer.com">Springer</span>
                         </div>
                     </div>
-                    
+
                     <div class="form-group">
                         <label class="form-label">Időszűrő</label>
                         <select class="form-select" id="dateFilter">
@@ -1186,7 +1260,7 @@
                             <option value="2020-01-01">2020 óta</option>
                         </select>
                     </div>
-                    
+
                     <button type="submit" class="form-button">
                         <i class="fas fa-search mr-2"></i>
                         Keresés indítása
@@ -1203,7 +1277,7 @@
                         <label class="form-label">Kulcsszavak</label>
                         <input type="text" class="form-input" id="searchQuery" placeholder="kulcsszó1 kulcsszó2" required>
                     </div>
-                    
+
                     <div class="form-group">
                         <label class="form-label">Keresés típusa</label>
                         <select class="form-select" id="searchType">
@@ -1211,12 +1285,12 @@
                             <option value="neural" selected>Neurális</option>
                         </select>
                     </div>
-                    
+
                     <div class="form-group">
                         <label class="form-label">Kizárt domainok</label>
                         <input type="text" class="form-input" id="excludeDomains" placeholder="facebook.com, twitter.com">
                     </div>
-                    
+
                     <button type="submit" class="form-button">
                         <i class="fas fa-search mr-2"></i>
                         Kulcsszavas keresés
@@ -1233,7 +1307,7 @@
                         <label class="form-label">Referencia URL</label>
                         <input type="url" class="form-input" id="referenceUrl" placeholder="https://example.com/article" required>
                     </div>
-                    
+
                     <div class="form-group">
                         <label class="form-label">Hasonló találatok száma</label>
                         <select class="form-select" id="numResults">
@@ -1242,7 +1316,7 @@
                             <option value="20">20 találat</option>
                         </select>
                     </div>
-                    
+
                     <div class="form-group">
                         <label class="form-label">Forrás domain kizárása</label>
                         <select class="form-select" id="excludeSource">
@@ -1250,7 +1324,7 @@
                             <option value="false">Nem</option>
                         </select>
                     </div>
-                    
+
                     <button type="submit" class="form-button">
                         <i class="fas fa-clone mr-2"></i>
                         Hasonló oldalak keresése
@@ -1267,7 +1341,7 @@
                         <label class="form-label">Referencia szöveg</label>
                         <textarea class="form-textarea" id="referenceText" placeholder="Illeszd be a szöveget, amelyhez hasonlót keresel..." required></textarea>
                     </div>
-                    
+
                     <div class="form-group">
                         <label class="form-label">Találatok száma</label>
                         <select class="form-select" id="numResults">
@@ -1276,7 +1350,7 @@
                             <option value="15">15 találat</option>
                         </select>
                     </div>
-                    
+
                     <button type="submit" class="form-button">
                         <i class="fas fa-file-text mr-2"></i>
                         Szöveg alapú keresés
@@ -1294,7 +1368,7 @@
                         <textarea class="form-textarea" id="resultIds" placeholder="result_id_1, result_id_2, result_id_3" required></textarea>
                         <small class="text-gray-500">Vesszővel elválasztott ID-k az Exa keresési eredményekből</small>
                     </div>
-                    
+
                     <div class="form-group">
                         <label class="form-label">AI összefoglaló</label>
                         <select class="form-select" id="generateSummary">
@@ -1302,7 +1376,7 @@
                             <option value="false">Nem</option>
                         </select>
                     </div>
-                    
+
                     <div class="form-group">
                         <label class="form-label">Maximális karakterek</label>
                         <select class="form-select" id="maxChars">
@@ -1311,7 +1385,7 @@
                             <option value="10000">10000 karakter</option>
                         </select>
                     </div>
-                    
+
                     <button type="submit" class="form-button">
                         <i class="fas fa-download mr-2"></i>
                         Tartalom lekérése
@@ -1328,12 +1402,12 @@
                         <label class="form-label">Keresési lekérdezés</label>
                         <input type="text" class="form-input" id="searchQuery" placeholder="Keresési kifejezés" required>
                     </div>
-                    
+
                     <div class="form-group">
                         <label class="form-label">Kiemelendő kulcsszavak</label>
                         <input type="text" class="form-input" id="highlightKeywords" placeholder="kulcsszó1, kulcsszó2">
                     </div>
-                    
+
                     <div class="form-group">
                         <label class="form-label">Kiemelés hossza</label>
                         <select class="form-select" id="highlightLength">
@@ -1342,7 +1416,7 @@
                             <option value="300">300 karakter</option>
                         </select>
                     </div>
-                    
+
                     <button type="submit" class="form-button">
                         <i class="fas fa-highlighter mr-2"></i>
                         Kiemelések létrehozása
@@ -1359,7 +1433,7 @@
                         <label class="form-label">Kutatási téma</label>
                         <input type="text" class="form-input" id="researchTopic" placeholder="pl. quantum computing applications" required>
                     </div>
-                    
+
                     <div class="form-group">
                         <label class="form-label">Kutatás mélysége</label>
                         <select class="form-select" id="researchDepth">
@@ -1368,7 +1442,7 @@
                             <option value="deep">Mély kutatás (50 forrás)</option>
                         </select>
                     </div>
-                    
+
                     <div class="form-group">
                         <label class="form-label">Forrás típusok</label>
                         <div id="sourceTypes">
@@ -1378,7 +1452,7 @@
                             <span class="domain-tag" onclick="toggleDomain(this)" data-domain="reports">Jelentések</span>
                         </div>
                     </div>
-                    
+
                     <button type="submit" class="form-button">
                         <i class="fas fa-microscope mr-2"></i>
                         Automatizált kutatás indítása
@@ -1395,7 +1469,7 @@
                         <label class="form-label">Kérdés</label>
                         <textarea class="form-textarea" id="question" placeholder="Tedd fel a kérdésedet, és közvetlen választ kapsz hivatkozásokkal..." required></textarea>
                     </div>
-                    
+
                     <div class="form-group">
                         <label class="form-label">Válasz részletessége</label>
                         <select class="form-select" id="answerDetail">
@@ -1404,7 +1478,7 @@
                             <option value="comprehensive">Átfogó válasz</option>
                         </select>
                     </div>
-                    
+
                     <div class="form-group">
                         <label class="form-label">Hivatkozások száma</label>
                         <select class="form-select" id="numReferences">
@@ -1413,7 +1487,7 @@
                             <option value="10">10 hivatkozás</option>
                         </select>
                     </div>
-                    
+
                     <button type="submit" class="form-button">
                         <i class="fas fa-question-circle mr-2"></i>
                         Közvetlen válasz kérése
@@ -1430,7 +1504,7 @@
                         <label class="form-label">RAG lekérdezés</label>
                         <textarea class="form-textarea" id="ragQuery" placeholder="Tedd fel a kérdésedet a RAG pipeline-hoz..." required></textarea>
                     </div>
-                    
+
                     <div class="form-group">
                         <label class="form-label">Kontextus források száma</label>
                         <select class="form-select" id="contextSources">
@@ -1439,7 +1513,7 @@
                             <option value="15">15 forrás</option>
                         </select>
                     </div>
-                    
+
                     <div class="form-group">
                         <label class="form-label">AI modell</label>
                         <select class="form-select" id="aiModel">
@@ -1448,7 +1522,7 @@
                             <option value="hybrid">Hibrid megközelítés</option>
                         </select>
                     </div>
-                    
+
                     <button type="submit" class="form-button">
                         <i class="fas fa-stream mr-2"></i>
                         RAG Pipeline indítása
@@ -1470,12 +1544,12 @@
                             <option value="search_analyze">Keresés + Elemzés</option>
                         </select>
                     </div>
-                    
+
                     <div class="form-group">
                         <label class="form-label">Bemeneti lekérdezés</label>
                         <textarea class="form-textarea" id="workflowQuery" placeholder="A LangChain munkafolyamat bemenete..." required></textarea>
                     </div>
-                    
+
                     <div class="form-group">
                         <label class="form-label">Kimenet formátuma</label>
                         <select class="form-select" id="outputFormat">
@@ -1484,7 +1558,7 @@
                             <option value="markdown">Markdown</option>
                         </select>
                     </div>
-                    
+
                     <button type="submit" class="form-button">
                         <i class="fas fa-link mr-2"></i>
                         LangChain integráció futtatása
@@ -1504,7 +1578,7 @@
             document.getElementById('alphaModalTitle').textContent = serviceName;
             document.getElementById('serviceDescription').textContent = serviceDesc;
             document.getElementById('alphaServiceModal').style.display = 'flex';
-            
+
             // Set example data based on category
             setExampleData(category);
         }
@@ -1588,17 +1662,16 @@
                 e.preventDefault();
                 await executeExaFunction();
             }
-        }
-
+        }This code implements a comprehensive AI platform with Exa search integration, Alpha services, and a deep research feature, enhancing user interaction and analytical capabilities.
         // Execute Exa function
         async function executeExaFunction() {
             const button = document.querySelector('#exaSearchForm button[type="submit"]');
             const originalText = button.innerHTML;
-            
+
             try {
                 button.disabled = true;
                 button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Futtatás...';
-                
+
                 let result;
                 switch (currentExaFunction) {
                     case 'neural_search':
@@ -1617,9 +1690,9 @@
                     default:
                         throw new Error('Nem támogatott funkció');
                 }
-                
+
                 showExaResult(result);
-                
+
             } catch (error) {
                 alert(`Hiba: ${error.message}`);
             } finally {
@@ -1632,13 +1705,13 @@
         async function performAdvancedSearch() {
             const query = document.getElementById('searchQuery').value;
             const numResults = parseInt(document.getElementById('numResults').value);
-            
+
             const selectedDomains = Array.from(document.querySelectorAll('.domain-tag.selected'))
                 .map(tag => tag.dataset.domain).filter(Boolean);
-            
+
             const dateFilter = document.getElementById('dateFilter')?.value;
             const searchType = document.getElementById('searchType')?.value || 'neural';
-            
+
             const requestData = {
                 query: query,
                 type: searchType,
@@ -1650,21 +1723,21 @@
                     strategy: "comprehensive"
                 }
             };
-            
+
             if (dateFilter) {
                 requestData.start_published_date = dateFilter;
             }
-            
+
             const response = await fetch('/api/exa/advanced_search', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(requestData)
             });
-            
+
             if (!response.ok) {
                 throw new Error('Keresési hiba');
             }
-            
+
             return await response.json();
         }
 
@@ -1673,7 +1746,7 @@
             const url = document.getElementById('referenceUrl').value;
             const numResults = parseInt(document.getElementById('numResults').value);
             const excludeSource = document.getElementById('excludeSource').value === 'true';
-            
+
             const response = await fetch('/api/exa/find_similar', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1683,11 +1756,11 @@
                     exclude_source_domain: excludeSource
                 })
             });
-            
+
             if (!response.ok) {
                 throw new Error('Hasonlósági keresési hiba');
             }
-            
+
             return await response.json();
         }
 
@@ -1696,7 +1769,7 @@
             const ids = document.getElementById('resultIds').value
                 .split(',').map(id => id.trim()).filter(Boolean);
             const generateSummary = document.getElementById('generateSummary').value === 'true';
-            
+
             const response = await fetch('/api/exa/get_contents', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1705,11 +1778,11 @@
                     summary: generateSummary
                 })
             });
-            
+
             if (!response.ok) {
                 throw new Error('Tartalom kinyerési hiba');
             }
-            
+
             return await response.json();
         }
 
@@ -1718,7 +1791,7 @@
             const topic = document.getElementById('researchTopic')?.value || 
                         document.getElementById('ragQuery')?.value ||
                         document.getElementById('question')?.value;
-            
+
             const response = await fetch('/api/deep_discovery/research_trends', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1728,11 +1801,11 @@
                     summary_length: 300
                 })
             });
-            
+
             if (!response.ok) {
                 throw new Error('Kutatási trend elemzési hiba');
             }
-            
+
             return await response.json();
         }
 
@@ -1740,9 +1813,9 @@
         function showExaResult(result) {
             const resultDiv = document.getElementById('exaModalResult');
             const contentDiv = document.getElementById('exaResultContent');
-            
+
             let resultHTML = '';
-            
+
             if (result.results) {
                 // Search results
                 resultHTML = `
@@ -1750,7 +1823,7 @@
                         <h4 class="text-blue-400 font-semibold mb-2">Keresési eredmények (${result.total_results})</h4>
                     </div>
                 `;
-                
+
                 result.results.forEach((item, index) => {
                     resultHTML += `
                         <div class="search-result">
@@ -1767,7 +1840,7 @@
                         </div>
                     `;
                 });
-                
+
             } else if (result.similar_results) {
                 // Similarity results
                 resultHTML = `
@@ -1776,7 +1849,7 @@
                         <p class="text-sm text-gray-400">Referencia: ${result.reference_url}</p>
                     </div>
                 `;
-                
+
                 result.similar_results.forEach(item => {
                     resultHTML += `
                         <div class="search-result">
@@ -1791,7 +1864,7 @@
                         </div>
                     `;
                 });
-                
+
             } else if (result.contents) {
                 // Content extraction results
                 resultHTML = `
@@ -1799,7 +1872,7 @@
                         <h4 class="text-blue-400 font-semibold mb-2">Kinyert tartalmak (${result.total_contents})</h4>
                     </div>
                 `;
-                
+
                 result.contents.forEach(item => {
                     resultHTML += `
                         <div class="search-result">
@@ -1809,7 +1882,7 @@
                         </div>
                     `;
                 });
-                
+
                 if (result.ai_summary) {
                     resultHTML += `
                         <div class="mt-4 p-4 bg-gray-900 rounded-lg">
@@ -1818,7 +1891,7 @@
                         </div>
                     `;
                 }
-                
+
             } else if (result.summary) {
                 // Research trends result
                 resultHTML = `
@@ -1829,7 +1902,7 @@
                         </div>
                     </div>
                 `;
-                
+
                 if (result.sources) {
                     resultHTML += `<h4 class="text-blue-400 font-semibold mb-2">Források</h4>`;
                     result.sources.forEach(source => {
@@ -1846,7 +1919,7 @@
                     });
                 }
             }
-            
+
             contentDiv.innerHTML = resultHTML;
             resultDiv.style.display = 'block';
         }
@@ -1882,18 +1955,18 @@
         // Execute Alpha service
         async function executeAlphaService(e) {
             e.preventDefault();
-            
+
             const inputData = document.getElementById('inputData').value;
             const parameters = document.getElementById('parameters').value;
             const button = document.getElementById('executeButton');
-            
+
             try {
                 const inputJson = JSON.parse(inputData);
                 const paramsJson = parameters ? JSON.parse(parameters) : {};
-                
+
                 button.disabled = true;
                 button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Futtatás...';
-                
+
                 const response = await fetch(`/api/alpha/${currentService}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1905,7 +1978,7 @@
                 });
 
                 const result = await response.json();
-                
+
                 if (response.ok) {
                     showAlphaResult(result);
                 } else {
@@ -1923,7 +1996,7 @@
         function showAlphaResult(result) {
             const resultDiv = document.getElementById('alphaModalResult');
             const contentDiv = document.getElementById('alphaResultContent');
-            
+
             contentDiv.innerHTML = `
                 <div class="space-y-4">
                     <div>
@@ -1944,7 +2017,7 @@
                     </div>
                 </div>
             `;
-            
+
             resultDiv.style.display = 'block';
         }
 
@@ -1952,7 +2025,7 @@
         function addMessage(type, content, model = null) {
             const messageDiv = document.createElement('div');
             messageDiv.className = 'message';
-            
+
             if (type === 'user') {
                 messageDiv.innerHTML = `
                     <div class="flex justify-end">
@@ -1979,7 +2052,7 @@
                     </div>
                 `;
             }
-            
+
             messagesContainer.appendChild(messageDiv);
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
@@ -2050,6 +2123,182 @@
                 closeModal('alphaServiceModal');
             }
         });
+
+        /**
+         * Quick Exa Search function
+         */
+        function quickExaSearch() {
+            const query = prompt('Add meg a keresési kulcsszót:');
+            if (query) {
+                messageInput.value = `Keress rá az Exa AI-jal: ${query}`;
+                sendMessage();
+            }
+        }
+
+        /**
+         * Quick Alpha Service function
+         */
+        function quickAlphaService() {
+            const serviceName = prompt('Add meg az Alpha szolgáltatás nevét (pl: AlphaFold, AlphaClimate, AlphaAI):');
+            if (serviceName) {
+                const query = prompt('Mit szeretnél elemezni/kutatni?');
+                if (query) {
+                    startSimpleAlphaService(serviceName, query);
+                }
+            }
+        }
+
+        /**
+         * Starts a simple Alpha service
+         */
+        async function startSimpleAlphaService(serviceName, query, details = '') {
+            if (isTyping) return;
+
+            isTyping = true;
+            sendButton.disabled = true;
+
+            // Hide welcome screen and show messages
+            welcomeScreen.style.display = 'none';
+            messagesContainer.style.display = 'block';
+
+            addMessage('user', `${serviceName} elemzés: ${query}`);
+            addMessage('ai', `⚡ ${serviceName} szolgáltatás indítása...\n\nGemini 2.5 Pro elemzést végez a megadott kérésre.`, 'Alpha Service');
+
+            try {
+                const response = await fetch(`/api/alpha/simple/${serviceName}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        service_name: serviceName,
+                        query: query,
+                        details: details
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    let result = `# 🎯 ${data.service_name} Elemzés\n\n`;
+                    result += `**Kategória:** ${data.category}\n`;
+                    result += `**Leírás:** ${data.description}\n`;
+                    result += `**Használt modell:** ${data.model_used}\n\n`;
+                    result += `## 📊 Elemzési Eredmények\n\n${data.analysis}`;
+
+                    addMessage('ai', result, data.model_used);
+                } else {
+                    addMessage('ai', 'Hiba történt az Alpha szolgáltatás során.', 'Error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                addMessage('ai', `Hiba történt az Alpha szolgáltatás során: ${error.message}`, 'Error');
+            } finally {
+                isTyping = false;
+                sendButton.disabled = false;
+            }
+        }
+
+        /**
+         * Starts deep research for a given query
+         */
+        async function startDeepResearch(query) {
+            if (isTyping) return;
+
+            isTyping = true;
+
+            // Add a message showing research is starting
+            addMessage('ai', `🔍 Mélyreható kutatás indítása: "${query}"...\n\nEz több percet is igénybe vehet, hiszen minden AI modellt és számos forrást felhasználok a legteljesebb elemzés érdekében.`, 'Deep Research');
+
+            try {
+                const response = await fetch(`/api/deep_research`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        query: query,
+                        user_id: currentUserId
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    let researchResult = `# 🎯 Mélyreható Kutatási Eredmények\n\n`;
+                    researchResult += `**Kutatott téma:** ${data.query}\n`;
+                    researchResult += `**Források száma:** ${data.total_sources}\n`;
+                    researchResult += `**Felhasznált modellek:** ${data.models_used.join(', ')}\n\n`;
+
+                    // Individual analyses
+                    if (data.individual_analyses) {
+                        researchResult += `## 📊 Különböző AI Modellek Elemzései\n\n`;
+                        for (const [model, analysis] of Object.entries(data.individual_analyses)) {
+                            researchResult += `### ${model} Elemzése\n${analysis}\n\n`;
+                        }
+                    }
+
+                    // Final synthesis
+                    if (data.final_synthesis) {
+                        researchResult += `## 🔬 Végső Szintézis (Gemini 2.5 Pro)\n\n${data.final_synthesis}\n\n`;
+                    }
+
+                    // Sources
+                    if (data.sources && data.sources.length > 0) {
+                        researchResult += `## 📚 Felhasznált Források\n\n`;
+                        data.sources.slice(0, 10).forEach((source, i) => {
+                            researchResult += `${i + 1}. [${source.title}](${source.url})\n`;
+                        });
+                    }
+
+                    addMessage('ai', researchResult, 'Deep Research Complete');
+                } else {
+                    addMessage('ai', 'Hiba történt a mélyreható kutatás során.', 'Error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                addMessage('ai', 'Hiba történt a mélyreható kutatás során.', 'Error');
+            } finally {
+                isTyping = false;
+            }
+        }
+
+        // Add message to chat
+        function addMessage(type, content, modelUsed = '') {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+
+            if (type === 'user') {
+                messageDiv.innerHTML = `
+                    <div class="flex justify-end">
+                        <div class="user-message">
+                            ${content}
+                        </div>
+                    </div>
+                `;
+            } else {
+                messageDiv.innerHTML = `
+                    <div class="ai-message">
+                        <div class="ai-header">
+                            <div class="ai-avatar">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="ai-info">
+                                <h4>Jade AI</h4>
+                                <p>${modelUsed || 'AI Assistant'}</p>
+                            </div>
+                        </div>
+                        <div class="prose prose-invert max-w-none">
+                            ${content.replace(/\n/g, '<br>')}
+                        </div>
+                        <div class="ai-actions">
+                            <button class="deep-research-btn" onclick="startDeepResearch('${content.replace(/'/g, '\\\'').substring(0, 100)}')">
+                                <i class="fas fa-search-plus"></i> Bővebben
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            messagesContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
     </script>
 </body>
 </html>
