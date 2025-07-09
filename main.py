@@ -4,11 +4,6 @@ from typing import List, Dict, Any, Optional
 import asyncio
 import httpx # Aszinkron HTTP kérésekhez
 import logging
-import sqlite3
-import hashlib
-import time
-from datetime import datetime, timedelta
-from functools import wraps
 
 # Google Cloud kliensekhez
 from google.cloud import aiplatform
@@ -137,17 +132,6 @@ class ChatRequest(BaseModel):
     message: str
     user_id: str = Field(..., description="A felhasználó egyedi azonosítója a beszélgetési előzményekhez.")
 
-class UserSubscriptionRequest(BaseModel):
-    user_id: str
-    subscription_type: str = Field(..., pattern="^(basic|pro|enterprise)$")
-    
-class UserUsageResponse(BaseModel):
-    user_id: str
-    subscription_type: str
-    api_calls_today: int
-    api_calls_limit: int
-    remaining_calls: int
-
 class ScientificInsightRequest(BaseModel):
     query: str = Field(..., min_length=5, description="A tudományos vagy innovációs lekérdezés.")
     num_results: int = Field(default=5, ge=1, le=10, description="Hány releváns találatot keressen az Exa AI.")
@@ -173,242 +157,6 @@ class AlphaGenomeRequest(BaseModel):
     organism: str = Field(..., description="A szervezet, amelyből a genom származik (pl. 'Homo sapiens').")
     analysis_type: str = Field(..., description="Az elemzés típusa ('átfogó', 'génkódoló régiók', 'funkcionális elemek').")
     include_predictions: bool = Field(default=False, description="Tartalmazzon-e fehérje struktúra előrejelzéseket (AlphaFold).")
-
-# === ADATBÁZIS ÉS CACHE RENDSZER ===
-
-# Adatbázis inicializálás
-def init_database():
-    """Adatbázis táblák létrehozása"""
-    conn = sqlite3.connect('deep_discovery.db')
-    cursor = conn.cursor()
-    
-    # Felhasználók tábla
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            id TEXT PRIMARY KEY,
-            email TEXT UNIQUE,
-            name TEXT,
-            subscription_type TEXT DEFAULT 'basic',
-            api_calls_today INTEGER DEFAULT 0,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            last_active TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
-    
-    # Chat előzmények tábla
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS chat_history (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id TEXT,
-            message TEXT,
-            response TEXT,
-            model_used TEXT,
-            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users (id)
-        )
-    ''')
-    
-    # Kutatási eredmények cache tábla
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS research_cache (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            query_hash TEXT UNIQUE,
-            query TEXT,
-            results TEXT,
-            model_used TEXT,
-            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
-    
-    # API használati statisztikák
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS api_usage (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id TEXT,
-            endpoint TEXT,
-            model_used TEXT,
-            tokens_used INTEGER,
-            cost REAL,
-            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users (id)
-        )
-    ''')
-    
-    conn.commit()
-    conn.close()
-
-# Adatbázis inicializálás
-init_database()
-
-# === PIACI FUNKCIÓK ===
-
-# Előfizetési limitek
-SUBSCRIPTION_LIMITS = {
-    'basic': {
-        'daily_api_calls': 50,
-        'max_sequence_length': 1000,
-        'concurrent_requests': 1,
-        'advanced_models': False,
-        'lab_analysis': False,
-        'patent_search': False,
-        'market_analysis': False,
-        'priority_support': False
-    },
-    'pro': {
-        'daily_api_calls': 500,
-        'max_sequence_length': 10000,
-        'concurrent_requests': 3,
-        'advanced_models': True,
-        'lab_analysis': True,
-        'patent_search': True,
-        'market_analysis': False,
-        'priority_support': True
-    },
-    'enterprise': {
-        'daily_api_calls': 10000,
-        'max_sequence_length': 50000,
-        'concurrent_requests': 10,
-        'advanced_models': True,
-        'lab_analysis': True,
-        'patent_search': True,
-        'market_analysis': True,
-        'priority_support': True
-    },
-    'research_institution': {
-        'daily_api_calls': 25000,
-        'max_sequence_length': 100000,
-        'concurrent_requests': 20,
-        'advanced_models': True,
-        'lab_analysis': True,
-        'patent_search': True,
-        'market_analysis': True,
-        'priority_support': True,
-        'custom_models': True,
-        'bulk_processing': True
-    }
-}
-
-# Rate limiting decorator
-def rate_limit(func):
-    @wraps(func)
-    async def wrapper(*args, **kwargs):
-        # Implementáció a rate limiting logikához
-        return await func(*args, **kwargs)
-    return wrapper
-
-# Felhasználó validáció
-def validate_user_limits(user_id: str, endpoint: str) -> bool:
-    """Ellenőrzi, hogy a felhasználó túllépi-e a limiteket"""
-    conn = sqlite3.connect('deep_discovery.db')
-    cursor = conn.cursor()
-    
-    cursor.execute('SELECT subscription_type, api_calls_today FROM users WHERE id = ?', (user_id,))
-    result = cursor.fetchone()
-    
-    if not result:
-        # Új felhasználó létrehozása
-        cursor.execute('INSERT INTO users (id, subscription_type) VALUES (?, ?)', (user_id, 'basic'))
-        conn.commit()
-        subscription_type = 'basic'
-        api_calls_today = 0
-    else:
-        subscription_type, api_calls_today = result
-    
-    conn.close()
-    
-    limits = SUBSCRIPTION_LIMITS[subscription_type]
-    return api_calls_today < limits['daily_api_calls']
-
-# Cache rendszer
-def get_cached_result(query: str) -> Optional[Dict]:
-    """Cached eredmény lekérése"""
-    query_hash = hashlib.md5(query.encode()).hexdigest()
-    conn = sqlite3.connect('deep_discovery.db')
-    cursor = conn.cursor()
-    
-    cursor.execute('''
-        SELECT results, model_used, timestamp 
-        FROM research_cache 
-        WHERE query_hash = ? AND timestamp > datetime('now', '-1 hour')
-    ''', (query_hash,))
-    
-    result = cursor.fetchone()
-    conn.close()
-    
-    if result:
-        return {
-            'results': json.loads(result[0]),
-            'model_used': result[1],
-            'cached': True,
-            'timestamp': result[2]
-        }
-    return None
-
-def save_to_cache(query: str, results: Dict, model_used: str):
-    """Eredmény mentése cache-be"""
-    query_hash = hashlib.md5(query.encode()).hexdigest()
-    conn = sqlite3.connect('deep_discovery.db')
-    cursor = conn.cursor()
-    
-    cursor.execute('''
-        INSERT OR REPLACE INTO research_cache (query_hash, query, results, model_used)
-        VALUES (?, ?, ?, ?)
-    ''', (query_hash, query, json.dumps(results), model_used))
-    
-    conn.commit()
-    conn.close()
-
-# === HIBRID AI ORCHESTRATOR ===
-
-class AIOrchestrator:
-    def __init__(self):
-        self.model_performance = {
-            'qwen3': {'avg_response_time': 2.5, 'success_rate': 0.95, 'cost': 0.001},
-            'llama4': {'avg_response_time': 3.0, 'success_rate': 0.93, 'cost': 0.0012},
-            'gemini': {'avg_response_time': 4.0, 'success_rate': 0.98, 'cost': 0.002}
-        }
-        
-    def select_optimal_model(self, task_type: str, user_subscription: str) -> str:
-        """Optimális modell kiválasztása feladat és előfizetés alapján"""
-        if user_subscription == 'basic':
-            return 'qwen3'  # Leggyorsabb és legolcsóbb
-        elif task_type == 'research':
-            return 'gemini'  # Legjobb pontosság kutatáshoz
-        elif task_type == 'chat':
-            return 'llama4'  # Jó beszélgetési képességek
-        else:
-            return 'qwen3'  # Alapértelmezett
-    
-    async def execute_with_fallback(self, task, primary_model: str, fallback_models: List[str]):
-        """Feladat végrehajtása fallback rendszerrel"""
-        models_to_try = [primary_model] + fallback_models
-        
-        for model in models_to_try:
-            try:
-                start_time = time.time()
-                result = await task(model)
-                end_time = time.time()
-                
-                # Teljesítmény frissítése
-                self.update_model_performance(model, end_time - start_time, True)
-                return result, model
-                
-            except Exception as e:
-                logger.warning(f"Modell {model} sikertelen: {e}")
-                self.update_model_performance(model, 0, False)
-                continue
-                
-        raise Exception("Minden AI modell sikertelen volt")
-    
-    def update_model_performance(self, model: str, response_time: float, success: bool):
-        """Modell teljesítmény frissítése"""
-        if model in self.model_performance:
-            perf = self.model_performance[model]
-            perf['avg_response_time'] = (perf['avg_response_time'] + response_time) / 2
-            perf['success_rate'] = (perf['success_rate'] + (1 if success else 0)) / 2
-
-# AI Orchestrator instance
-ai_orchestrator = AIOrchestrator()
 
 # Beszélgetési előzmények tárolása memóriában (egyszerű prototípushoz)
 # Ezt éles környezetben adatbázisra (pl. Firestore) kell cserélni!
@@ -469,23 +217,15 @@ async def health_check_endpoint():
     return {"status": "healthy", "version": app.version, "creator": DIGITAL_FINGERPRINT}
 
 @app.post("/api/deep_discovery/chat")
-@rate_limit
 async def deep_discovery_chat(req: ChatRequest):
     """
-    Kezeli a beszélgetéseket hibrid AI rendszerrel és felhasználói limitekkel.
-    A beszélgetési előzményeket az adatbázis tárolja user_id alapján.
+    Kezeli a beszélgetéseket, a Cerebras Llama 4 és a Gemini 2.5 Pro modelleket használva.
+    A beszélgetési előzményeket a szerver tárolja user_id alapján.
     """
-    # Felhasználói limitek ellenőrzése
-    if not validate_user_limits(req.user_id, 'chat'):
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="API hívás limit elérve. Frissítsd az előfizetésed a további használathoz!"
-        )
-    
     if not cerebras_client and not gemini_model:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Nincs elérhető chat modell (Cerebras Qwen 3/Llama 4 vagy Gemini)."
+            detail="Nincs elérhető chat modell (Cerebras Llama vagy Gemini)."
         )
 
     user_id = req.user_id
@@ -497,7 +237,7 @@ async def deep_discovery_chat(req: ChatRequest):
     # Rendszerüzenet (csak egyszer az elején)
     system_message = {
         "role": "system",
-        "content": "Te egy rendkívül intelligens és szakértő AI asszisztens vagy, aki magyarul válaszol. A neved Jade. Hibrid AI képességekkel rendelkezel (Qwen 3, Llama 4, Gemini), és segítőkész, részletes és innovatív válaszokat adsz a legújabb tudományos és technológiai fejleményekről, különös tekintettel a biológia, kémia, anyagtudomány, orvostudomány és mesterséges intelligencia területére. Használd a tudásodat a legjobb válaszok megadásához."
+        "content": "Te egy rendkívül intelligens és szakértő AI asszisztens vagy, aki magyarul válaszol. A neved Jade. Segítőkész, részletes és innovatív válaszokat adsz a legújabb tudományos és technológiai fejleményekről, különös tekintettel a biológia, kémia, anyagtudomány, orvostudomány és mesterséges intelligencia területére. Használd a tudásodat a legjobb válaszok megadásához."
     }
 
     # Építsük fel a teljes üzenetlistát
@@ -507,84 +247,27 @@ async def deep_discovery_chat(req: ChatRequest):
     model_used = ""
 
     try:
-        # Párhuzamos modell futtatás: Qwen 3 és Llama 4 egyenrangú elsődleges modellek
+        # Próbáljuk meg a Cerebras Llama 4-gyel először (ha elérhető)
         if cerebras_client:
-            async def run_qwen3():
-                try:
-                    logger.info(f"Starting Cerebras Qwen 3 for user {user_id}")
-                    stream = cerebras_client.chat.completions.create(
-                        messages=messages_for_llm,
-                        model="qwen2.5-72b-instruct",
-                        stream=True,
-                        max_completion_tokens=2048,
-                        temperature=0.2,
-                        top_p=1
-                    )
-                    content = ""
-                    for chunk in stream:
-                        if chunk.choices[0].delta.content:
-                            content += chunk.choices[0].delta.content
-                    return content, "Cerebras Qwen 3"
-                except Exception as e:
-                    logger.warning(f"Qwen 3 hiba: {e}")
-                    return None, None
-
-            async def run_llama4():
-                try:
-                    logger.info(f"Starting Cerebras Llama 4 for user {user_id}")
-                    stream = cerebras_client.chat.completions.create(
-                        messages=messages_for_llm,
-                        model="llama-4-scout-17b-16e-instruct",
-                        stream=True,
-                        max_completion_tokens=2048,
-                        temperature=0.2,
-                        top_p=1
-                    )
-                    content = ""
-                    for chunk in stream:
-                        if chunk.choices[0].delta.content:
-                            content += chunk.choices[0].delta.content
-                    return content, "Cerebras Llama 4"
-                except Exception as e:
-                    logger.warning(f"Llama 4 hiba: {e}")
-                    return None, None
-
-            # Párhuzamos futtatás - az első válasz nyer
-            try:
-                tasks = [run_qwen3(), run_llama4()]
-                done, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
-                
-                # Töröljük a függőben lévő feladatokat
-                for task in pending:
-                    task.cancel()
-                
-                # Első sikeres válasz feldolgozása
-                for task in done:
-                    result = await task
-                    if result[0]:  # Ha van válasz
-                        response_text, model_used = result
-                        logger.info(f"Első válasz: {model_used}")
-                        break
-                
-                # Ha egyik sem adott választ, próbáljuk őket szekvenciálisan
-                if not response_text:
-                    logger.warning("Párhuzamos futtatás sikertelen, szekvenciális próbálkozás")
-                    response_text, model_used = await run_qwen3()
-                    if not response_text:
-                        response_text, model_used = await run_llama4()
-                        
-            except Exception as parallel_error:
-                logger.error(f"Párhuzamos futtatás hiba: {parallel_error}")
-                response_text = ""
-        
-        # Ha a Cerebras modellek nem működnek, használjuk a Gemini-t
-        if not response_text and gemini_model:
+            logger.info(f"Using Cerebras Llama 4 for user {user_id}")
+            # A Cerebras chat API-ja is streamel, de a FastAPI csak a teljes választ küldi el egyben itt.
+            stream = cerebras_client.chat.completions.create(
+                messages=messages_for_llm,
+                model="llama-4-scout-17b-16e-instruct", # Használjuk a megadott modellt
+                stream=True,
+                max_completion_tokens=2048,
+                temperature=0.2,
+                top_p=1
+            )
+            for chunk in stream:
+                if chunk.choices[0].delta.content:
+                    response_text += chunk.choices[0].delta.content
+            model_used = "Cerebras Llama 4"
+        elif gemini_model:
             # Ha a Cerebras nem elérhető, használjuk a Gemini 2.5 Pro-t
             logger.info(f"Using Gemini 2.5 Pro for user {user_id}")
-            # Gemini esetén a messages formátum átalakítása szükséges
-            conversation_text = "\n".join([f"{msg['role']}: {msg['content']}" for msg in messages_for_llm])
             response = await gemini_model.generate_content_async(
-                conversation_text,
+                messages_for_llm,
                 generation_config=genai.types.GenerationConfig(
                     max_output_tokens=2048,
                     temperature=0.2
@@ -600,23 +283,6 @@ async def deep_discovery_chat(req: ChatRequest):
         history.append({"role": "user", "content": current_message})
         history.append({"role": "assistant", "content": response_text})
         chat_histories[user_id] = history # Mentés memóriába
-        
-        # Adatbázisba mentés
-        conn = sqlite3.connect('deep_discovery.db')
-        cursor = conn.cursor()
-        cursor.execute('''
-            INSERT INTO chat_history (user_id, message, response, model_used)
-            VALUES (?, ?, ?, ?)
-        ''', (user_id, current_message, response_text, model_used))
-        
-        # API használat frissítése
-        cursor.execute('''
-            UPDATE users SET api_calls_today = api_calls_today + 1, last_active = CURRENT_TIMESTAMP
-            WHERE id = ?
-        ''', (user_id,))
-        
-        conn.commit()
-        conn.close()
 
         return {
             'response': response_text,
@@ -631,97 +297,6 @@ async def deep_discovery_chat(req: ChatRequest):
             detail=f"Hiba történt a beszélgetés során: {e}"
         )
 
-@app.post("/api/subscription/upgrade")
-async def upgrade_subscription(req: UserSubscriptionRequest):
-    """Felhasználói előfizetés frissítése"""
-    conn = sqlite3.connect('deep_discovery.db')
-    cursor = conn.cursor()
-    
-    cursor.execute('''
-        UPDATE users 
-        SET subscription_type = ?, api_calls_today = 0
-        WHERE id = ?
-    ''', (req.subscription_type, req.user_id))
-    
-    conn.commit()
-    conn.close()
-    
-    return {
-        'message': f'Előfizetés sikeresen frissítve: {req.subscription_type}',
-        'new_limits': SUBSCRIPTION_LIMITS[req.subscription_type]
-    }
-
-@app.get("/api/user/usage/{user_id}")
-async def get_user_usage(user_id: str):
-    """Felhasználói használati statisztikák lekérése"""
-    conn = sqlite3.connect('deep_discovery.db')
-    cursor = conn.cursor()
-    
-    cursor.execute('''
-        SELECT subscription_type, api_calls_today 
-        FROM users 
-        WHERE id = ?
-    ''', (user_id,))
-    
-    result = cursor.fetchone()
-    conn.close()
-    
-    if not result:
-        return UserUsageResponse(
-            user_id=user_id,
-            subscription_type='basic',
-            api_calls_today=0,
-            api_calls_limit=SUBSCRIPTION_LIMITS['basic']['daily_api_calls'],
-            remaining_calls=SUBSCRIPTION_LIMITS['basic']['daily_api_calls']
-        )
-    
-    subscription_type, api_calls_today = result
-    limit = SUBSCRIPTION_LIMITS[subscription_type]['daily_api_calls']
-    
-    return UserUsageResponse(
-        user_id=user_id,
-        subscription_type=subscription_type,
-        api_calls_today=api_calls_today,
-        api_calls_limit=limit,
-        remaining_calls=max(0, limit - api_calls_today)
-    )
-
-@app.get("/api/analytics/dashboard")
-async def analytics_dashboard():
-    """Platformstatisztikák dashboard"""
-    conn = sqlite3.connect('deep_discovery.db')
-    cursor = conn.cursor()
-    
-    # Aktív felhasználók
-    cursor.execute('''
-        SELECT COUNT(*) FROM users 
-        WHERE last_active > datetime('now', '-7 days')
-    ''')
-    active_users = cursor.fetchone()[0]
-    
-    # Összes API hívás ma
-    cursor.execute('''
-        SELECT SUM(api_calls_today) FROM users
-    ''')
-    total_api_calls = cursor.fetchone()[0] or 0
-    
-    # Előfizetési megoszlás
-    cursor.execute('''
-        SELECT subscription_type, COUNT(*) 
-        FROM users 
-        GROUP BY subscription_type
-    ''')
-    subscription_stats = dict(cursor.fetchall())
-    
-    conn.close()
-    
-    return {
-        'active_users_week': active_users,
-        'total_api_calls_today': total_api_calls,
-        'subscription_distribution': subscription_stats,
-        'model_performance': ai_orchestrator.model_performance
-    }
-
 @app.get("/api/deep_discovery/chat_history/{user_id}")
 async def get_chat_history_endpoint(user_id: str):
     """Visszaadja egy adott felhasználó beszélgetési előzményeit."""
@@ -731,22 +306,14 @@ async def get_chat_history_endpoint(user_id: str):
 @app.post("/api/deep_discovery/clear_chat_history/{user_id}")
 async def clear_chat_history_endpoint(user_id: str):
     """Törli egy adott felhasználó beszélgetési előzményeit."""
-    # Memóriából törlés
     if user_id in chat_histories:
         del chat_histories[user_id]
-    
-    # Adatbázisból törlés
-    try:
-        conn = sqlite3.connect('deep_discovery.db')
-        cursor = conn.cursor()
-        cursor.execute('DELETE FROM chat_history WHERE user_id = ?', (user_id,))
-        conn.commit()
-        conn.close()
-    except Exception as e:
-        logger.warning(f"Database cleanup error for {user_id}: {e}")
-    
-    logger.info(f"Chat history cleared for user {user_id}")
-    return {'message': f'Beszélgetési előzmények törölve a felhasználó számára: {user_id}'}
+        logger.info(f"Chat history cleared for user {user_id}")
+        return {'message': f'Beszélgetési előzmények törölve a felhasználó számára: {user_id}'}
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail=f"Nincs beszélgetési előzmény a felhasználó számára: {user_id}"
+    )
 
 @app.post("/api/deep_discovery/research_trends")
 async def get_research_trends(req: ScientificInsightRequest):
@@ -966,64 +533,19 @@ async def simulation_optimizer(req: SimulationOptimizerRequest):
 
     try:
         if cerebras_client:
-            async def run_qwen3_sim():
-                try:
-                    logger.info(f"Starting Qwen 3 for simulation: {req.simulation_type}")
-                    stream = cerebras_client.chat.completions.create(
-                        messages=[{"role": "user", "content": prompt}],
-                        model="qwen2.5-72b-instruct",
-                        stream=True,
-                        max_completion_tokens=1024,
-                        temperature=0.3,
-                        top_p=1
-                    )
-                    content = ""
-                    for chunk in stream:
-                        if chunk.choices[0].delta.content:
-                            content += chunk.choices[0].delta.content
-                    return content, "Cerebras Qwen 3"
-                except Exception as e:
-                    logger.warning(f"Qwen 3 szimulációs hiba: {e}")
-                    return None, None
-
-            async def run_llama4_sim():
-                try:
-                    logger.info(f"Starting Llama 4 for simulation: {req.simulation_type}")
-                    stream = cerebras_client.chat.completions.create(
-                        messages=[{"role": "user", "content": prompt}],
-                        model="llama-4-scout-17b-16e-instruct",
-                        stream=True,
-                        max_completion_tokens=1024,
-                        temperature=0.3,
-                        top_p=1
-                    )
-                    content = ""
-                    for chunk in stream:
-                        if chunk.choices[0].delta.content:
-                            content += chunk.choices[0].delta.content
-                    return content, "Cerebras Llama 4"
-                except Exception as e:
-                    logger.warning(f"Llama 4 szimulációs hiba: {e}")
-                    return None, None
-
-            # Párhuzamos futtatás szimulációhoz
-            try:
-                tasks = [run_qwen3_sim(), run_llama4_sim()]
-                done, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
-                
-                for task in pending:
-                    task.cancel()
-                
-                for task in done:
-                    result = await task
-                    if result[0]:
-                        response_text, model_used = result
-                        logger.info(f"Szimulációs első válasz: {model_used}")
-                        break
-                        
-            except Exception as parallel_error:
-                logger.error(f"Szimulációs párhuzamos hiba: {parallel_error}")
-                response_text = ""
+            logger.info(f"Using Cerebras Llama 4 for simulation optimization: {req.simulation_type}")
+            stream = cerebras_client.chat.completions.create(
+                messages=[{"role": "user", "content": prompt}],
+                model="llama-4-scout-17b-16e-instruct",
+                stream=True,
+                max_completion_tokens=1024,
+                temperature=0.3,
+                top_p=1
+            )
+            for chunk in stream:
+                if chunk.choices[0].delta.content:
+                    response_text += chunk.choices[0].delta.content
+            model_used = "Cerebras Llama 4"
         elif gemini_model:
             logger.info(f"Using Gemini 2.5 Pro for simulation optimization: {req.simulation_type}")
             response = await gemini_model.generate_content_async(
@@ -1052,191 +574,6 @@ async def simulation_optimizer(req: SimulationOptimizerRequest):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Hiba történt a szimuláció optimalizálása során: {e}"
-        )
-
-@app.post("/api/deep_discovery/patent_analysis")
-async def patent_analysis(request: Request):
-    """
-    Szabadalom elemzés és IP védelem - valós üzleti értékű funkció
-    """
-    try:
-        data = await request.json()
-        invention_description = data.get('invention_description', '')
-        technology_field = data.get('technology_field', '')
-        
-        if not invention_description:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Találmány leírása szükséges"
-            )
-        
-        # Cache ellenőrzés
-        cache_key = f"patent_{hashlib.md5(invention_description.encode()).hexdigest()}"
-        cached_result = get_cached_result(cache_key)
-        if cached_result:
-            return cached_result
-        
-        # Exa keresés szabadalmakra
-        patent_search_query = f"patent {technology_field} {invention_description} invention"
-        
-        if exa_client:
-            search_results = exa_client.search(
-                query=patent_search_query,
-                num_results=10,
-                text_contents={"max_characters": 1000}
-            )
-            
-            patent_info = []
-            for result in search_results.results:
-                patent_info.append({
-                    "title": result.title,
-                    "url": result.url,
-                    "content": result.text_contents.text if result.text_contents else ""
-                })
-        else:
-            patent_info = []
-        
-        # AI elemzés
-        analysis_prompt = f"""
-        Szabadalom és IP elemzés:
-        
-        Találmány: {invention_description}
-        Technológiai terület: {technology_field}
-        
-        Talált kapcsolódó szabadalmak:
-        {json.dumps(patent_info, indent=2)}
-        
-        Adj részletes elemzést:
-        1. Szabadalmazhatóság értékelése
-        2. Hasonló szabadalmak elemzése
-        3. IP stratégia javaslat
-        4. Kockázatok és lehetőségek
-        5. Következő lépések
-        """
-        
-        response_text = ""
-        model_used = ""
-        
-        if gemini_model:
-            response = await gemini_model.generate_content_async(
-                analysis_prompt,
-                generation_config=genai.types.GenerationConfig(
-                    max_output_tokens=2048,
-                    temperature=0.1
-                )
-            )
-            response_text = response.text
-            model_used = "Google Gemini 2.5 Pro"
-        
-        result = {
-            "invention_analysis": response_text,
-            "related_patents": patent_info,
-            "model_used": model_used,
-            "timestamp": datetime.now().isoformat()
-        }
-        
-        # Cache mentés
-        save_to_cache(cache_key, result, model_used)
-        
-        return result
-        
-    except Exception as e:
-        logger.error(f"Szabadalom elemzési hiba: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Hiba a szabadalom elemzés során: {e}"
-        )
-
-@app.post("/api/deep_discovery/market_analysis")
-async def market_analysis(request: Request):
-    """
-    Piaci elemzés és konkurencia kutatás - valós üzleti értékű funkció
-    """
-    try:
-        data = await request.json()
-        product_description = data.get('product_description', '')
-        target_market = data.get('target_market', '')
-        
-        if not product_description:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Termék leírása szükséges"
-            )
-        
-        # Piaci kutatás az Exa-val
-        market_queries = [
-            f"market size {target_market} {product_description}",
-            f"competitors {product_description} industry analysis",
-            f"market trends {target_market} 2024"
-        ]
-        
-        market_data = []
-        if exa_client:
-            for query in market_queries:
-                try:
-                    search_results = exa_client.search(
-                        query=query,
-                        num_results=5,
-                        text_contents={"max_characters": 800}
-                    )
-                    
-                    for result in search_results.results:
-                        market_data.append({
-                            "query": query,
-                            "title": result.title,
-                            "url": result.url,
-                            "content": result.text_contents.text if result.text_contents else ""
-                        })
-                except Exception as e:
-                    logger.warning(f"Piaci keresési hiba: {e}")
-                    continue
-        
-        # AI elemzés
-        analysis_prompt = f"""
-        Piaci elemzés és üzleti stratégia:
-        
-        Termék/szolgáltatás: {product_description}
-        Célpiac: {target_market}
-        
-        Piaci kutatás eredményei:
-        {json.dumps(market_data, indent=2)}
-        
-        Adj részletes üzleti elemzést:
-        1. Piaci méret és potenciál
-        2. Főbb versenytársak elemzése
-        3. Árképzési stratégia
-        4. SWOT elemzés
-        5. Go-to-market stratégia
-        6. Kockázatok és lehetőségek
-        7. Pénzügyi előrejelzések
-        """
-        
-        response_text = ""
-        model_used = ""
-        
-        if gemini_model:
-            response = await gemini_model.generate_content_async(
-                analysis_prompt,
-                generation_config=genai.types.GenerationConfig(
-                    max_output_tokens=2048,
-                    temperature=0.2
-                )
-            )
-            response_text = response.text
-            model_used = "Google Gemini 2.5 Pro"
-        
-        return {
-            "market_analysis": response_text,
-            "market_research_data": market_data,
-            "model_used": model_used,
-            "timestamp": datetime.now().isoformat()
-        }
-        
-    except Exception as e:
-        logger.error(f"Piaci elemzési hiba: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Hiba a piaci elemzés során: {e}"
         )
 
 @app.post("/api/deep_discovery/alphagenome")
@@ -1291,69 +628,8 @@ async def alphagenome_analysis(req: AlphaGenomeRequest):
         response_text = ""
         model_used = ""
 
-        # Párhuzamos genomikai elemzés: Qwen 3 és Llama 4 egyenrangú
-        if cerebras_client:
-            async def run_qwen3_genome():
-                try:
-                    logger.info(f"Starting Qwen 3 for genome analysis: {req.analysis_type}")
-                    stream = cerebras_client.chat.completions.create(
-                        messages=[{"role": "user", "content": analysis_prompt}],
-                        model="qwen2.5-72b-instruct",
-                        stream=True,
-                        max_completion_tokens=2048,
-                        temperature=0.1,
-                        top_p=0.9
-                    )
-                    content = ""
-                    for chunk in stream:
-                        if chunk.choices[0].delta.content:
-                            content += chunk.choices[0].delta.content
-                    return content, "Cerebras Qwen 3"
-                except Exception as e:
-                    logger.warning(f"Qwen 3 genomikai hiba: {e}")
-                    return None, None
-
-            async def run_llama4_genome():
-                try:
-                    logger.info(f"Starting Llama 4 for genome analysis: {req.analysis_type}")
-                    stream = cerebras_client.chat.completions.create(
-                        messages=[{"role": "user", "content": analysis_prompt}],
-                        model="llama-4-scout-17b-16e-instruct",
-                        stream=True,
-                        max_completion_tokens=2048,
-                        temperature=0.1,
-                        top_p=0.9
-                    )
-                    content = ""
-                    for chunk in stream:
-                        if chunk.choices[0].delta.content:
-                            content += chunk.choices[0].delta.content
-                    return content, "Cerebras Llama 4"
-                except Exception as e:
-                    logger.warning(f"Llama 4 genomikai hiba: {e}")
-                    return None, None
-
-            # Párhuzamos futtatás genomikai elemzéshez
-            try:
-                tasks = [run_qwen3_genome(), run_llama4_genome()]
-                done, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
-                
-                for task in pending:
-                    task.cancel()
-                
-                for task in done:
-                    result = await task
-                    if result[0]:
-                        response_text, model_used = result
-                        logger.info(f"Genomikai első válasz: {model_used}")
-                        break
-                        
-            except Exception as parallel_error:
-                logger.error(f"Genomikai párhuzamos hiba: {parallel_error}")
-                response_text = ""
-        
-        # Ha Qwen 3 nem működik, próbáljuk a Gemini-t
-        if not response_text and gemini_model:
+        # Először próbáljuk a Gemini-vel, amely jobb a tudományos szövegek elemzésében
+        if gemini_model:
             logger.info(f"Using Gemini 2.5 Pro for AlphaGenome analysis: {req.analysis_type}")
             response = await gemini_model.generate_content_async(
                 analysis_prompt,
@@ -1364,7 +640,7 @@ async def alphagenome_analysis(req: AlphaGenomeRequest):
             )
             response_text = response.text
             model_used = "Google Gemini 2.5 Pro"
-        elif not response_text and cerebras_client:
+        elif cerebras_client:
             logger.info(f"Using Cerebras Llama 4 for AlphaGenome analysis: {req.analysis_type}")
             stream = cerebras_client.chat.completions.create(
                 messages=[{"role": "user", "content": analysis_prompt}],
