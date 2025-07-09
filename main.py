@@ -123,6 +123,38 @@ class ScientificInsightRequest(BaseModel):
     num_results: int = Field(default=5, ge=1, le=10, description="Találatok száma")
     summary_length: int = Field(default=200, ge=50, le=500, description="Összefoglaló hossza")
 
+class AdvancedExaRequest(BaseModel):
+    query: str = Field(..., description="Keresési lekérdezés")
+    type: str = Field(default="neural", description="Keresés típusa: neural, keyword, similarity")
+    num_results: int = Field(default=10, ge=1, le=50, description="Találatok száma")
+    include_domains: List[str] = Field(default=[], description="Csak ezeken a domaineken keressen")
+    exclude_domains: List[str] = Field(default=[], description="Ezeket a domaineket zárja ki")
+    start_crawl_date: Optional[str] = Field(None, description="Kezdő dátum (YYYY-MM-DD)")
+    end_crawl_date: Optional[str] = Field(None, description="Befejező dátum (YYYY-MM-DD)")
+    start_published_date: Optional[str] = Field(None, description="Publikálás kezdő dátuma")
+    end_published_date: Optional[str] = Field(None, description="Publikálás befejező dátuma")
+    include_text: List[str] = Field(default=[], description="Ezeket a szövegeket tartalmaznia kell")
+    exclude_text: List[str] = Field(default=[], description="Ezeket a szövegeket nem tartalmazhatja")
+    category: Optional[str] = Field(None, description="Kategória szűrő")
+    subcategory: Optional[str] = Field(None, description="Alkategória szűrő")
+    livecrawl: str = Field(default="always", description="Live crawl: always, never, when_necessary")
+    text_contents_options: Dict[str, Any] = Field(default_factory=lambda: {
+        "max_characters": 2000,
+        "include_html_tags": False,
+        "strategy": "comprehensive"
+    })
+
+class ExaSimilarityRequest(BaseModel):
+    url: str = Field(..., description="Referencia URL")
+    num_results: int = Field(default=10, ge=1, le=50, description="Hasonló találatok száma")
+    category_weights: Dict[str, float] = Field(default={}, description="Kategória súlyok")
+    exclude_source_domain: bool = Field(default=True, description="Forrás domain kizárása")
+
+class ExaContentsRequest(BaseModel):
+    ids: List[str] = Field(..., description="Exa result ID-k")
+    summary: bool = Field(default=True, description="Összefoglaló generálása")
+    highlights: Dict[str, Any] = Field(default_factory=dict, description="Kiemelés opciók")
+
 class ProteinLookupRequest(BaseModel):
     protein_id: str = Field(..., description="Fehérje azonosító")
 
@@ -528,6 +560,301 @@ async def deep_discovery_chat(req: ChatRequest):
         )
 
 # Meglévő specializált végpontok megőrzése
+@app.post("/api/exa/advanced_search")
+async def exa_advanced_search(req: AdvancedExaRequest):
+    """Fejlett Exa keresés minden paraméterrel"""
+    if not exa_client:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Exa AI nem elérhető"
+        )
+
+    try:
+        # Keresési paraméterek összeállítása
+        search_params = {
+            "query": req.query,
+            "num_results": req.num_results,
+            "text_contents": req.text_contents_options,
+            "livecrawl": req.livecrawl
+        }
+
+        # Típus alapú keresés
+        if req.type == "similarity" and hasattr(exa_client, 'find_similar'):
+            # Hasonlóság alapú kereséshez URL szükséges
+            search_params["type"] = "similarity"
+        elif req.type == "keyword":
+            search_params["type"] = "keyword"
+        else:
+            search_params["type"] = "neural"
+
+        # Domain szűrők
+        if req.include_domains:
+            search_params["include_domains"] = req.include_domains
+        if req.exclude_domains:
+            search_params["exclude_domains"] = req.exclude_domains
+
+        # Dátum szűrők
+        if req.start_crawl_date:
+            search_params["start_crawl_date"] = req.start_crawl_date
+        if req.end_crawl_date:
+            search_params["end_crawl_date"] = req.end_crawl_date
+        if req.start_published_date:
+            search_params["start_published_date"] = req.start_published_date
+        if req.end_published_date:
+            search_params["end_published_date"] = req.end_published_date
+
+        # Szöveg szűrők
+        if req.include_text:
+            search_params["include_text"] = req.include_text
+        if req.exclude_text:
+            search_params["exclude_text"] = req.exclude_text
+
+        # Kategória szűrők
+        if req.category:
+            search_params["category"] = req.category
+        if req.subcategory:
+            search_params["subcategory"] = req.subcategory
+
+        logger.info(f"Advanced Exa search with params: {search_params}")
+        response = exa_client.search(**search_params)
+
+        # Eredmények feldolgozása
+        results = []
+        for result in response.results:
+            processed_result = {
+                "id": result.id,
+                "title": result.title,
+                "url": result.url,
+                "published_date": result.published_date,
+                "author": getattr(result, 'author', None),
+                "score": getattr(result, 'score', None),
+                "text_content": result.text_contents.text if result.text_contents else None,
+                "highlights": getattr(result, 'highlights', None)
+            }
+            results.append(processed_result)
+
+        return {
+            "query": req.query,
+            "search_type": req.type,
+            "total_results": len(results),
+            "results": results,
+            "search_params": search_params,
+            "status": "success"
+        }
+
+    except Exception as e:
+        logger.error(f"Error in advanced Exa search: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Hiba a fejlett Exa keresés során: {e}"
+        )
+
+@app.post("/api/exa/find_similar")
+async def exa_find_similar(req: ExaSimilarityRequest):
+    """Hasonló tartalmak keresése URL alapján"""
+    if not exa_client:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Exa AI nem elérhető"
+        )
+
+    try:
+        params = {
+            "url": req.url,
+            "num_results": req.num_results,
+            "exclude_source_domain": req.exclude_source_domain,
+            "text_contents": {
+                "max_characters": 2000,
+                "strategy": "comprehensive"
+            }
+        }
+
+        if req.category_weights:
+            params["category_weights"] = req.category_weights
+
+        response = exa_client.find_similar(**params)
+
+        results = []
+        for result in response.results:
+            processed_result = {
+                "id": result.id,
+                "title": result.title,
+                "url": result.url,
+                "similarity_score": getattr(result, 'score', None),
+                "published_date": result.published_date,
+                "text_content": result.text_contents.text if result.text_contents else None
+            }
+            results.append(processed_result)
+
+        return {
+            "reference_url": req.url,
+            "similar_results": results,
+            "total_found": len(results),
+            "status": "success"
+        }
+
+    except Exception as e:
+        logger.error(f"Error in Exa similarity search: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Hiba a hasonlóság alapú keresés során: {e}"
+        )
+
+@app.post("/api/exa/get_contents")
+async def exa_get_contents(req: ExaContentsRequest):
+    """Részletes tartalom lekérése Exa result ID alapján"""
+    if not exa_client:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Exa AI nem elérhető"
+        )
+
+    try:
+        params = {
+            "ids": req.ids,
+            "text_contents": {
+                "max_characters": 5000,
+                "include_html_tags": True,
+                "strategy": "comprehensive"
+            }
+        }
+
+        if req.highlights:
+            params["highlights"] = req.highlights
+
+        response = exa_client.get_contents(**params)
+
+        contents = []
+        for content in response.contents:
+            processed_content = {
+                "id": content.id,
+                "url": content.url,
+                "title": content.title,
+                "text": content.text_contents.text if content.text_contents else None,
+                "html": getattr(content.text_contents, 'html', None) if content.text_contents else None,
+                "highlights": getattr(content, 'highlights', None),
+                "published_date": content.published_date,
+                "author": getattr(content, 'author', None)
+            }
+            contents.append(processed_content)
+
+        # AI összefoglaló generálása ha kért
+        summary = ""
+        if req.summary and (gemini_model or cerebras_client):
+            combined_text = "\n\n".join([c["text"] for c in contents if c["text"]])[:10000]
+            
+            summary_prompt = f"""
+            Készíts részletes összefoglalót a következő tartalmakról:
+            
+            {combined_text}
+            
+            Az összefoglaló legyen strukturált és informatív.
+            """
+
+            try:
+                if gemini_model:
+                    response = await gemini_model.generate_content_async(
+                        summary_prompt,
+                        generation_config=genai.types.GenerationConfig(
+                            max_output_tokens=1000,
+                            temperature=0.1
+                        )
+                    )
+                    summary = response.text
+                elif cerebras_client:
+                    stream = cerebras_client.chat.completions.create(
+                        messages=[{"role": "user", "content": summary_prompt}],
+                        model="llama-4-scout-17b-16e-instruct",
+                        stream=True,
+                        max_completion_tokens=1000,
+                        temperature=0.1
+                    )
+                    for chunk in stream:
+                        if chunk.choices[0].delta.content:
+                            summary += chunk.choices[0].delta.content
+            except Exception as e:
+                logger.error(f"Error generating summary: {e}")
+                summary = "Hiba az összefoglaló generálása során"
+
+        return {
+            "contents": contents,
+            "total_contents": len(contents),
+            "ai_summary": summary if req.summary else None,
+            "status": "success"
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting Exa contents: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Hiba a tartalmak lekérése során: {e}"
+        )
+
+@app.post("/api/exa/neural_search")
+async def exa_neural_search(query: str, domains: List[str] = [], exclude_domains: List[str] = [], num_results: int = 20):
+    """Speciális neurális keresés tudományos tartalmakhoz"""
+    if not exa_client:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Exa AI nem elérhető"
+        )
+
+    # Tudományos domainok alapértelmezetten
+    if not domains:
+        domains = [
+            "arxiv.org", "pubmed.ncbi.nlm.nih.gov", "nature.com", "science.org",
+            "cell.com", "nejm.org", "thelancet.com", "bmj.com", "plos.org",
+            "ieee.org", "acm.org", "springer.com", "wiley.com", "elsevier.com"
+        ]
+
+    try:
+        response = exa_client.search(
+            query=query,
+            type="neural",
+            num_results=num_results,
+            include_domains=domains,
+            exclude_domains=exclude_domains,
+            text_contents={
+                "max_characters": 3000,
+                "strategy": "comprehensive"
+            },
+            livecrawl="when_necessary"
+        )
+
+        # Eredmények pontszám szerint rendezése
+        results = sorted(
+            response.results, 
+            key=lambda x: getattr(x, 'score', 0), 
+            reverse=True
+        )
+
+        processed_results = []
+        for result in results:
+            processed_result = {
+                "title": result.title,
+                "url": result.url,
+                "score": getattr(result, 'score', 0),
+                "published_date": result.published_date,
+                "domain": result.url.split('/')[2] if '/' in result.url else result.url,
+                "text_preview": result.text_contents.text[:500] + "..." if result.text_contents else None
+            }
+            processed_results.append(processed_result)
+
+        return {
+            "query": query,
+            "neural_results": processed_results,
+            "domains_searched": domains,
+            "total_results": len(processed_results),
+            "status": "success"
+        }
+
+    except Exception as e:
+        logger.error(f"Error in neural search: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Hiba a neurális keresés során: {e}"
+        )
+
 @app.post("/api/deep_discovery/research_trends")
 async def get_research_trends(req: ScientificInsightRequest):
     if not exa_client or not gemini_model:
@@ -537,10 +864,25 @@ async def get_research_trends(req: ScientificInsightRequest):
         )
 
     try:
+        # Fejlett Exa keresés tudományos domainekkel
+        scientific_domains = [
+            "arxiv.org", "pubmed.ncbi.nlm.nih.gov", "nature.com", "science.org",
+            "cell.com", "nejm.org", "thelancet.com", "bmj.com", "plos.org",
+            "ieee.org", "acm.org", "springer.com", "wiley.com", "biorxiv.org"
+        ]
+        
         search_response = exa_client.search(
             query=req.query,
+            type="neural",
             num_results=req.num_results,
-            text_contents={"max_characters": 1000, "strategy": "retrieve"}
+            include_domains=scientific_domains,
+            text_contents={
+                "max_characters": 2000, 
+                "strategy": "comprehensive",
+                "include_html_tags": False
+            },
+            livecrawl="when_necessary",
+            start_published_date="2020-01-01"  # Friss kutatások
         )
 
         if not search_response or not search_response.results:
