@@ -1,0 +1,39 @@
+- természetes nyelvű (embedding-alapú) webes keresés  
+- kulcsszavas keresés (Google-stílusú)  
+- hasonló oldalak keresése megadott URL vagy szöveg alapján  
+- strukturált HTML-tartalom lekérése keresési találatokból  
+- válasz API: közvetlen választ ad kérdésre, hivatkozásokkal  
+- automatizált, strukturált webes kutatás (RESEARCH API)  
+- LangChain integráció: keresés, RAG (retrieval-augmented generation) pipeline-hoz  
+- Python SDK és REST API támogatás  
+- kategória szerinti szűrés (pl. csak tudományos cikkek, blogok, hírek)  
+- találatok számának, forrásának, időintervallumának testreszabása  
+- keresési eredményekből kiemelések (highlights) lekérése  
+- keresési eredmények JSON vagy szöveges feldolgozása Pythonban  
+- egyszerű integráció néhány kódsorral Pythonban (pl. exa_py, langchain-exa)  
+- hasonlósági keresés (ExaFindSimilarResults)  
+- keresési eredmények lekérése (ExaSearchResults)  
+- tartalom letöltése (CONTENTS endpoint)  
+- RAG workflow támogatás (prompt + keresési kontextus)  
+[9][10][11][14][18]
+
+Források
+[1] Agora, Inc. ; API ; 1802883 ; 20-f ; 2025-04-15 https://www.sec.gov/Archives/edgar/data/1802883/000095017025053943/api-20241231.htm
+[2] APi Group Corp ; APG ; 1796209 ; def14a ; 2025-04-04 https://www.sec.gov/Archives/edgar/data/1796209/000162828025016749/apg-20250404.htm
+[3] Braze, Inc. ; BRZE ; 1676238 ; 10-k ; 2025-03-31 https://www.sec.gov/Archives/edgar/data/1676238/000167623825000054/brze-20250131.htm
+[4] Blend Labs, Inc. ; BLND ; 1855747 ; 10-k ; 2025-03-13 https://www.sec.gov/Archives/edgar/data/1855747/000185574725000017/blnd-20241231.htm
+[5] Exa Labs Inc. ; NO_TICKER ; 2024864 ; d ; 2025-03-04 https://www.sec.gov/Archives/edgar/data/2024864/0002024864-25-000001-index.htm
+[6] FIRST ADVANTAGE CORP ; FA ; 1210677 ; 10-k ; 2025-02-27 https://www.sec.gov/Archives/edgar/data/1210677/000095017025029067/fa-20241231.htm
+[7] APi Group Corp ; APG ; 1796209 ; 10-k ; 2025-02-26 https://www.sec.gov/Archives/edgar/data/1796209/000162828025008189/apg-20241231.htm
+[8] IBM WatsonX AI with Exa's web search integration https://github.com/exa-labs/ibm-exa
+[9] RAG with LangChain https://docs.exa.ai/reference/langchain
+[10] Exa https://python.langchain.com/docs/integrations/providers/exa_search/
+[11] Exa | Web Search API, AI Search Engine, & Website Crawler https://exa.ai
+[12] EXA Search Web Loader https://docs.crewai.com/tools/search-research/exasearchtool
+[13] Exa (formerly Metaphor) Python SDK Guide-Free Neural ... https://www.yeschat.ai/gpts-9t557ID6Q91-Exa-formerly-Metaphor-Python-SDK-Guide
+[14] Exa Search https://python.langchain.com/docs/integrations/tools/exa_search/
+[15] Guide: Exa.ai API client for Google Apps Script - semantic ... https://www.reddit.com/r/GoogleAppsScript/comments/1gdkm9d/guide_exaai_api_client_for_google_apps_script/
+[16] Integrate the Scale AI API with the Exa (Formerly Metaphor) ... https://pipedream.com/apps/scale-ai/integrations/metaphor
+[17] langchain-exa https://pypi.org/project/langchain-exa/
+[18] Welcome to Exa - Exa https://docs.exa.ai
+[19] Exa (Formerly Metaphor) API Integrations - Pipedream https://pipedream.com/apps/metaphor
