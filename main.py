@@ -1,9 +1,13 @@
+
 import os
 import json
 from typing import List, Dict, Any, Optional
 import asyncio
-import httpx # Aszinkron HTTP kérésekhez
+import httpx
 import logging
+from datetime import datetime
+import hashlib
+import base64
 
 # Google Cloud kliensekhez
 from google.cloud import aiplatform
@@ -26,25 +30,16 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
-# --- Konfiguráció és Titkok Betöltése ---
-# Ez feltételezi, hogy a következő titkok be vannak állítva a Replit Secrets-ben:
-# GCP_SERVICE_ACCOUNT_KEY (a JSON kulcs teljes tartalma)
-# GCP_PROJECT_ID (a GCP projekt azonosítója)
-# GCP_REGION (a GCP régió, pl. "us-central1")
-# CEREBRAS_API_KEY
-# GEMINI_API_KEY
-# EXA_API_KEY
-
 # Naplózás konfigurálása
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 # --- Digitális Ujjlenyomat ---
 DIGITAL_FINGERPRINT = "Jade made by Kollár Sándor"
-CREATOR_SIGNATURE = "SmFkZSBtYWRlIGJ5IEtvbGzDoXIgU8OhbmRvcg==" # Base64 kódolt "Jade made by Kollár Sándor"
-CREATOR_HASH = "a7b4c8d9e2f1a6b5c8d9e2f1a6b5c8d9e2f1a6b5c8d9e2f1a6b5c8d9e2f1a6b5" # SHA256 hash
+CREATOR_SIGNATURE = "SmFkZSBtYWRlIGJ5IEtvbGzDoXIgU8OhbmRvcg=="
+CREATOR_HASH = "a7b4c8d9e2f1a6b5c8d9e2f1a6b5c8d9e2f1a6b5c8d9e2f1a6b5c8d9e2f1a6b5"
 
-# --- API Kulcsok és Konfiguráció Betöltése a Replit Secrets-ből ---
+# --- API Kulcsok betöltése ---
 GCP_SERVICE_ACCOUNT_KEY_JSON = os.environ.get("GCP_SERVICE_ACCOUNT_KEY")
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID")
 GCP_REGION = os.environ.get("GCP_REGION")
@@ -52,8 +47,7 @@ CEREBRAS_API_KEY = os.environ.get("CEREBRAS_API_KEY")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 EXA_API_KEY = os.environ.get("EXA_API_KEY")
 
-# --- Kliensek Inicializálása ---
-# GCP Vertex AI kliens inicializálása service accounttal
+# --- Kliensek inicializálása ---
 gcp_credentials = None
 if GCP_SERVICE_ACCOUNT_KEY_JSON and GCP_PROJECT_ID and GCP_REGION:
     try:
@@ -61,13 +55,10 @@ if GCP_SERVICE_ACCOUNT_KEY_JSON and GCP_PROJECT_ID and GCP_REGION:
         gcp_credentials = service_account.Credentials.from_service_account_info(info)
         aiplatform.init(project=GCP_PROJECT_ID, location=GCP_REGION, credentials=gcp_credentials)
         logger.info("GCP Vertex AI client initialized successfully.")
-    except (json.JSONDecodeError, GoogleAPIError, ValueError) as e:
+    except Exception as e:
         logger.error(f"Error initializing GCP Vertex AI client: {e}")
-        gcp_credentials = None # Jelöljük, hogy nem sikerült inicializálni
-else:
-    logger.warning("GCP_SERVICE_ACCOUNT_KEY, GCP_PROJECT_ID, or GCP_REGION not found. GCP Vertex AI functionality will be limited.")
+        gcp_credentials = None
 
-# Cerebras kliens
 cerebras_client = None
 if CEREBRAS_API_KEY:
     try:
@@ -75,22 +66,16 @@ if CEREBRAS_API_KEY:
         logger.info("Cerebras client initialized successfully.")
     except Exception as e:
         logger.error(f"Error initializing Cerebras client: {e}")
-else:
-    logger.warning("CEREBRAS_API_KEY not found. Cerebras functionality will be limited.")
 
-# Gemini kliens
 gemini_model = None
 if GEMINI_API_KEY:
     try:
         genai.configure(api_key=GEMINI_API_KEY)
-        gemini_model = genai.GenerativeModel('gemini-1.5-pro') # Vagy 'gemini-1.5-flash' a gyorsaságért
+        gemini_model = genai.GenerativeModel('gemini-1.5-pro')
         logger.info("Gemini client initialized successfully.")
     except Exception as e:
         logger.error(f"Error initializing Gemini client: {e}")
-else:
-    logger.warning("GEMINI_API_KEY not found. Gemini functionality will be limited.")
 
-# Exa kliens
 exa_client = None
 if EXA_API_KEY:
     try:
@@ -98,142 +83,423 @@ if EXA_API_KEY:
         logger.info("Exa client initialized successfully.")
     except Exception as e:
         logger.error(f"Error initializing Exa client: {e}")
-else:
-    logger.warning("EXA_API_KEY not found. Exa functionality will be limited.")
 
-# --- FastAPI Alkalmazás Inicializálása ---
+# --- FastAPI alkalmazás ---
 app = FastAPI(
-    title="Deep Discovery AI - Tudományos és Innovációs Katalizátor",
-    description="Egyedülálló platform Gemini, Exa, AlphaFold (adatbázis) és Llama (Cerebras) AI modellekkel.",
-    version="1.0.0",
+    title="Jade - Deep Discovery AI Platform",
+    description="Fejlett AI platform 150+ tudományos és innovációs szolgáltatással",
+    version="2.0.0",
     docs_url="/api/docs",
     redoc_url="/api/redoc",
     openapi_url="/api/openapi.json"
 )
 
-# CORS konfiguráció
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Termelési környezetben szűkítsd le a frontend URL-jére!
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Statikus fájlok kiszolgálása
 app.mount("/static", StaticFiles(directory="templates"), name="static")
 
-# --- Segédmodellek a Pydantic-hoz ---
+# --- Pydantic modellek ---
 class Message(BaseModel):
     role: str
     content: str
 
 class ChatRequest(BaseModel):
     message: str
-    user_id: str = Field(..., description="A felhasználó egyedi azonosítója a beszélgetési előzményekhez.")
+    user_id: str = Field(..., description="Felhasználó egyedi azonosítója")
+
+class UniversalAlphaRequest(BaseModel):
+    service_name: str = Field(..., description="Az Alpha szolgáltatás neve")
+    input_data: Dict[str, Any] = Field(..., description="Bemeneti adatok")
+    parameters: Dict[str, Any] = Field(default_factory=dict, description="Opcionális paraméterek")
 
 class ScientificInsightRequest(BaseModel):
-    query: str = Field(..., min_length=5, description="A tudományos vagy innovációs lekérdezés.")
-    num_results: int = Field(default=5, ge=1, le=10, description="Hány releváns találatot keressen az Exa AI.")
-    summary_length: int = Field(default=200, ge=50, le=500, description="A Gemini által generált összefoglaló hossza szavakban.")
+    query: str = Field(..., min_length=5, description="Tudományos lekérdezés")
+    num_results: int = Field(default=5, ge=1, le=10, description="Találatok száma")
+    summary_length: int = Field(default=200, ge=50, le=500, description="Összefoglaló hossza")
 
 class ProteinLookupRequest(BaseModel):
-    protein_id: str = Field(..., description="Az EMBL-EBI AlphaFold DB-ben keresendő fehérje azonosítója (pl. UniProt ID).")
+    protein_id: str = Field(..., description="Fehérje azonosító")
 
 class CustomGCPModelRequest(BaseModel):
-    input_data: Dict[str, Any] = Field(..., description="A GCP Vertex AI modellnek küldendő bemeneti adatok.")
-    gcp_endpoint_id: str = Field(..., description="A GCP Vertex AI telepített modell végpontjának azonosítója.")
+    input_data: Dict[str, Any] = Field(..., description="GCP modell bemeneti adatok")
+    gcp_endpoint_id: str = Field(..., description="GCP végpont azonosító")
     gcp_project_id: Optional[str] = GCP_PROJECT_ID
     gcp_region: Optional[str] = GCP_REGION
 
 class SimulationOptimizerRequest(BaseModel):
-    simulation_type: str = Field(..., description="A szimuláció típusa (pl. 'molecular_dynamics', 'materials_property').")
-    input_parameters: Dict[str, Any] = Field(..., description="A szimulációhoz szükséges bemeneti paraméterek.")
-    optimization_goal: str = Field(..., description="A szimuláció optimalizálási célja (pl. 'minimize_energy', 'maximize_conductivity').")
+    simulation_type: str = Field(..., description="Szimuláció típusa")
+    input_parameters: Dict[str, Any] = Field(..., description="Bemeneti paraméterek")
+    optimization_goal: str = Field(..., description="Optimalizálási cél")
 
-# Új modell az AlphaGenome API-hoz
 class AlphaGenomeRequest(BaseModel):
-    genome_sequence: str = Field(..., min_length=100, description="A teljes DNS vagy RNS szekvencia elemzésre.")
-    organism: str = Field(..., description="A szervezet, amelyből a genom származik (pl. 'Homo sapiens').")
-    analysis_type: str = Field(..., description="Az elemzés típusa ('átfogó', 'génkódoló régiók', 'funkcionális elemek').")
-    include_predictions: bool = Field(default=False, description="Tartalmazzon-e fehérje struktúra előrejelzéseket (AlphaFold).")
+    genome_sequence: str = Field(..., min_length=100, description="Genom szekvencia")
+    organism: str = Field(..., description="Organizmus")
+    analysis_type: str = Field(..., description="Elemzés típusa")
+    include_predictions: bool = Field(default=False, description="Fehérje előrejelzések")
 
-# Beszélgetési előzmények tárolása memóriában (egyszerű prototípushoz)
-# Ezt éles környezetben adatbázisra (pl. Firestore) kell cserélni!
+# Beszélgetési előzmények
 chat_histories: Dict[str, List[Message]] = {}
+
+# --- Alpha Services definíciója ---
+ALPHA_SERVICES = {
+    "biologiai_orvosi": {
+        "AlphaMicrobiome": "Mikrobiom elemzés és baktériumközösség vizsgálat",
+        "AlphaImmune": "Immunrendszer válaszok predikciója",
+        "AlphaCardio": "Szívbetegségek kockázatelemzése",
+        "AlphaNeuron": "Idegsejt aktivitás szimulálása",
+        "AlphaVirus": "Vírus mutáció előrejelzése",
+        "AlphaCell": "Sejtosztódás és növekedés modellezése",
+        "AlphaMetabolism": "Anyagcsere útvonalak elemzése",
+        "AlphaPharmaco": "Gyógyszer-receptor kölcsönhatások",
+        "AlphaGene": "Génexpresszió előrejelzése",
+        "AlphaProteomics": "Fehérje hálózatok elemzése",
+        "AlphaToxicology": "Toxicitás és biztonság értékelése",
+        "AlphaEpigenetics": "Epigenetikai változások predikciója",
+        "AlphaBiomarker": "Biomarker azonosítás és validálás",
+        "AlphaPathogen": "Kórokozó azonosítás és karakterizálás",
+        "AlphaOncology": "Rák biomarkerek és terápiás célpontok",
+        "AlphaEndocrine": "Hormonális szabályozás modellezése",
+        "AlphaRespiratory": "Légzési rendszer betegségei",
+        "AlphaNeurodegeneration": "Neurodegeneratív betegségek",
+        "AlphaRegenerative": "Regeneratív medicina alkalmazások",
+        "AlphaPersonalized": "Személyre szabott orvoslás",
+        "AlphaBioengineering": "Biomérnöki rendszerek tervezése",
+        "AlphaBioinformatics": "Bioinformatikai adatelemzés",
+        "AlphaSystemsBiology": "Rendszerbiológiai modellezés",
+        "AlphaSynthbio": "Szintetikus biológiai rendszerek",
+        "AlphaLongevity": "Öregedés és hosszú élet kutatása"
+    },
+    "kemiai_anyagtudomanyi": {
+        "AlphaCatalyst": "Katalizátor tervezés és optimalizálás",
+        "AlphaPolymer": "Polimer tulajdonságok előrejelzése",
+        "AlphaNanotech": "Nanomateriál szintézis és jellemzés",
+        "AlphaChemSynthesis": "Kémiai szintézis útvonalak",
+        "AlphaMaterial": "Anyagtulajdonságok predikciója",
+        "AlphaSuperconductor": "Szupravezető anyagok kutatása",
+        "AlphaSemiconductor": "Félvezető anyagok tervezése",
+        "AlphaComposite": "Kompozit anyagok fejlesztése",
+        "AlphaBattery": "Akkumulátor technológiák",
+        "AlphaSolar": "Napelem hatékonyság optimalizálása",
+        "AlphaCorrosion": "Korrózió és védelem elemzése",
+        "AlphaAdhesive": "Ragasztó és kötőanyagok",
+        "AlphaCrystal": "Kristályszerkezet előrejelzése",
+        "AlphaLiquid": "Folyadék tulajdonságok modellezése",
+        "AlphaGas": "Gázfázisú reakciók szimulálása",
+        "AlphaSurface": "Felületi kémia és adszorpció",
+        "AlphaElectrochemistry": "Elektrokémiai folyamatok",
+        "AlphaPhotochemistry": "Fotokémiai reakciók",
+        "AlphaThermodynamics": "Termodinamikai paraméterek",
+        "AlphaKinetics": "Reakciókinetika modellezése",
+        "AlphaSpectroscopy": "Spektroszkópiai adatelemzés",
+        "AlphaChromatography": "Kromatográfiás szeparáció",
+        "AlphaAnalytical": "Analitikai kémiai módszerek",
+        "AlphaFormulation": "Formuláció és stabilitás",
+        "AlphaGreen": "Zöld kémiai alternatívák"
+    },
+    "kornyezeti_fenntarthato": {
+        "AlphaClimate": "Klímaváltozás modellezése",
+        "AlphaOcean": "Óceáni rendszerek elemzése",
+        "AlphaAtmosphere": "Légköri folyamatok szimulálása",
+        "AlphaEcology": "Ökológiai rendszerek modellezése",
+        "AlphaWater": "Víz minőség és kezelés",
+        "AlphaSoil": "Talaj egészség és termékenység",
+        "AlphaRenewable": "Megújuló energia optimalizálása",
+        "AlphaCarbon": "Szén-dioxid befogás és tárolás",
+        "AlphaWaste": "Hulladékgazdálkodás és újrahasznosítás",
+        "AlphaBiodiversity": "Biodiverzitás védelem",
+        "AlphaForest": "Erdészeti fenntarthatóság",
+        "AlphaAgriculture": "Fenntartható mezőgazdaság",
+        "AlphaPollution": "Környezetszennyezés elemzése",
+        "AlphaConservation": "Természetvédelem stratégiák",
+        "AlphaUrban": "Városi fenntarthatóság",
+        "AlphaTransport": "Közlekedési rendszerek",
+        "AlphaBuilding": "Épület energetika",
+        "AlphaResource": "Erőforrás gazdálkodás",
+        "AlphaLifecycle": "Életciklus elemzés",
+        "AlphaCircular": "Körforgásos gazdaság",
+        "AlphaEnvironmentalHealth": "Környezeti egészségügy",
+        "AlphaWildlife": "Vadvilág monitoring",
+        "AlphaMarine": "Tengeri ökoszisztémák",
+        "AlphaDesertification": "Elsivatagosodás elleni küzdelem",
+        "AlphaSustainability": "Fenntarthatósági metrikák"
+    },
+    "fizikai_asztrofizikai": {
+        "AlphaQuantum": "Kvantumfizikai szimulációk",
+        "AlphaParticle": "Részecskefizikai elemzések",
+        "AlphaGravity": "Gravitációs hullámok elemzése",
+        "AlphaCosmic": "Kozmikus sugárzás kutatása",
+        "AlphaStellar": "Csillagfejlődés modellezése",
+        "AlphaGalaxy": "Galaxisok dinamikája",
+        "AlphaExoplanet": "Exobolygó karakterizálás",
+        "AlphaPlasma": "Plazma fizika szimulációk",
+        "AlphaOptics": "Optikai rendszerek tervezése",
+        "AlphaCondensed": "Kondenzált anyag fizika",
+        "AlphaSuperconductivity": "Szupravezetés mechanizmusai",
+        "AlphaMagnetism": "Mágneses tulajdonságok",
+        "AlphaThermodynamics": "Termodinamikai rendszerek",
+        "AlphaFluid": "Folyadékdinamika szimulációk",
+        "AlphaAcoustics": "Akusztikai jelenségek",
+        "AlphaElectromagnetism": "Elektromágneses mezők",
+        "AlphaNuclear": "Nukleáris folyamatok",
+        "AlphaAtomic": "Atomfizikai számítások",
+        "AlphaMolecular": "Molekuláris fizika",
+        "AlphaSpectroscopy": "Spektroszkópiai elemzés",
+        "AlphaLaser": "Lézer technológiák",
+        "AlphaPhotonics": "Fotonika alkalmazások",
+        "AlphaCryogenics": "Kriogén rendszerek",
+        "AlphaVacuum": "Vákuum technológia",
+        "AlphaInstrumentation": "Tudományos műszerek"
+    },
+    "technologiai_melymu": {
+        "AlphaAI": "Mesterséges intelligencia architektúrák",
+        "AlphaML": "Gépi tanulás optimalizálás",
+        "AlphaNeural": "Neurális hálózatok tervezése",
+        "AlphaRobotics": "Robotikai rendszerek",
+        "AlphaAutonomy": "Autonóm rendszerek",
+        "AlphaVision": "Számítógépes látás",
+        "AlphaNLP": "Természetes nyelv feldolgozás",
+        "AlphaOptimization": "Optimalizálási algoritmusok",
+        "AlphaSimulation": "Szimulációs rendszerek",
+        "AlphaModeling": "Matematikai modellezés",
+        "AlphaControl": "Irányítástechnika",
+        "AlphaSignal": "Jelfeldolgozás",
+        "AlphaData": "Adatelemzés és big data",
+        "AlphaNetwork": "Hálózati rendszerek",
+        "AlphaSecurity": "Kiberbiztonsági elemzés",
+        "AlphaCrypto": "Kriptográfiai protokollok",
+        "AlphaBlockchain": "Blockchain technológiák",
+        "AlphaIoT": "Internet of Things rendszerek",
+        "AlphaEdge": "Edge computing optimalizálás",
+        "AlphaCloud": "Felhő architektúrák",
+        "AlphaHPC": "Nagy teljesítményű számítás",
+        "AlphaDrone": "Drón technológiák",
+        "AlphaSensor": "Szenzor hálózatok",
+        "AlphaEmbedded": "Beágyazott rendszerek",
+        "AlphaFPGA": "FPGA programozás"
+    },
+    "tarsadalmi_gazdasagi": {
+        "AlphaEconomy": "Gazdasági modellek és előrejelzések",
+        "AlphaMarket": "Piaci trendek elemzése",
+        "AlphaFinance": "Pénzügyi kockázatelemzés",
+        "AlphaSocial": "Társadalmi hálózatok elemzése",
+        "AlphaPolicy": "Szakpolitikai hatáselemzés",
+        "AlphaUrbanPlanning": "Városfejlesztés optimalizálása",
+        "AlphaLogistics": "Logisztikai láncok",
+        "AlphaSupplyChain": "Ellátási láncok optimalizálása",
+        "AlphaManufacturing": "Gyártási folyamatok",
+        "AlphaQuality": "Minőségbiztosítás",
+        "AlphaRisk": "Kockázatelemzés és menedzsment",
+        "AlphaDecision": "Döntéstámogató rendszerek",
+        "AlphaStrategy": "Stratégiai tervezés",
+        "AlphaInnovation": "Innovációs ökoszisztémák",
+        "AlphaStartup": "Startup értékelés és mentoring",
+        "AlphaEducation": "Oktatási rendszerek",
+        "AlphaHealthcare": "Egészségügyi rendszerek",
+        "AlphaCustomer": "Vásárlói viselkedés elemzése",
+        "AlphaMarketing": "Marketing optimalizálás",
+        "AlphaBrand": "Márka értékelés",
+        "AlphaHR": "Humán erőforrás menedzsment",
+        "AlphaLegal": "Jogi elemzések",
+        "AlphaCompliance": "Megfelelőségi rendszerek",
+        "AlphaEthics": "Etikai értékelések",
+        "AlphaSustainableBusiness": "Fenntartható üzleti modellek"
+    }
+}
+
+# --- Általános Alpha Service Handler ---
+async def handle_alpha_service(service_name: str, input_data: Dict[str, Any], parameters: Dict[str, Any] = None) -> Dict[str, Any]:
+    """Univerzális Alpha szolgáltatás kezelő"""
+    
+    # Keresés a kategóriákban
+    service_category = None
+    service_description = None
+    
+    for category, services in ALPHA_SERVICES.items():
+        if service_name in services:
+            service_category = category
+            service_description = services[service_name]
+            break
+    
+    if not service_category:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Ismeretlen Alpha szolgáltatás: {service_name}"
+        )
+    
+    # AI modell kiválasztása a kategória alapján
+    if service_category in ["biologiai_orvosi", "kemiai_anyagtudomanyi"]:
+        selected_model = gemini_model if gemini_model else cerebras_client
+    else:
+        selected_model = cerebras_client if cerebras_client else gemini_model
+    
+    if not selected_model:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Nincs elérhető AI modell"
+        )
+    
+    # Prompt összeállítása
+    prompt = f"""
+    {service_name} Alpha Szolgáltatás
+    Kategória: {service_category}
+    Leírás: {service_description}
+    
+    Bemeneti adatok:
+    {json.dumps(input_data, indent=2, ensure_ascii=False)}
+    
+    Paraméterek:
+    {json.dumps(parameters or {}, indent=2, ensure_ascii=False)}
+    
+    Kérlek, végezz professzionális, tudományos elemzést és adj részletes válaszokat a megadott adatok alapján.
+    A válaszod legyen strukturált, magyar nyelvű és gyakorlati szempontokat is tartalmazzon.
+    """
+    
+    try:
+        response_text = ""
+        model_used = ""
+        
+        if selected_model == gemini_model:
+            response = await gemini_model.generate_content_async(
+                prompt,
+                generation_config=genai.types.GenerationConfig(
+                    max_output_tokens=2048,
+                    temperature=0.1
+                )
+            )
+            response_text = response.text
+            model_used = "Gemini 1.5 Pro"
+            
+        elif selected_model == cerebras_client:
+            stream = cerebras_client.chat.completions.create(
+                messages=[{"role": "user", "content": prompt}],
+                model="llama-4-scout-17b-16e-instruct",
+                stream=True,
+                max_completion_tokens=2048,
+                temperature=0.1
+            )
+            for chunk in stream:
+                if chunk.choices[0].delta.content:
+                    response_text += chunk.choices[0].delta.content
+            model_used = "Cerebras Llama 4"
+        
+        return {
+            "service_name": service_name,
+            "category": service_category,
+            "description": service_description,
+            "analysis": response_text,
+            "model_used": model_used,
+            "timestamp": datetime.now().isoformat(),
+            "status": "success"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in {service_name}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Hiba a {service_name} szolgáltatás végrehajtása során: {e}"
+        )
 
 # --- API Végpontok ---
 
 @app.get("/")
 async def serve_frontend():
-    """A frontend HTML oldal kiszolgálása."""
     return FileResponse("templates/index.html")
 
 @app.get("/api")
 async def root_endpoint():
-    """Alapvető üdvözlő végpont."""
     return {
-        "message": "Üdvözöllek a Deep Discovery AI platformon!",
+        "message": "Jade - Deep Discovery AI Platform",
         "version": app.version,
         "creator": DIGITAL_FINGERPRINT,
-        "docs": "/api/docs"
+        "total_services": sum(len(services) for services in ALPHA_SERVICES.values()),
+        "categories": list(ALPHA_SERVICES.keys())
     }
 
-@app.get("/health")
-async def health_check_endpoint():
-    """Egészségügyi ellenőrzés."""
-    return {"status": "healthy", "version": app.version, "creator": DIGITAL_FINGERPRINT}
+@app.get("/api/services")
+async def get_services():
+    """Minden Alpha szolgáltatás listázása kategóriák szerint"""
+    return {
+        "categories": ALPHA_SERVICES,
+        "total_services": sum(len(services) for services in ALPHA_SERVICES.values())
+    }
+
+@app.get("/api/services/{category}")
+async def get_services_by_category(category: str):
+    """Egy kategória szolgáltatásainak listázása"""
+    if category not in ALPHA_SERVICES:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Ismeretlen kategória: {category}"
+        )
+    
+    return {
+        "category": category,
+        "services": ALPHA_SERVICES[category]
+    }
+
+@app.post("/api/alpha/{service_name}")
+async def execute_alpha_service(service_name: str, request: UniversalAlphaRequest):
+    """Bármely Alpha szolgáltatás végrehajtása"""
+    return await handle_alpha_service(
+        service_name=service_name,
+        input_data=request.input_data,
+        parameters=request.parameters
+    )
 
 @app.post("/api/deep_discovery/chat")
 async def deep_discovery_chat(req: ChatRequest):
-    """
-    Kezeli a beszélgetéseket, a Cerebras Llama 4 és a Gemini 2.5 Pro modelleket használva.
-    A beszélgetési előzményeket a szerver tárolja user_id alapján.
-    """
+    """Chat funkcionalitás"""
     if not cerebras_client and not gemini_model:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Nincs elérhető chat modell (Cerebras Llama vagy Gemini)."
+            detail="Nincs elérhető chat modell"
         )
 
     user_id = req.user_id
     current_message = req.message
-
-    # Beszélgetési előzmények lekérése vagy inicializálása
     history = chat_histories.get(user_id, [])
 
-    # Rendszerüzenet (csak egyszer az elején)
     system_message = {
         "role": "system",
-        "content": "Te egy rendkívül intelligens és szakértő AI asszisztens vagy, aki magyarul válaszol. A neved Jade. Segítőkész, részletes és innovatív válaszokat adsz a legújabb tudományos és technológiai fejleményekről, különös tekintettel a biológia, kémia, anyagtudomány, orvostudomány és mesterséges intelligencia területére. Használd a tudásodat a legjobb válaszok megadásához."
+        "content": f"""Te Jade vagy, egy fejlett AI asszisztens, aki magyarul válaszol. 
+        Szakértő vagy tudományos és technológiai területeken.
+        
+        Rendelkezel {sum(len(services) for services in ALPHA_SERVICES.values())} Alpha szolgáltatással:
+        - Biológiai/Orvosi: {len(ALPHA_SERVICES['biologiai_orvosi'])} szolgáltatás
+        - Kémiai/Anyagtudományi: {len(ALPHA_SERVICES['kemiai_anyagtudomanyi'])} szolgáltatás
+        - Környezeti/Fenntartható: {len(ALPHA_SERVICES['kornyezeti_fenntarthato'])} szolgáltatás
+        - Fizikai/Asztrofizikai: {len(ALPHA_SERVICES['fizikai_asztrofizikai'])} szolgáltatás
+        - Technológiai/Mélyműszaki: {len(ALPHA_SERVICES['technologiai_melymu'])} szolgáltatás
+        - Társadalmi/Gazdasági: {len(ALPHA_SERVICES['tarsadalmi_gazdasagi'])} szolgáltatás
+        
+        Segítőkész, részletes és innovatív válaszokat adsz."""
     }
 
-    # Építsük fel a teljes üzenetlistát
     messages_for_llm = [system_message] + history + [{"role": "user", "content": current_message}]
 
-    response_text = ""
-    model_used = ""
-
     try:
-        # Próbáljuk meg a Cerebras Llama 4-gyel először (ha elérhető)
+        response_text = ""
+        model_used = ""
+
         if cerebras_client:
-            logger.info(f"Using Cerebras Llama 4 for user {user_id}")
-            # A Cerebras chat API-ja is streamel, de a FastAPI csak a teljes választ küldi el egyben itt.
             stream = cerebras_client.chat.completions.create(
                 messages=messages_for_llm,
-                model="llama-4-scout-17b-16e-instruct", # Használjuk a megadott modellt
+                model="llama-4-scout-17b-16e-instruct",
                 stream=True,
                 max_completion_tokens=2048,
-                temperature=0.2,
-                top_p=1
+                temperature=0.2
             )
             for chunk in stream:
                 if chunk.choices[0].delta.content:
                     response_text += chunk.choices[0].delta.content
             model_used = "Cerebras Llama 4"
         elif gemini_model:
-            # Ha a Cerebras nem elérhető, használjuk a Gemini 2.5 Pro-t
-            logger.info(f"Using Gemini 2.5 Pro for user {user_id}")
             response = await gemini_model.generate_content_async(
                 messages_for_llm,
                 generation_config=genai.types.GenerationConfig(
@@ -242,15 +508,11 @@ async def deep_discovery_chat(req: ChatRequest):
                 )
             )
             response_text = response.text
-            model_used = "Google Gemini 2.5 Pro"
+            model_used = "Gemini 1.5 Pro"
 
-        if not response_text:
-            raise ValueError("Az AI modell nem adott választ.")
-
-        # Frissítsük a beszélgetési előzményeket
         history.append({"role": "user", "content": current_message})
         history.append({"role": "assistant", "content": response_text})
-        chat_histories[user_id] = history # Mentés memóriába
+        chat_histories[user_id] = history
 
         return {
             'response': response_text,
@@ -259,49 +521,22 @@ async def deep_discovery_chat(req: ChatRequest):
         }
 
     except Exception as e:
-        logger.error(f"Error in deep discovery chat for user {user_id}: {e}")
+        logger.error(f"Error in chat: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Hiba történt a beszélgetés során: {e}"
+            detail=f"Hiba a beszélgetés során: {e}"
         )
 
-@app.get("/api/deep_discovery/chat_history/{user_id}")
-async def get_chat_history_endpoint(user_id: str):
-    """Visszaadja egy adott felhasználó beszélgetési előzményeit."""
-    history = chat_histories.get(user_id, [])
-    return {'user_id': user_id, 'history': history}
-
-@app.post("/api/deep_discovery/clear_chat_history/{user_id}")
-async def clear_chat_history_endpoint(user_id: str):
-    """Törli egy adott felhasználó beszélgetési előzményeit."""
-    if user_id in chat_histories:
-        del chat_histories[user_id]
-        logger.info(f"Chat history cleared for user {user_id}")
-        return {'message': f'Beszélgetési előzmények törölve a felhasználó számára: {user_id}'}
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail=f"Nincs beszélgetési előzmény a felhasználó számára: {user_id}"
-    )
-
+# Meglévő specializált végpontok megőrzése
 @app.post("/api/deep_discovery/research_trends")
 async def get_research_trends(req: ScientificInsightRequest):
-    """
-    Keresi a legújabb tudományos/innovációs információkat az Exa AI-val,
-    majd a Gemini 2.5 Pro-val elemzi és összefoglalja.
-    """
-    if not exa_client:
+    if not exa_client or not gemini_model:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Az Exa AI kliens nem elérhető."
-        )
-    if not gemini_model:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="A Gemini modell nem elérhető az elemzéshez."
+            detail="Exa AI vagy Gemini nem elérhető"
         )
 
     try:
-        logger.info(f"Searching Exa for query: {req.query}")
         search_response = exa_client.search(
             query=req.query,
             num_results=req.num_results,
@@ -311,7 +546,7 @@ async def get_research_trends(req: ScientificInsightRequest):
         if not search_response or not search_response.results:
             return {
                 "query": req.query,
-                "summary": "Nem található releváns információ a lekérdezésre.",
+                "summary": "Nem található releváns információ",
                 "sources": []
             }
 
@@ -326,127 +561,88 @@ async def get_research_trends(req: ScientificInsightRequest):
                     "published_date": result.published_date
                 })
 
-        # Gemini összefoglalás és elemzés
         summary_prompt = f"""
-        Elemezd a következő tudományos/innovációs információkat, és készíts egy tömör, objektív összefoglalót (max. {req.summary_length} szó).
-        Emeld ki a legfontosabb áttöréseket, következtetéseket vagy innovációs vonatkozásokat.
+        Elemezd a következő tudományos információkat és készíts összefoglalót (max. {req.summary_length} szó):
 
-        Információk:
-        {combined_content[:8000]} # Korlátozzuk a bemenetet a token limit miatt
+        {combined_content[:8000]}
 
         Összefoglalás:
         """
 
-        gemini_response = await gemini_model.generate_content_async(
+        response = await gemini_model.generate_content_async(
             summary_prompt,
             generation_config=genai.types.GenerationConfig(
-                max_output_tokens=req.summary_length * 2, # Több token, hogy biztosan elférjen
+                max_output_tokens=req.summary_length * 2,
                 temperature=0.1
             )
         )
-        summary_text = gemini_response.text
 
         return {
             "query": req.query,
-            "summary": summary_text,
+            "summary": response.text,
             "sources": sources
         }
 
     except Exception as e:
-        logger.error(f"Error in research trends endpoint: {e}")
+        logger.error(f"Error in research trends: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Hiba történt a tudományos trendek elemzése során: {e}"
+            detail=f"Hiba a kutatási trendek elemzése során: {e}"
         )
 
 @app.post("/api/deep_discovery/protein_structure")
 async def protein_structure_lookup(req: ProteinLookupRequest):
-    """
-    Lekérdezi a fehérjeszerkezetet az EMBL-EBI AlphaFold Protein Structure Database API-ból.
-    Ez nem generál új struktúrát, hanem meglévő előrejelzéseket keres.
-    """
     ebi_alphafold_api_url = f"https://alphafold.ebi.ac.uk/api/prediction/{req.protein_id}"
 
     try:
-        logger.info(f"Querying AlphaFold DB for protein ID: {req.protein_id}")
         async with httpx.AsyncClient() as client:
             response = await client.get(ebi_alphafold_api_url, timeout=30)
-            response.raise_for_status() # Hibát dob, ha a státuszkód 4xx vagy 5xx
-
+            response.raise_for_status()
             data = response.json()
 
             if not data or (isinstance(data, list) and not data):
                 return {
                     "protein_id": req.protein_id,
-                    "message": "Nem található előrejelzés ehhez a fehérje azonosítóhoz az AlphaFold adatbázisban.",
+                    "message": "Nem található előrejelzés",
                     "details": None
                 }
 
-            # Az AlphaFold DB API gyakran listát ad vissza, vegyük az elsőt
             first_prediction = data[0] if isinstance(data, list) else data
 
             return {
                 "protein_id": req.protein_id,
-                "message": "Fehérje előrejelzés sikeresen lekérdezve.",
+                "message": "Sikeres lekérdezés",
                 "details": {
                     "model_id": first_prediction.get("model_id"),
                     "uniprot_id": first_prediction.get("uniprot_id"),
-                    "plddt": first_prediction.get("plddt"), # Konfidencia pontszám
-                    "protein_url": first_prediction.get("cif_url") or first_prediction.get("pdb_url"), # Link a struktúrához
-                    "pae_url": first_prediction.get("pae_url"), # Predicted Aligned Error
+                    "plddt": first_prediction.get("plddt"),
+                    "protein_url": first_prediction.get("cif_url") or first_prediction.get("pdb_url"),
+                    "pae_url": first_prediction.get("pae_url"),
                     "assembly_id": first_prediction.get("assembly_id")
                 }
             }
 
-    except httpx.HTTPStatusError as e:
-        logger.error(f"HTTP error from AlphaFold DB API for {req.protein_id}: {e.response.status_code} - {e.response.text}")
-        raise HTTPException(
-            status_code=e.response.status_code,
-            detail=f"Hiba a fehérje adatbázis lekérdezésekor: {e.response.text}"
-        )
-    except httpx.RequestError as e:
-        logger.error(f"Network error querying AlphaFold DB API for {req.protein_id}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Hálózati hiba a fehérje adatbázis elérésekor: {e}"
-        )
     except Exception as e:
-        logger.error(f"Unexpected error in protein lookup for {req.protein_id}: {e}")
+        logger.error(f"Error in protein lookup: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Váratlan hiba a fehérje lekérdezése során: {e}"
+            detail=f"Hiba a fehérje lekérdezése során: {e}"
         )
 
 @app.post("/api/deep_discovery/custom_gcp_model")
 async def custom_gcp_model_inference(req: CustomGCPModelRequest):
-    """
-    Meghív egy általad telepített egyedi AI modellt a GCP Vertex AI-ban.
-    Ez lehet egy kémiai tulajdonság előrejelző, molekulageneráló, vagy anyagtulajdonság modell.
-    """
     if not gcp_credentials:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="A GCP Vertex AI kliens nincs megfelelően inicializálva. Ellenőrizze a GCP_SERVICE_ACCOUNT_KEY-t."
+            detail="GCP Vertex AI nem elérhető"
         )
 
     try:
-        # A GCP projekt és régió felülírható a kérésben, ha szükséges
         project = req.gcp_project_id or GCP_PROJECT_ID
         region = req.gcp_region or GCP_REGION
-
-        if not project or not region:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Hiányzó GCP projekt ID vagy régió."
-            )
-
         endpoint_name = f"projects/{project}/locations/{region}/endpoints/{req.gcp_endpoint_id}"
-        logger.info(f"Calling GCP Vertex AI endpoint: {endpoint_name}")
 
         prediction_client = aiplatform.gapic.PredictionServiceClient(credentials=gcp_credentials)
-
-        # Az `instances` formátuma a telepített modell elvárásaitól függ!
-        # Itt egy általános formátumot használunk.
         instances_list = [req.input_data] if not isinstance(req.input_data, list) else req.input_data
 
         response = prediction_client.predict(
@@ -454,68 +650,52 @@ async def custom_gcp_model_inference(req: CustomGCPModelRequest):
             instances=instances_list
         )
 
-        logger.info(f"GCP Vertex AI prediction successful from endpoint: {endpoint_name}")
         return {
             "model_response": response.predictions,
             "model_id": req.gcp_endpoint_id,
             "status": "success"
         }
 
-    except GoogleAPIError as e:
-        logger.error(f"GCP Vertex AI API error: {e.message} (Code: {e.code})")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Hiba a GCP Vertex AI modell hívásakor: {e.message}"
-        )
     except Exception as e:
-        logger.error(f"Unexpected error calling GCP Vertex AI model: {e}")
+        logger.error(f"Error in GCP model: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Váratlan hiba a GCP Vertex AI modell hívásakor: {e}"
+            detail=f"Hiba a GCP modell hívásakor: {e}"
         )
 
 @app.post("/api/deep_discovery/simulation_optimizer")
 async def simulation_optimizer(req: SimulationOptimizerRequest):
-    """
-    Használja a Cerebras Llama 4-et (vagy Gemini-t) szimulációs paraméterek optimalizálására
-    vagy szimulációs kód generálására.
-    """
     if not cerebras_client and not gemini_model:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Nincs elérhető modell a szimuláció optimalizálásához (Cerebras Llama vagy Gemini)."
+            detail="Nincs elérhető modell"
         )
 
     prompt = f"""
-    Feladat: {req.simulation_type} szimuláció optimalizálása.
-    Bemeneti paraméterek: {json.dumps(req.input_parameters, indent=2)}
-    Optimalizálási cél: {req.optimization_goal}
-
-    Kérlek, generálj optimalizált szimulációs paramétereket, vagy ha releváns, egy rövid Python kód snippetet
-    a szimuláció elvégzéséhez/optimalizálásához, figyelembe véve a megadott célt.
-    Válaszod legyen tömör, szakmailag pontos, és csak a kért információt tartalmazza.
+    {req.simulation_type} szimuláció optimalizálása:
+    Paraméterek: {json.dumps(req.input_parameters, indent=2)}
+    Cél: {req.optimization_goal}
+    
+    Generálj optimalizált paramétereket vagy Python kódot.
     """
 
-    response_text = ""
-    model_used = ""
-
     try:
+        response_text = ""
+        model_used = ""
+
         if cerebras_client:
-            logger.info(f"Using Cerebras Llama 4 for simulation optimization: {req.simulation_type}")
             stream = cerebras_client.chat.completions.create(
                 messages=[{"role": "user", "content": prompt}],
                 model="llama-4-scout-17b-16e-instruct",
                 stream=True,
                 max_completion_tokens=1024,
-                temperature=0.3,
-                top_p=1
+                temperature=0.3
             )
             for chunk in stream:
                 if chunk.choices[0].delta.content:
                     response_text += chunk.choices[0].delta.content
             model_used = "Cerebras Llama 4"
         elif gemini_model:
-            logger.info(f"Using Gemini 2.5 Pro for simulation optimization: {req.simulation_type}")
             response = await gemini_model.generate_content_async(
                 prompt,
                 generation_config=genai.types.GenerationConfig(
@@ -524,10 +704,7 @@ async def simulation_optimizer(req: SimulationOptimizerRequest):
                 )
             )
             response_text = response.text
-            model_used = "Google Gemini 2.5 Pro"
-
-        if not response_text:
-            raise ValueError("Az AI modell nem adott választ.")
+            model_used = "Gemini 1.5 Pro"
 
         return {
             "simulation_type": req.simulation_type,
@@ -538,114 +715,69 @@ async def simulation_optimizer(req: SimulationOptimizerRequest):
         }
 
     except Exception as e:
-        logger.error(f"Error in simulation optimizer endpoint: {e}")
+        logger.error(f"Error in simulation optimizer: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Hiba történt a szimuláció optimalizálása során: {e}"
+            detail=f"Hiba a szimuláció optimalizálásában: {e}"
         )
 
 @app.post("/api/deep_discovery/alphagenome")
 async def alphagenome_analysis(req: AlphaGenomeRequest):
-    """
-    AlphaGenome genomikai elemzés: DNS/RNS szekvencia analízis AI-val.
-    Kombinálja a Gemini modellt a genomikai adatok feldolgozásához és a Cerebras Llama-t részletes elemzéshez.
-    """
     if not gemini_model and not cerebras_client:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Nincs elérhető AI modell a genomikai elemzéshez."
+            detail="Nincs elérhető AI modell"
         )
 
-    # Validáljuk a genom szekvenciát
-    valid_nucleotides = set('ATCGURYN-')  # DNA, RNA és egyéb valid karakterek
+    valid_nucleotides = set('ATCGURYN-')
     sequence_upper = req.genome_sequence.upper()
     if not all(char in valid_nucleotides for char in sequence_upper):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Érvénytelen genom szekvencia. Csak A, T, C, G, U, R, Y, N, - karakterek engedélyezettek."
+            detail="Érvénytelen genom szekvencia"
         )
 
     try:
-        # Alap szekvencia információk számítása
         sequence_length = len(req.genome_sequence)
         gc_content = (sequence_upper.count('G') + sequence_upper.count('C')) / sequence_length * 100
 
-        # AI elemzési prompt összeállítása
         analysis_prompt = f"""
         AlphaGenome Genomikai Elemzés:
-
         Szekvencia: {req.genome_sequence[:500]}{'...' if len(req.genome_sequence) > 500 else ''}
         Szervezet: {req.organism}
-        Elemzés típusa: {req.analysis_type}
-        Szekvencia hossza: {sequence_length} bázispár
-        GC tartalom: {gc_content:.1f}%
-
-        Kérlek, végezz részletes genomikai elemzést az alábbi szempontok szerint:
-
-        1. **Szekvencia jellemzők**: Nukleotid összetétel, ismétlődő motívumok, különleges régiók
-        2. **Funkcionális predikció**: Lehetséges génkódoló régiók, promóterek, szabályozó elemek
-        3. **Evolúciós vonatkozások**: Konzervált régiók, filogenetikai jelentőség
-        4. **Patológiai releváncia**: Ismert mutációs hotspotok, betegséggel kapcsolatos variánsok
-        5. **Strukturális elemzés**: Másodlagos szerkezet, fehérje kölcsönhatások
-
-        {"6. **Fehérje struktúra előrejelzés**: AlphaFold alapú szerkezeti predikciók" if req.include_predictions else ""}
-
-        Válaszod legyen tudományosan megalapozott, magyar nyelvű és strukturált.
+        Elemzés: {req.analysis_type}
+        Hossz: {sequence_length} bp
+        GC: {gc_content:.1f}%
+        
+        Végezz részletes genomikai elemzést magyar nyelven.
         """
 
         response_text = ""
         model_used = ""
 
-        # Először próbáljuk a Gemini-vel, amely jobb a tudományos szövegek elemzésében
         if gemini_model:
-            logger.info(f"Using Gemini 2.5 Pro for AlphaGenome analysis: {req.analysis_type}")
             response = await gemini_model.generate_content_async(
                 analysis_prompt,
                 generation_config=genai.types.GenerationConfig(
                     max_output_tokens=2048,
-                    temperature=0.1  # Alacsony temperature a tudományos pontosságért
+                    temperature=0.1
                 )
             )
             response_text = response.text
-            model_used = "Google Gemini 2.5 Pro"
+            model_used = "Gemini 1.5 Pro"
         elif cerebras_client:
-            logger.info(f"Using Cerebras Llama 4 for AlphaGenome analysis: {req.analysis_type}")
             stream = cerebras_client.chat.completions.create(
                 messages=[{"role": "user", "content": analysis_prompt}],
                 model="llama-4-scout-17b-16e-instruct",
                 stream=True,
                 max_completion_tokens=2048,
-                temperature=0.1,
-                top_p=0.9
+                temperature=0.1
             )
             for chunk in stream:
                 if chunk.choices[0].delta.content:
                     response_text += chunk.choices[0].delta.content
             model_used = "Cerebras Llama 4"
 
-        if not response_text:
-            raise ValueError("Az AI modell nem adott választ a genomikai elemzésre.")
-
-        # AlphaFold integráció, ha fehérje predikció kért
-        alphafold_data = None
-        if req.include_predictions and req.analysis_type in ["comprehensive", "protein_coding"]:
-            try:
-                # Keresünk potenciális UniProt ID-kat a szekvenciában vagy alapértelmezett emberi fehérjéket
-                common_proteins = ["P04637", "P53350", "P31946"]  # p53, PLK1, 14-3-3β
-                for protein_id in common_proteins:
-                    try:
-                        ebi_url = f"https://alphafold.ebi.ac.uk/api/prediction/{protein_id}"
-                        async with httpx.AsyncClient() as client:
-                            alphafold_response = await client.get(ebi_url, timeout=10)
-                            if alphafold_response.status_code == 200:
-                                alphafold_data = alphafold_response.json()
-                                break
-                    except:
-                        continue
-            except Exception as e:
-                logger.warning(f"AlphaFold integráció hiba: {e}")
-
-        # Eredmények összeállítása
         return {
             "sequence_info": {
                 "length": sequence_length,
@@ -657,25 +789,16 @@ async def alphagenome_analysis(req: AlphaGenomeRequest):
                 "content": response_text,
                 "model_used": model_used
             },
-            "alphafold_predictions": alphafold_data[0] if alphafold_data and isinstance(alphafold_data, list) else alphafold_data,
-            "metadata": {
-                "timestamp": "2024-01-01T00:00:00Z",
-                "version": "AlphaGenome v1.0",
-                "creator": DIGITAL_FINGERPRINT
-            },
             "status": "success"
         }
 
-    except HTTPException:
-        raise
     except Exception as e:
-        logger.error(f"Error in AlphaGenome analysis: {e}")
+        logger.error(f"Error in AlphaGenome: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Hiba történt az AlphaGenome elemzés során: {e}"
+            detail=f"Hiba az AlphaGenome elemzésben: {e}"
         )
 
-# --- Alkalmazás Indítása ---
 if __name__ == '__main__':
     import uvicorn
     uvicorn.run(app, host='0.0.0.0', port=5000)

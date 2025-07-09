@@ -1,31 +1,36 @@
+
 <!DOCTYPE html>
 <html lang="hu">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jade AI</title>
+    <title>Jade - Deep Discovery AI Platform</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
         :root {
-            --color-green: #00ff88;
-            --color-blue: #0088ff;
-            --color-pink: #ff1493;
+            --color-primary: #00ff88;
+            --color-secondary: #0088ff;
+            --color-accent: #ff1493;
             --color-bg: #000000;
-            --color-surface: rgba(10, 10, 10, 0.8);
-            --color-glass: rgba(255, 255, 255, 0.03);
-            --color-border: rgba(255, 255, 255, 0.08);
+            --color-surface: rgba(10, 10, 10, 0.9);
+            --color-glass: rgba(255, 255, 255, 0.05);
+            --color-border: rgba(255, 255, 255, 0.1);
             --color-text: #ffffff;
             --color-text-muted: #a0aec0;
         }
 
+        * { box-sizing: border-box; }
+
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: var(--color-bg);
             color: var(--color-text);
-            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
         }
 
         .gradient-bg::before {
@@ -35,1018 +40,1123 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: radial-gradient(circle at 20% 50%, rgba(0, 255, 136, 0.1) 0%, transparent 60%),
-                        radial-gradient(circle at 80% 80%, rgba(0, 136, 255, 0.08) 0%, transparent 60%);
-            animation: floatGradient 15s ease-in-out infinite;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(0, 255, 136, 0.1) 0%, transparent 60%),
+                radial-gradient(circle at 80% 80%, rgba(0, 136, 255, 0.08) 0%, transparent 60%),
+                radial-gradient(circle at 40% 40%, rgba(255, 20, 147, 0.05) 0%, transparent 60%);
+            animation: floatGradient 20s ease-in-out infinite;
             pointer-events: none;
-            filter: blur(40px);
+            z-index: -1;
         }
 
         @keyframes floatGradient {
-            0%, 100% { transform: rotate(0deg) translate(10%, -10%); }
-            50% { transform: rotate(180deg) translate(-10%, 10%); }
-        }
-
-        .neon-gradient-text {
-            background: linear-gradient(135deg, var(--color-green) 0%, var(--color-blue) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.1); }
         }
 
         .sidebar {
             background: var(--color-surface);
             backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
             border-right: 1px solid var(--color-border);
-            transition: transform 0.3s ease;
+            transition: all 0.3s ease;
+            width: 320px;
+            height: 100vh;
+            overflow-y: auto;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 100;
         }
 
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); }
+        .sidebar::-webkit-scrollbar-thumb { 
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); 
+            border-radius: 3px; 
+        }
+
+        .main-content {
+            margin-left: 320px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .category-group {
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--color-border);
+            border-radius: 12px;
+            background: var(--color-glass);
+            overflow: hidden;
+        }
+
+        .category-header {
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            color: #000;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s ease;
+        }
+
+        .category-header:hover {
+            background: linear-gradient(135deg, var(--color-secondary), var(--color-primary));
+        }
+
+        .category-services {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .category-services.expanded {
+            max-height: 500px;
+        }
+
+        .service-item {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--color-border);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .service-item:hover {
+            background: var(--color-glass);
+            transform: translateX(5px);
+        }
+
+        .service-item:last-child {
+            border-bottom: none;
+        }
+
+        .service-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #000;
+            flex-shrink: 0;
+        }
+
+        .service-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .service-name {
+            font-weight: 500;
+            font-size: 0.9rem;
+            color: var(--color-text);
+        }
+
+        .service-description {
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
+            margin-top: 0.25rem;
+            line-height: 1.3;
+        }
+
+        .biologiai-orvosi { background: linear-gradient(135deg, #10b981, #059669); }
+        .kemiai-anyagtudomanyi { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+        .kornyezeti-fenntarthato { background: linear-gradient(135deg, #22c55e, #16a34a); }
+        .fizikai-asztrofizikai { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+        .technologiai-melymu { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .tarsadalmi-gazdasagi { background: linear-gradient(135deg, #ef4444, #dc2626); }
+
         .chat-container {
-            height: calc(100vh - 80px);
+            flex: 1;
             overflow-y: auto;
+            padding: 1.5rem;
             scroll-behavior: smooth;
         }
 
         .chat-container::-webkit-scrollbar { width: 6px; }
         .chat-container::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); }
-        .chat-container::-webkit-scrollbar-thumb { background: linear-gradient(135deg, var(--color-green) 0%, var(--color-blue) 100%); border-radius: 3px; }
+        .chat-container::-webkit-scrollbar-thumb { 
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); 
+            border-radius: 3px; 
+        }
 
-        .message { animation: fadeInUp 0.4s ease-out; }
+        .message {
+            margin-bottom: 1.5rem;
+            animation: fadeInUp 0.4s ease-out;
+        }
 
         @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(15px); }
+            from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .user-message { background: rgba(0, 255, 136, 0.1); border: 1px solid rgba(0, 255, 136, 0.2); }
-        .ai-message { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .user-message {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            color: #000;
+            padding: 1rem 1.5rem;
+            border-radius: 20px 20px 5px 20px;
+            margin-left: auto;
+            max-width: 70%;
+            font-weight: 500;
+        }
+
+        .ai-message {
+            background: var(--color-glass);
+            border: 1px solid var(--color-border);
+            padding: 1.5rem;
+            border-radius: 20px 20px 20px 5px;
+            max-width: 85%;
+        }
+
+        .ai-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .ai-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+            font-weight: 600;
+        }
+
+        .ai-info h4 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--color-text);
+        }
+
+        .ai-info p {
+            margin: 0;
+            font-size: 0.8rem;
+            color: var(--color-text-muted);
+        }
 
         .input-container {
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            padding: 1.5rem;
+            background: var(--color-surface);
             border-top: 1px solid var(--color-border);
+            backdrop-filter: blur(20px);
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 1rem;
+            align-items: end;
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
         .input-field {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            flex: 1;
+            padding: 1rem 1.5rem;
+            background: var(--color-glass);
+            border: 1px solid var(--color-border);
+            border-radius: 24px;
             color: var(--color-text);
+            font-size: 1rem;
+            resize: none;
+            outline: none;
             transition: all 0.2s ease;
+            min-height: 24px;
+            max-height: 120px;
         }
 
         .input-field:focus {
-            outline: none;
-            border-color: rgba(0, 255, 136, 0.5);
-            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.1);
+        }
+
+        .input-field::placeholder {
+            color: var(--color-text-muted);
         }
 
         .send-button {
-            background: linear-gradient(135deg, var(--color-green) 0%, var(--color-blue) 100%);
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border-radius: 16px;
-            border: 1px solid rgba(0, 255, 136, 0.3);
-        }
-        
-        .send-button::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.2) 50%, transparent 70%);
-            transform: translateX(-100%);
-            transition: transform 0.6s ease;
-        }
-        
-        .send-button::after {
-            content: '';
-            position: absolute;
-            top: 50%; left: 50%;
-            width: 0; height: 0;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
-            transform: translate(-50%, -50%);
-            transition: all 0.3s ease;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
-        }
-        
-        .send-button:hover { 
-            transform: scale(1.05) translateY(-2px); 
-            box-shadow: 
-                0 8px 32px rgba(0, 255, 136, 0.4),
-                0 4px 16px rgba(0, 136, 255, 0.3),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2);
-            border-color: rgba(0, 255, 136, 0.6);
-        }
-        
-        .send-button:hover::before {
-            transform: translateX(100%);
-        }
-        
-        .send-button:hover::after {
-            width: 100px; height: 100px;
-        }
-        
-        .send-button:active { 
-            transform: scale(0.98) translateY(0px); 
-            box-shadow: 
-                0 4px 16px rgba(0, 255, 136, 0.3),
-                inset 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-        
-        .send-button .send-icon {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            z-index: 2;
-        }
-        
-        .send-button:hover .send-icon {
-            transform: translateX(3px) rotate(-10deg);
-            filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
-        }
-        
-        .send-button:active .send-icon {
-            transform: translateX(6px) rotate(-20deg) scale(1.1);
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            border: none;
+            color: #000;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
         }
 
-        .typing-indicator { display: flex; gap: 4px; padding: 8px; }
-        .typing-dot { width: 8px; height: 8px; background: linear-gradient(135deg, var(--color-green) 0%, var(--color-blue) 100%); border-radius: 50%; animation: typing 1.4s infinite ease-in-out; }
+        .send-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 20px rgba(0, 255, 136, 0.3);
+        }
+
+        .send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 1rem;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
         .typing-dot:nth-child(2) { animation-delay: 0.2s; }
         .typing-dot:nth-child(3) { animation-delay: 0.4s; }
 
         @keyframes typing {
             0%, 60%, 100% { transform: scale(0.8); opacity: 0.5; }
-            30% { transform: scale(1); opacity: 1; }
-        }
-
-        .neon-glow { box-shadow: 0 0 20px rgba(0, 255, 136, 0.3), 0 0 40px rgba(0, 136, 255, 0.2); }
-
-        .model-badge {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(0, 255, 136, 0.2);
-            font-size: 10px;
-            padding: 4px 10px;
-            border-radius: 20px;
-            color: rgba(0, 255, 136, 0.9);
-            font-weight: 600;
+            30% { transform: scale(1.2); opacity: 1; }
         }
 
         .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             background: rgba(0, 0, 0, 0.8);
-            display: none; justify-content: center; align-items: center;
-            z-index: 2000; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            animation: fadeIn 0.3s ease-out;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
         }
 
         .modal-content {
-            background: #0A0E19;
-            border-radius: 16px; padding: 2rem; width: 90%; max-width: 500px;
-            max-height: 80vh; overflow-y: auto; border: 1px solid var(--color-border);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-            animation: slideInFromTop 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            background: var(--color-surface);
+            border-radius: 16px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 1px solid var(--color-border);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--color-border);
         }
 
         .modal-title {
-            background: linear-gradient(135deg, var(--color-green), var(--color-blue));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            font-size: 1.5rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
-        .modal-close:hover { color: var(--color-pink); background: rgba(255, 255, 255, 0.1); }
-        .modal-input { background: #000; border: 1px solid var(--color-border); }
-        .modal-button { background: linear-gradient(135deg, var(--color-green), var(--color-blue)); }
-        .modal-button:hover { box-shadow: 0 0 20px rgba(0, 255, 136, 0.4); }
-
-        .ai-answer-card { background: rgba(255, 255, 255, 0.05); border: 1px solid var(--color-border); border-radius: 12px; padding: 1rem; }
-        .ai-answer-card h3 { color: var(--color-green); }
-        .related-actions-card { margin-top: 1rem; }
-        .related-actions-card button { 
-            display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; border-radius: 8px; 
-            transition: background 0.2s; width: 100%; text-align: left;
-            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
+        .modal-close {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--color-glass);
+            border: 1px solid var(--color-border);
             color: var(--color-text);
-            font-size: 0.875rem; /* text-sm */
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
         }
-        .related-actions-card button:hover { background: rgba(255, 255, 255, 0.1); }
-        .related-actions-card i { color: var(--color-blue); }
 
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideInFromTop { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .modal-close:hover {
+            background: var(--color-accent);
+            color: #fff;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--color-text);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--color-glass);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            color: var(--color-text);
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.1);
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-button {
+            width: 100%;
+            padding: 0.875rem 1.5rem;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            border: none;
+            border-radius: 8px;
+            color: #000;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .form-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0, 255, 136, 0.3);
+        }
+
+        .form-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .welcome-section {
+            text-align: center;
+            padding: 4rem 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .welcome-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .welcome-subtitle {
+            font-size: 1.2rem;
+            color: var(--color-text-muted);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .stat-card {
+            background: var(--color-glass);
+            border: 1px solid var(--color-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--color-primary);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--color-text-muted);
+            margin-top: 0.5rem;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .quick-action {
+            background: var(--color-glass);
+            border: 1px solid var(--color-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .quick-action:hover {
+            background: var(--color-border);
+            transform: translateY(-2px);
+        }
+
+        .quick-action-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: var(--color-primary);
+        }
+
+        .quick-action-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .quick-action-desc {
+            font-size: 0.9rem;
+            color: var(--color-text-muted);
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+        }
 
         @media (max-width: 768px) {
-            .sidebar { position: fixed; z-index: 50; transform: translateX(-100%); }
-            .sidebar.open { transform: translateX(0); }
+            .sidebar {
+                width: 100%;
+            }
+            
+            .welcome-title {
+                font-size: 2rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
     </style>
 </head>
 <body class="gradient-bg">
-    <div class="flex h-screen">
-        <!-- Sidebar -->
-        <aside id="sidebar" class="sidebar w-64 lg:w-80 h-full flex flex-col">
-            <!-- Header -->
-            <div class="p-4 border-b border-gray-800">
-                <button id="newChatBtn" class="w-full bg-gradient-to-r from-green-500 to-blue-500 text-black font-semibold rounded-xl px-4 py-3 flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-green-500/20 transition-all duration-200">
-                    <i class="fas fa-plus"></i>
-                    <span>Új beszélgetés</span>
-                </button>
-            </div>
-
-            <!-- Deep Discovery Tools -->
-            <div class="p-4">
-                 <h3 class="text-xs uppercase tracking-wider text-gray-500 mb-3">Deep Discovery Eszközök</h3>
-                 <div class="space-y-2">
-                     <button id="researchTrendsBtn" class="w-full text-left text-sm text-gray-300 p-2 rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-3"><i class="fas fa-flask w-5 text-center text-green-400"></i> Kutatási Trendek</button>
-                     <button id="proteinStructureBtn" class="w-full text-left text-sm text-gray-300 p-2 rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-3"><i class="fas fa-dna w-5 text-center text-blue-400"></i> Fehérje Struktúra</button>
-                     <button id="customGCPModelBtn" class="w-full text-left text-sm text-gray-300 p-2 rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-3"><i class="fas fa-cloud w-5 text-center text-pink-400"></i> Egyedi GCP Modell</button>
-                     <button id="simulationOptimizerBtn" class="w-full text-left text-sm text-gray-300 p-2 rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-3"><i class="fas fa-microchip w-5 text-center text-yellow-400"></i> Szimuláció Optimalizáló</button>
-                     <button id="alphaGenomeBtn" class="w-full text-left text-sm text-gray-300 p-2 rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-3"><i class="fas fa-dna w-5 text-center text-purple-400"></i> AlphaGenome Elemzés</button>
-                 </div>
-            </div>
-             <div class="flex-1"></div>
-            <!-- Settings -->
-            <div class="p-4 border-t border-gray-800">
-                <button class="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-gray-800 transition-colors">
-                    <i class="fas fa-cog text-gray-400"></i>
-                    <span class="text-gray-300 text-sm font-medium">Beállítások</span>
-                </button>
-            </div>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="flex-1 flex flex-col">
-            <!-- Top Bar -->
-            <header class="h-16 flex items-center justify-between px-4 lg:px-6 border-b border-gray-800">
-                <button id="menuToggle" class="lg:hidden p-2 rounded-lg hover:bg-gray-800">
-                    <i class="fas fa-bars text-gray-400"></i>
-                </button>
-                <div class="flex items-center gap-3">
-                    <h1 class="text-xl font-semibold neon-gradient-text">Jade</h1>
-                    <span id="currentModelBadge" class="model-badge">Hibrid AI</span>
+    <div class="sidebar" id="sidebar">
+        <!-- Sidebar Header -->
+        <div class="p-4 border-b border-gray-800">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 bg-gradient-to-br from-green-400 to-blue-500 rounded-xl flex items-center justify-center">
+                    <span class="text-black font-bold text-xl">J</span>
                 </div>
-                <div class="w-6"></div>
-            </header>
-
-            <!-- Chat Container -->
-            <div id="chatContainer" class="chat-container flex-1 p-4 lg:p-6">
-                <!-- Welcome Message -->
-                <div id="welcomeScreen" class="max-w-3xl mx-auto text-center py-20">
-                    <div class="mb-8">
-                        <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/75125ca6-b626-4035-b3d2-c7d2b10d3f55.png" alt="Jade AI Logo" class="w-24 h-24 mx-auto rounded-2xl neon-glow" />
-                    </div>
-                    <h2 class="text-3xl font-bold mb-4 neon-gradient-text">Üdvözöl a Jade</h2>
-                    <p class="text-gray-400 mb-8">Fejlett AI asszisztensed, a Deep Discovery erejével.</p>
-                </div>
-                <div id="messagesContainer"></div>
-            </div>
-
-            <!-- Input Container -->
-            <div class="input-container px-4 lg:px-6 py-4">
-                <div class="max-w-3xl mx-auto">
-                    <div class="flex items-end gap-3">
-                        <div class="flex-1">
-                            <textarea id="messageInput" class="input-field w-full px-4 py-3 rounded-xl resize-none" placeholder="Írj egy üzenetet..." rows="1" style="max-height: 120px;"></textarea>
-                        </div>
-                        <button id="sendButton" class="send-button p-3 rounded-xl">
-                            <i class="fas fa-paper-plane text-black send-icon"></i>
-                        </button>
-                    </div>
-                    <div class="mt-3 text-xs text-gray-500 text-center">
-                        A Jade tévedhet. Fontos információkat ellenőrizz.
-                    </div>
+                <div>
+                    <h1 class="text-xl font-bold text-white">Jade</h1>
+                    <p class="text-xs text-gray-400">Deep Discovery AI</p>
                 </div>
             </div>
-        </main>
-    </div>
+            
+            <button id="newChatBtn" class="w-full bg-gradient-to-r from-green-500 to-blue-500 text-black font-semibold rounded-xl px-4 py-3 flex items-center justify-center gap-2 hover:shadow-lg transition-all">
+                <i class="fas fa-plus"></i>
+                <span>Új beszélgetés</span>
+            </button>
+        </div>
 
-    <!-- Modals -->
-    <!-- Research Trends Modal -->
-    <div class="modal-overlay" id="researchTrendsModal">
-        <div class="modal-content">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold modal-title">Kutatási Trendek Elemzése</h2>
-                <button class="modal-close p-2 rounded-full" data-modal-id="researchTrendsModal"><i class="fas fa-times"></i></button>
+        <!-- Service Categories -->
+        <div class="p-4" id="serviceCategories">
+            <h3 class="text-xs uppercase tracking-wider text-gray-500 mb-4">Alpha Services</h3>
+            <div id="categoriesContainer">
+                <!-- Categories will be loaded here -->
             </div>
-            <div class="modal-message-container"></div>
-            <form id="researchTrendsForm" class="flex flex-col gap-4">
-                <textarea class="modal-input rounded-lg p-3" id="researchQuery" placeholder="Milyen tudományos/innovációs trendeket vizsgálnál?" rows="3" required></textarea>
-                <input type="number" class="modal-input rounded-lg p-3" id="numResults" placeholder="Találatok száma (1-10)" value="5" min="1" max="10">
-                <input type="number" class="modal-input rounded-lg p-3" id="summaryLength" placeholder="Összefoglaló hossza (szóban, 50-500)" value="200" min="50" max="500">
-                <button type="submit" class="modal-button font-bold py-3 rounded-lg" id="researchTrendsSubmitBtn">Elemzés Indítása</button>
-            </form>
-            <div id="researchResult" class="mt-4 pt-4 border-t border-gray-700 text-gray-300" style="display: none;">
-                <h3 class="text-lg font-semibold mb-2 flex items-center gap-2 text-green-400"><i class="fas fa-chart-line"></i> Összefoglaló</h3>
-                <p id="researchSummary" class="mb-4"></p>
-                <h4 class="text-md font-semibold my-2 text-blue-400">Források</h4>
-                <div id="researchSources" class="space-y-2"></div>
-            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="p-4 border-t border-gray-800 mt-auto">
+            <p class="text-xs text-gray-500 text-center">Jade made by Kollár Sándor</p>
         </div>
     </div>
 
-    <!-- Protein Structure Modal -->
-    <div class="modal-overlay" id="proteinStructureModal">
-        <div class="modal-content">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold modal-title">Fehérje Struktúra Keresése</h2>
-                <button class="modal-close p-2 rounded-full" data-modal-id="proteinStructureModal"><i class="fas fa-times"></i></button>
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div class="flex items-center justify-between p-4 border-b border-gray-800 bg-black/50 backdrop-blur-sm">
+            <button id="menuToggle" class="lg:hidden p-2 rounded-lg hover:bg-gray-800 text-white">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="flex items-center gap-3">
+                <h1 class="text-xl font-semibold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
+                    Jade AI Platform
+                </h1>
+                <span id="modelBadge" class="px-3 py-1 bg-green-500/20 text-green-400 text-xs rounded-full font-medium">
+                    Hibrid AI
+                </span>
             </div>
-            <div class="modal-message-container"></div>
-            <form id="proteinStructureForm" class="flex flex-col gap-4">
-                <input type="text" class="modal-input rounded-lg p-3" id="proteinId" placeholder="Fehérje azonosító (pl. UniProt ID: P0DTC2)" required>
-                <button type="submit" class="modal-button font-bold py-3 rounded-lg" id="proteinStructureSubmitBtn">Keresés</button>
-            </form>
-            <div id="proteinResult" class="mt-4 pt-4 border-t border-gray-700 text-gray-300" style="display: none;">
-                <h3 class="text-lg font-semibold mb-2 flex items-center gap-2 text-green-400"><i class="fas fa-microscope"></i> Struktúra Részletek</h3>
-                <p><strong>UniProt ID:</strong> <span id="resultUniProtId"></span></p>
-                <p><strong>Modell Konfidencia (pLDDT):</strong> <span id="resultPlddt"></span></p>
-                <p class="mt-2">
-                    <a id="resultProteinUrl" href="#" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline flex items-center gap-2">
-                        <i class="fas fa-external-link-alt"></i> Struktúra letöltése (CIF/PDB)
-                    </a>
+        </div>
+
+        <!-- Chat Container -->
+        <div class="chat-container" id="chatContainer">
+            <!-- Welcome Screen -->
+            <div id="welcomeScreen" class="welcome-section">
+                <h1 class="welcome-title">Üdvözöl a Jade</h1>
+                <p class="welcome-subtitle">
+                    Fejlett AI platform 150+ tudományos és innovációs szolgáltatással. 
+                    Válaszd ki a kívánt Alpha szolgáltatást, vagy beszélgess velem szabadon.
                 </p>
-                <p class="mt-1">
-                    <a id="resultPaeUrl" href="#" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline flex items-center gap-2">
-                        <i class="fas fa-chart-area"></i> PAE Diagram
-                    </a>
-                </p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Custom GCP Model Modal -->
-    <div class="modal-overlay" id="customGCPModelModal">
-        <div class="modal-content">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold modal-title">Egyedi GCP Modell Hívása</h2>
-                <button class="modal-close p-2 rounded-full" data-modal-id="customGCPModelModal"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="modal-message-container"></div>
-            <form id="customGCPModelForm" class="flex flex-col gap-4">
-                <input type="text" class="modal-input rounded-lg p-3" id="gcpEndpointId" placeholder="GCP Endpoint ID" required>
-                <textarea class="modal-input rounded-lg p-3" id="gcpInputData" placeholder="Bemeneti JSON adat (pl. {'smiles': 'CCO'})" rows="5" required></textarea>
-                <button type="submit" class="modal-button font-bold py-3 rounded-lg" id="customGCPModelSubmitBtn">Hívás</button>
-            </form>
-            <div id="gcpResult" class="mt-4 pt-4 border-t border-gray-700 text-gray-300" style="display: none;">
-                <h3 class="text-lg font-semibold mb-2 flex items-center gap-2 text-green-400"><i class="fas fa-cloud-upload-alt"></i> Modell Válasz</h3>
-                <pre id="gcpResponseData" class="bg-gray-900 p-3 rounded-lg text-xs overflow-x-auto"></pre>
-            </div>
-        </div>
-    </div>
-
-    <!-- Simulation Optimizer Modal -->
-    <div class="modal-overlay" id="simulationOptimizerModal">
-        <div class="modal-content">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold modal-title">Szimuláció Optimalizáló</h2>
-                <button class="modal-close p-2 rounded-full" data-modal-id="simulationOptimizerModal"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="modal-message-container"></div>
-            <form id="simulationOptimizerForm" class="flex flex-col gap-4">
-                <input type="text" class="modal-input rounded-lg p-3" id="simulationType" placeholder="Szimuláció típusa (pl. molecular_dynamics)" required>
-                <textarea class="modal-input rounded-lg p-3" id="simulationInputParams" placeholder="Bemeneti paraméterek JSON formátumban" rows="3" required></textarea>
-                <input type="text" class="modal-input rounded-lg p-3" id="optimizationGoal" placeholder="Optimalizálási cél (pl. minimize_energy)" required>
-                <button type="submit" class="modal-button font-bold py-3 rounded-lg" id="simulationOptimizerSubmitBtn">Optimalizálás</button>
-            </form>
-            <div id="simulationResult" class="mt-4 pt-4 border-t border-gray-700 text-gray-300" style="display: none;">
-                <h3 class="text-lg font-semibold mb-2 flex items-center gap-2 text-green-400"><i class="fas fa-cogs"></i> Optimalizált Kimenet</h3>
-                <pre id="simulationOptimizedOutput" class="bg-gray-900 p-3 rounded-lg text-xs overflow-x-auto"></pre>
-                <p class="text-xs text-gray-500 mt-2">Modell használva: <span id="simulationModelUsed"></span></p>
-            </div>
-        </div>
-    </div>
-
-    <!-- AlphaGenome Modal -->
-    <div class="modal-overlay" id="alphaGenomeModal">
-        <div class="modal-content max-w-4xl">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold modal-title">AlphaGenome Genomikai Elemzés</h2>
-                <button class="modal-close p-2 rounded-full" data-modal-id="alphaGenomeModal"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="modal-message-container"></div>
-            <form id="alphaGenomeForm" class="flex flex-col gap-4">
-                <textarea class="modal-input rounded-lg p-3" id="genomeSequence" placeholder="Genom szekvencia (DNA/RNA, pl: ATCGATCGATCG...)" rows="6" required></textarea>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <select class="modal-input rounded-lg p-3" id="analysisType" required>
-                        <option value="comprehensive">Átfogó elemzés</option>
-                        <option value="protein_coding">Fehérje kódoló</option>
-                        <option value="regulatory">Szabályozó elemek</option>
-                        <option value="structural">Strukturális elemzés</option>
-                    </select>
-                    <select class="modal-input rounded-lg p-3" id="organism" required>
-                        <option value="human">Ember</option>
-                        <option value="mouse">Egér</option>
-                        <option value="plant">Növény</option>
-                        <option value="bacteria">Baktérium</option>
-                    </select>
-                    <label class="flex items-center text-gray-300">
-                        <input type="checkbox" id="includePredictions" class="mr-2" checked>
-                        Fehérje előrejelzések
-                    </label>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <span class="stat-number">150+</span>
+                        <div class="stat-label">Alpha Service</div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number">6</span>
+                        <div class="stat-label">Kategória</div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number">3</span>
+                        <div class="stat-label">AI Modell</div>
+                    </div>
                 </div>
-                <button type="submit" class="modal-button font-bold py-3 rounded-lg" id="alphaGenomeButton">
-                    <i class="fas fa-dna mr-2"></i> Genomikai Elemzés Indítása
+
+                <div class="quick-actions">
+                    <div class="quick-action" onclick="showRandomService()">
+                        <div class="quick-action-icon">🎲</div>
+                        <div class="quick-action-title">Véletlen Service</div>
+                        <div class="quick-action-desc">Fedezz fel egy random Alpha szolgáltatást</div>
+                    </div>
+                    <div class="quick-action" onclick="showPopularServices()">
+                        <div class="quick-action-icon">⭐</div>
+                        <div class="quick-action-title">Népszerű Services</div>
+                        <div class="quick-action-desc">Legnépszerűbb szolgáltatások</div>
+                    </div>
+                    <div class="quick-action" onclick="showAllCategories()">
+                        <div class="quick-action-icon">📚</div>
+                        <div class="quick-action-title">Összes Kategória</div>
+                        <div class="quick-action-desc">Minden Alpha service böngészése</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Messages Container -->
+            <div id="messagesContainer"></div>
+        </div>
+
+        <!-- Input Container -->
+        <div class="input-container">
+            <div class="input-wrapper">
+                <textarea 
+                    id="messageInput" 
+                    class="input-field" 
+                    placeholder="Írj egy üzenetet vagy válassz egy Alpha szolgáltatást..."
+                    rows="1"
+                ></textarea>
+                <button id="sendButton" class="send-button">
+                    <i class="fas fa-paper-plane"></i>
                 </button>
-            </form>
-            <div id="alphaGenomeResult" class="mt-4 pt-4 border-t border-gray-700 text-gray-300" style="display: none;">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div>
-                        <h3 class="text-lg font-semibold mb-2 flex items-center gap-2 text-green-400"><i class="fas fa-info-circle"></i> Szekvencia Információk</h3>
-                        <div id="sequenceInfo" class="bg-gray-800 p-4 rounded-lg text-sm"></div>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-semibold mb-2 flex items-center gap-2 text-blue-400"><i class="fas fa-robot"></i> AI Elemzés</h3>
-                        <div id="aiAnalysis" class="bg-gray-800 p-4 rounded-lg text-sm max-h-96 overflow-auto"></div>
-                    </div>
-                </div>
-                <div id="alphafoldSection" class="mt-4" style="display: none;">
-                    <h3 class="text-lg font-semibold mb-2 flex items-center gap-2 text-purple-400"><i class="fas fa-cube"></i> AlphaFold Predikciók</h3>
-                    <div id="alphafoldData" class="bg-gray-800 p-4 rounded-lg text-sm"></div>
-                </div>
             </div>
         </div>
     </div>
 
+    <!-- Alpha Service Modal -->
+    <div class="modal-overlay" id="alphaServiceModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Alpha Service</h2>
+                <button class="modal-close" onclick="closeModal('alphaServiceModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div id="modalContent">
+                <form id="alphaServiceForm">
+                    <div class="form-group">
+                        <label class="form-label" for="serviceDescription">Szolgáltatás leírása</label>
+                        <p id="serviceDescription" class="text-gray-400 text-sm mb-4"></p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="inputData">Bemeneti adatok (JSON)</label>
+                        <textarea 
+                            id="inputData" 
+                            class="form-input form-textarea" 
+                            placeholder='{"key": "value", "parameter": "data"}'
+                            required
+                        ></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="parameters">Paraméterek (opcionális)</label>
+                        <textarea 
+                            id="parameters" 
+                            class="form-input form-textarea" 
+                            placeholder='{"temperature": 0.1, "max_tokens": 1000}'
+                        ></textarea>
+                    </div>
+                    
+                    <button type="submit" class="form-button" id="executeButton">
+                        <i class="fas fa-play mr-2"></i>
+                        Szolgáltatás futtatása
+                    </button>
+                </form>
+            </div>
+            
+            <div id="modalResult" style="display: none;">
+                <div class="mt-6 p-4 bg-gray-800 rounded-lg">
+                    <h3 class="text-lg font-semibold mb-2 text-green-400">Eredmény</h3>
+                    <div id="resultContent" class="text-gray-300"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
-        // --- STATE & DOM ELEMENTS ---
+        // Global variables
         let isTyping = false;
         let currentUserId = localStorage.getItem('jadeUserId') || `user_${Math.random().toString(36).substring(2, 15)}`;
-        localStorage.setItem('jadeUserId', currentUserId); // Mentjük a felhasználó ID-t
+        let currentService = null;
+        let alphaServices = {};
+        
+        localStorage.setItem('jadeUserId', currentUserId);
 
-        const API_BASE_URL = window.location.origin; // A Repliten ez a Repl URL-je lesz
-
-        const chatContainer = document.getElementById('chatContainer');
-        const messagesContainer = document.getElementById('messagesContainer');
-        const messageInput = document.getElementById('messageInput');
-        const sendButton = document.getElementById('sendButton');
-        const welcomeScreen = document.getElementById('welcomeScreen');
+        // DOM elements
         const sidebar = document.getElementById('sidebar');
         const menuToggle = document.getElementById('menuToggle');
         const newChatBtn = document.getElementById('newChatBtn');
-        const currentModelBadge = document.getElementById('currentModelBadge');
+        const chatContainer = document.getElementById('chatContainer');
+        const messagesContainer = document.getElementById('messagesContainer');
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const modelBadge = document.getElementById('modelBadge');
 
-        // Deep Discovery Tool Buttons
-        const researchTrendsBtn = document.getElementById('researchTrendsBtn');
-        const proteinStructureBtn = document.getElementById('proteinStructureBtn');
-        const customGCPModelBtn = document.getElementById('customGCPModelBtn');
-        const simulationOptimizerBtn = document.getElementById('simulationOptimizerBtn');
-        const alphaGenomeBtn = document.getElementById('alphaGenomeBtn');
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadAlphaServices();
+            setupEventListeners();
+            messageInput.focus();
+        });
 
+        // Load Alpha services from API
+        async function loadAlphaServices() {
+            try {
+                const response = await fetch('/api/services');
+                const data = await response.json();
+                alphaServices = data.categories;
+                renderServiceCategories();
+            } catch (error) {
+                console.error('Error loading services:', error);
+            }
+        }
 
-        // --- CORE FUNCTIONS ---
+        // Render service categories in sidebar
+        function renderServiceCategories() {
+            const container = document.getElementById('categoriesContainer');
+            container.innerHTML = '';
 
-        /**
-         * Sends a message from the user input, triggers AI response.
-         */
+            const categoryIcons = {
+                'biologiai_orvosi': 'fas fa-dna',
+                'kemiai_anyagtudomanyi': 'fas fa-atom',
+                'kornyezeti_fenntarthato': 'fas fa-leaf',
+                'fizikai_asztrofizikai': 'fas fa-satellite',
+                'technologiai_melymu': 'fas fa-microchip',
+                'tarsadalmi_gazdasagi': 'fas fa-chart-line'
+            };
+
+            const categoryNames = {
+                'biologiai_orvosi': 'Biológiai & Orvosi',
+                'kemiai_anyagtudomanyi': 'Kémiai & Anyagtudományi',
+                'kornyezeti_fenntarthato': 'Környezeti & Fenntartható',
+                'fizikai_asztrofizikai': 'Fizikai & Asztrofizikai',
+                'technologiai_melymu': 'Technológiai & Mélyműszaki',
+                'tarsadalmi_gazdasagi': 'Társadalmi & Gazdasági'
+            };
+
+            for (const [categoryKey, services] of Object.entries(alphaServices)) {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'category-group';
+                
+                const header = document.createElement('div');
+                header.className = 'category-header';
+                header.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <i class="${categoryIcons[categoryKey]}"></i>
+                        <span>${categoryNames[categoryKey]}</span>
+                        <span class="text-xs opacity-70">(${Object.keys(services).length})</span>
+                    </div>
+                    <i class="fas fa-chevron-down transition-transform transform" id="chevron-${categoryKey}"></i>
+                `;
+                
+                const servicesDiv = document.createElement('div');
+                servicesDiv.className = 'category-services';
+                servicesDiv.id = `services-${categoryKey}`;
+                
+                for (const [serviceName, serviceDesc] of Object.entries(services)) {
+                    const serviceItem = document.createElement('div');
+                    serviceItem.className = 'service-item';
+                    serviceItem.innerHTML = `
+                        <div class="service-icon ${categoryKey}">
+                            <i class="${categoryIcons[categoryKey]}"></i>
+                        </div>
+                        <div class="service-content">
+                            <div class="service-name">${serviceName}</div>
+                            <div class="service-description">${serviceDesc}</div>
+                        </div>
+                    `;
+                    
+                    serviceItem.addEventListener('click', () => {
+                        openAlphaService(serviceName, serviceDesc, categoryKey);
+                    });
+                    
+                    servicesDiv.appendChild(serviceItem);
+                }
+                
+                header.addEventListener('click', () => {
+                    toggleCategory(categoryKey);
+                });
+                
+                categoryDiv.appendChild(header);
+                categoryDiv.appendChild(servicesDiv);
+                container.appendChild(categoryDiv);
+            }
+        }
+
+        // Toggle category expansion
+        function toggleCategory(categoryKey) {
+            const servicesDiv = document.getElementById(`services-${categoryKey}`);
+            const chevron = document.getElementById(`chevron-${categoryKey}`);
+            
+            if (servicesDiv.classList.contains('expanded')) {
+                servicesDiv.classList.remove('expanded');
+                chevron.style.transform = 'rotate(0deg)';
+            } else {
+                servicesDiv.classList.add('expanded');
+                chevron.style.transform = 'rotate(180deg)';
+            }
+        }
+
+        // Open Alpha service modal
+        function openAlphaService(serviceName, serviceDesc, category) {
+            currentService = serviceName;
+            document.getElementById('modalTitle').textContent = serviceName;
+            document.getElementById('serviceDescription').textContent = serviceDesc;
+            document.getElementById('alphaServiceModal').style.display = 'flex';
+            
+            // Set example data based on category
+            setExampleData(category);
+        }
+
+        // Set example data for different categories
+        function setExampleData(category) {
+            const examples = {
+                'biologiai_orvosi': {
+                    input: '{"sequence": "ATCGATCGATCG", "organism": "human", "analysis_type": "mutation"}',
+                    params: '{"confidence_threshold": 0.8, "include_variants": true}'
+                },
+                'kemiai_anyagtudomanyi': {
+                    input: '{"compound": "C6H12O6", "temperature": 298.15, "pressure": 101325}',
+                    params: '{"method": "DFT", "basis_set": "B3LYP"}'
+                },
+                'kornyezeti_fenntarthato': {
+                    input: '{"location": "Budapest", "timeframe": "2024-2030", "parameters": ["temperature", "precipitation"]}',
+                    params: '{"model": "IPCC", "scenario": "RCP4.5"}'
+                },
+                'fizikai_asztrofizikai': {
+                    input: '{"mass": 1.989e30, "radius": 696340000, "temperature": 5778}',
+                    params: '{"simulation_time": 1000, "precision": "high"}'
+                },
+                'technologiai_melymu': {
+                    input: '{"algorithm": "neural_network", "data_size": 10000, "features": 512}',
+                    params: '{"learning_rate": 0.001, "epochs": 100}'
+                },
+                'tarsadalmi_gazdasagi': {
+                    input: '{"market": "technology", "period": "2024-Q1", "metrics": ["growth", "volatility"]}',
+                    params: '{"model": "ARIMA", "confidence_interval": 0.95}'
+                }
+            };
+
+            const example = examples[category] || examples['biologiai_orvosi'];
+            document.getElementById('inputData').value = example.input;
+            document.getElementById('parameters').value = example.params;
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Mobile menu toggle
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+            });
+
+            // Close sidebar when clicking outside on mobile
+            document.addEventListener('click', (e) => {
+                if (window.innerWidth <= 1024 && !sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+                    sidebar.classList.remove('open');
+                }
+            });
+
+            // New chat button
+            newChatBtn.addEventListener('click', startNewChat);
+
+            // Send message
+            sendButton.addEventListener('click', sendMessage);
+            messageInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            // Auto-resize textarea
+            messageInput.addEventListener('input', () => {
+                messageInput.style.height = 'auto';
+                messageInput.style.height = Math.min(messageInput.scrollHeight, 120) + 'px';
+            });
+
+            // Alpha service form
+            document.getElementById('alphaServiceForm').addEventListener('submit', executeAlphaService);
+        }
+
+        // Send chat message
         async function sendMessage() {
             const message = messageInput.value.trim();
             if (!message || isTyping) return;
 
-            if (messagesContainer.children.length === 0) {
-                welcomeScreen.style.display = 'none';
-            }
-
             addMessage('user', message);
             messageInput.value = '';
             messageInput.style.height = 'auto';
-
+            hideWelcomeScreen();
             showTypingIndicator();
 
             try {
-                // Beszélgetési előzmények lekérése a backendről
-                const historyRes = await fetch(`${API_BASE_URL}/api/deep_discovery/chat_history/${currentUserId}`);
-                const historyData = await historyRes.json();
-                const currentHistory = historyData.history || [];
-
-                const payload = {
-                    message: message,
-                    user_id: currentUserId,
-                    history: currentHistory.map(msg => ({ role: msg.role, content: msg.content })) // Csak a role és content
-                };
-
-                const response = await fetch(`${API_BASE_URL}/api/deep_discovery/chat`, {
+                const response = await fetch('/api/deep_discovery/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({ message, user_id: currentUserId })
                 });
 
-                if (!response.ok) {
-                    const errorBody = await response.json();
-                    throw new Error(errorBody.detail || response.statusText);
-                }
-
-                const result = await response.json();
-                addAiChatResponse(result.response, result.model_used);
-
-            } catch (error) {
-                console.error("Chat Error:", error);
-                addMessage('ai', `<div class="text-red-400">Hoppá, hiba történt a válasszal: ${error.message}. Kérjük, próbálja újra később.</div>`);
-            } finally {
+                const data = await response.json();
                 hideTypingIndicator();
+                addMessage('ai', data.response, data.model_used);
+                modelBadge.textContent = data.model_used;
+            } catch (error) {
+                hideTypingIndicator();
+                addMessage('ai', `Hiba történt: ${error.message}`, 'Error');
             }
         }
 
-        /**
-         * Adds a message to the chat UI.
-         * @param {'user' | 'ai'} sender - The sender of the message.
-         * @param {string} content - The HTML content of the message.
-         */
-        function addMessage(sender, content) {
+        // Execute Alpha service
+        async function executeAlphaService(e) {
+            e.preventDefault();
+            
+            const inputData = document.getElementById('inputData').value;
+            const parameters = document.getElementById('parameters').value;
+            const button = document.getElementById('executeButton');
+            
+            try {
+                const inputJson = JSON.parse(inputData);
+                const paramsJson = parameters ? JSON.parse(parameters) : {};
+                
+                button.disabled = true;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Futtatás...';
+                
+                const response = await fetch(`/api/alpha/${currentService}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        service_name: currentService,
+                        input_data: inputJson,
+                        parameters: paramsJson
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showResult(result);
+                } else {
+                    throw new Error(result.detail || 'Hiba történt');
+                }
+            } catch (error) {
+                alert(`Hiba: ${error.message}`);
+            } finally {
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-play mr-2"></i>Szolgáltatás futtatása';
+            }
+        }
+
+        // Show service result
+        function showResult(result) {
+            const resultDiv = document.getElementById('modalResult');
+            const contentDiv = document.getElementById('resultContent');
+            
+            contentDiv.innerHTML = `
+                <div class="space-y-4">
+                    <div>
+                        <h4 class="font-semibold text-blue-400 mb-2">Szolgáltatás</h4>
+                        <p class="text-sm">${result.service_name}</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-blue-400 mb-2">Kategória</h4>
+                        <p class="text-sm">${result.category}</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-blue-400 mb-2">Elemzés</h4>
+                        <div class="text-sm whitespace-pre-wrap bg-gray-900 p-3 rounded">${result.analysis}</div>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-blue-400 mb-2">Használt modell</h4>
+                        <p class="text-sm">${result.model_used}</p>
+                    </div>
+                </div>
+            `;
+            
+            resultDiv.style.display = 'block';
+        }
+
+        // Add message to chat
+        function addMessage(type, content, model = null) {
             const messageDiv = document.createElement('div');
-            messageDiv.className = 'message mb-6';
-
-            const isUser = sender === 'user';
-
-            messageDiv.innerHTML = `
-                <div class="max-w-3xl mx-auto">
-                    <div class="flex ${isUser ? 'justify-end' : 'justify-start'} gap-3">
-                        ${!isUser ? `
-                        <div class="flex-shrink-0">
-                            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
-                                <i class="fas fa-robot text-black"></i>
-                            </div>
-                        </div>` : ''}
-                        <div class="${isUser ? 'user-message' : 'ai-message'} max-w-[80%] px-4 py-3 rounded-2xl">
-                            <div class="text-sm ${isUser ? 'text-white' : 'text-gray-200'}">${content}</div>
+            messageDiv.className = 'message';
+            
+            if (type === 'user') {
+                messageDiv.innerHTML = `
+                    <div class="flex justify-end">
+                        <div class="user-message">
+                            ${content}
                         </div>
                     </div>
-                </div>`;
-
+                `;
+            } else {
+                messageDiv.innerHTML = `
+                    <div class="ai-message">
+                        <div class="ai-header">
+                            <div class="ai-avatar">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="ai-info">
+                                <h4>Jade AI</h4>
+                                <p>${model || 'AI Assistant'}</p>
+                            </div>
+                        </div>
+                        <div class="prose prose-invert max-w-none">
+                            ${content.replace(/\n/g, '<br>')}
+                        </div>
+                    </div>
+                `;
+            }
+            
             messagesContainer.appendChild(messageDiv);
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
 
-        /**
-         * Adds a structured AI chat response to the chat, including model used and suggested actions.
-         * @param {string} answer - The AI's answer.
-         * @param {string} modelUsed - The AI model that generated the response.
-         */
-        function addAiChatResponse(answer, modelUsed) {
-            currentModelBadge.textContent = modelUsed; // Frissítjük a badge-et
-
-            // Itt a "Deep Discovery" logika: a Gemini javasolhat további műveleteket
-            // Ez a logika a backendben, a Gemini promptban lenne a legcélszerűbb,
-            // hogy a Gemini maga dönti el, releváns-e egy speciális eszköz.
-            // Például, ha a Gemini válaszában kulcsszavak vannak, vagy egy bizonyos formátum.
-
-            // DEMÓ CÉLJÁRA: Kézzel javasolunk műveleteket, vagy egy egyszerű kulcsszó alapú felismerést.
-            let suggestedActionsHtml = '';
-            const lowerCaseAnswer = answer.toLowerCase();
-
-            if (lowerCaseAnswer.includes('fehérje') || lowerCaseAnswer.includes('struktúra') || lowerCaseAnswer.includes('biológia')) {
-                suggestedActionsHtml += `
-                    <button class="mb-2" onclick="showModal('proteinStructureModal'); addMessage('ai', 'Rendben, indítsuk el a Fehérje Struktúra Keresőt. Melyik fehérje ID-t szeretnéd lekérdezni?');">
-                        <i class="fas fa-dna text-blue-400"></i> Fehérje Struktúra Keresése
-                    </button>`;
-            }
-            if (lowerCaseAnswer.includes('anyag') || lowerCaseAnswer.includes('kémia') || lowerCaseAnswer.includes('molekula')) {
-                suggestedActionsHtml += `
-                    <button class="mb-2" onclick="showModal('customGCPModelModal'); addMessage('ai', 'Értem, indítsuk el az Egyedi GCP Modellt. Kérlek, add meg a végpont ID-t és a bemeneti adatokat.');">
-                        <i class="fas fa-cloud text-pink-400"></i> Egyedi GCP Modell Hívása
-                    </button>`;
-            }
-            if (lowerCaseAnswer.includes('szimuláció') || lowerCaseAnswer.includes('optimalizálás') || lowerCaseAnswer.includes('tervezés')) {
-                suggestedActionsHtml += `
-                    <button class="mb-2" onclick="showModal('simulationOptimizerModal'); addMessage('ai', 'Készen állok a Szimuláció Optimalizálásra. Milyen típusú szimulációról van szó?');">
-                        <i class="fas fa-microchip text-yellow-400"></i> Szimuláció Optimalizáló
-                    </button>`;
-            }
-            if (lowerCaseAnswer.includes('kutatás') || lowerCaseAnswer.includes('trend') || lowerCaseAnswer.includes('felfedezés')) {
-                suggestedActionsHtml += `
-                    <button class="mb-2" onclick="showModal('researchTrendsModal'); addMessage('ai', 'Indítsuk el a Kutatási Trendek Elemzőt. Milyen témában szeretnél kutatni?');">
-                        <i class="fas fa-flask text-green-400"></i> Kutatási Trendek Elemzése
-                    </button>`;
-            }
-
-            if (lowerCaseAnswer.includes('genom') || lowerCaseAnswer.includes('szekvencia') || lowerCaseAnswer.includes('dns') || lowerCaseAnswer.includes('rns')) {
-                suggestedActionsHtml += `
-                    <button class="mb-2" onclick="showModal('alphaGenomeModal'); addMessage('ai', 'Készen állok a Genomikai Elemzésre. Add meg a genom szekvenciát.');">
-                        <i class="fas fa-dna text-purple-400"></i> AlphaGenome Elemzés
-                    </button>`;
-            }
-
-
-            const content = `
-                <div class="ai-answer-card">
-                    <h3 class="text-lg font-semibold mb-2 flex items-center gap-2"><i class="fas fa-sparkles"></i> Válasz</h3>
-                    <p class="text-gray-300">${answer.replace(/\n/g, '<br>')}</p>
-                </div>
-                ${suggestedActionsHtml ? `
-                <div class="related-actions-card space-y-2">
-                    <h4 class="text-md font-semibold my-2 text-blue-400">Javasolt Deep Discovery Műveletek</h4>
-                    ${suggestedActionsHtml}
-                </div>` : ''}
-            `;
-            addMessage('ai', content);
+        // Utility functions
+        function hideWelcomeScreen() {
+            welcomeScreen.style.display = 'none';
         }
 
-
-        /**
-         * Shows the typing indicator in the chat.
-         */
         function showTypingIndicator() {
             isTyping = true;
-            const typingDiv = document.createElement('div');
-            typingDiv.id = 'typingIndicator';
-            typingDiv.className = 'message mb-6';
-            typingDiv.innerHTML = `
-                <div class="max-w-3xl mx-auto">
-                    <div class="flex justify-start gap-3">
-                        <div class="flex-shrink-0">
-                            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
-                                <i class="fas fa-robot text-black"></i>
-                            </div>
-                        </div>
-                        <div class="ai-message px-4 py-3 rounded-2xl">
-                            <div class="typing-indicator">
-                                <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
-                            </div>
-                        </div>
+            const indicator = document.createElement('div');
+            indicator.id = 'typingIndicator';
+            indicator.className = 'message';
+            indicator.innerHTML = `
+                <div class="ai-message">
+                    <div class="typing-indicator">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
                     </div>
-                </div>`;
-            messagesContainer.appendChild(typingDiv);
+                </div>
+            `;
+            messagesContainer.appendChild(indicator);
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
 
-        /**
-         * Hides the typing indicator.
-         */
         function hideTypingIndicator() {
             isTyping = false;
             const indicator = document.getElementById('typingIndicator');
             if (indicator) indicator.remove();
         }
 
-        // --- UI & EVENT LISTENERS ---
-
-        // Auto-resize textarea
-        messageInput.addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
-        });
-
-        // Handle enter key
-        messageInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-            }
-        });
-
-        // Send button click
-        sendButton.addEventListener('click', sendMessage);
-
-        // New chat button
-        newChatBtn.addEventListener('click', async () => {
-            await fetch(`${API_BASE_URL}/api/deep_discovery/clear_chat_history/${currentUserId}`, { method: 'POST' });
+        function startNewChat() {
             messagesContainer.innerHTML = '';
             welcomeScreen.style.display = 'block';
             messageInput.focus();
-            currentModelBadge.textContent = 'Hibrid AI';
-        });
+            modelBadge.textContent = 'Hibrid AI';
+        }
 
-        // Toggle sidebar on mobile
-        menuToggle.addEventListener('click', () => sidebar.classList.toggle('open'));
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+            document.getElementById('modalResult').style.display = 'none';
+        }
+
+        // Quick actions
+        function showRandomService() {
+            const allServices = [];
+            for (const [category, services] of Object.entries(alphaServices)) {
+                for (const [serviceName, serviceDesc] of Object.entries(services)) {
+                    allServices.push({ name: serviceName, desc: serviceDesc, category });
+                }
+            }
+            
+            const randomService = allServices[Math.floor(Math.random() * allServices.length)];
+            openAlphaService(randomService.name, randomService.desc, randomService.category);
+        }
+
+        function showPopularServices() {
+            const popularServices = [
+                'AlphaGenome', 'AlphaFold', 'AlphaClimate', 'AlphaAI', 'AlphaNeuron'
+            ];
+            
+            addMessage('ai', `Íme a legnépszerűbb Alpha szolgáltatások:\n\n${popularServices.join('\n')}\n\nVálassz egyet a bal oldali menüből!`);
+            hideWelcomeScreen();
+        }
+
+        function showAllCategories() {
+            const categoryCount = Object.keys(alphaServices).length;
+            const totalServices = Object.values(alphaServices).reduce((sum, services) => sum + Object.keys(services).length, 0);
+            
+            addMessage('ai', `Összes kategória áttekintése:\n\n📊 Összesen ${categoryCount} kategória\n🔬 Összesen ${totalServices} Alpha szolgáltatás\n\nBöngészd a bal oldali menüt, vagy kérdezz bármit!`);
+            hideWelcomeScreen();
+        }
+
+        // Close modal when clicking outside
         document.addEventListener('click', (e) => {
-            if (window.innerWidth < 1024 && !sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
-                sidebar.classList.remove('open');
+            if (e.target.classList.contains('modal-overlay')) {
+                closeModal('alphaServiceModal');
             }
-        });
-
-        // --- MODAL & TOOLS LOGIC ---
-
-        function showModal(modalId) { document.getElementById(modalId).style.display = 'flex'; }
-        function closeModal(modalId) { 
-            document.getElementById(modalId).style.display = 'none'; 
-            // Reset modal messages
-            const container = document.getElementById(modalId).querySelector('.modal-message-container');
-            if (container) container.innerHTML = '';
-        }
-
-        document.querySelectorAll('.modal-close').forEach(btn => btn.addEventListener('click', () => closeModal(btn.dataset.modalId)));
-
-        // Assign Deep Discovery Tool buttons to modals
-        researchTrendsBtn.addEventListener('click', () => showModal('researchTrendsModal'));
-        proteinStructureBtn.addEventListener('click', () => showModal('proteinStructureModal'));
-        customGCPModelBtn.addEventListener('click', () => showModal('customGCPModelModal'));
-        simulationOptimizerBtn.addEventListener('click', () => showModal('simulationOptimizerModal'));
-        alphaGenomeBtn.addEventListener('click', () => showModal('alphaGenomeModal'));
-
-        function showModalMessage(modalId, message, isError = true) {
-            const container = document.getElementById(modalId).querySelector('.modal-message-container');
-            if (!container) return;
-            container.innerHTML = `<div class="p-3 mb-4 ${isError ? 'text-red-300 bg-red-500/20' : 'text-green-300 bg-green-500/20'} rounded-lg">${message}</div>`;
-        }
-
-        // Research Trends Form
-        document.getElementById('researchTrendsForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const query = document.getElementById('researchQuery').value;
-            const numResults = parseInt(document.getElementById('numResults').value);
-            const summaryLength = parseInt(document.getElementById('summaryLength').value);
-            const submitBtn = document.getElementById('researchTrendsSubmitBtn');
-            const resultDiv = document.getElementById('researchResult');
-
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = 'Elemzés...';
-            resultDiv.style.display = 'none';
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/deep_discovery/research_trends`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query, num_results: numResults, summary_length: summaryLength })
-                });
-
-                if (!response.ok) {
-                    const errorBody = await response.json();
-                    throw new Error(errorBody.detail || response.statusText);
-                }
-
-                const data = await response.json();
-                document.getElementById('researchSummary').innerHTML = data.summary.replace(/\n/g, '<br>');
-
-                const sourcesContainer = document.getElementById('researchSources');
-                sourcesContainer.innerHTML = '';
-                if (data.sources && data.sources.length > 0) {
-                    data.sources.forEach(source => {
-                        const sourceLink = document.createElement('a');
-                        sourceLink.href = source.url;
-                        sourceLink.target = "_blank";
-                        sourceLink.rel = "noopener noreferrer";
-                        sourceLink.className = "flex items-center gap-2 p-2 rounded-lg hover:bg-gray-800 transition-colors";
-                        sourceLink.innerHTML = `<i class="fas fa-external-link-alt text-blue-400"></i> <span class="text-gray-300 text-sm">${source.title}</span>`;
-                        sourcesContainer.appendChild(sourceLink);
-                    });
-                } else {
-                    sourcesContainer.innerHTML = '<p class="text-gray-500 text-sm">Nincsenek források.</p>';
-                }
-
-                resultDiv.style.display = 'block';
-                showModalMessage('researchTrendsModal', 'Elemzés sikeresen befejezve!', false);
-            } catch (error) {
-                showModalMessage('researchTrendsModal', `Hiba: ${error.message}`);
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = 'Elemzés Indítása';
-            }
-        });
-
-        // Protein Structure Form
-        document.getElementById('proteinStructureForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const proteinId = document.getElementById('proteinId').value.trim();
-            const submitBtn = document.getElementById('proteinStructureSubmitBtn');
-            const resultDiv = document.getElementById('proteinResult');
-
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = 'Keresés...';
-            resultDiv.style.display = 'none';
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/deep_discovery/protein_structure`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ protein_id: proteinId })
-                });
-
-                if (!response.ok) {
-                    const errorBody = await response.json();
-                    throw new Error(errorBody.detail || response.statusText);
-                }
-
-                const data = await response.json();
-                if (data.details) {
-                    document.getElementById('resultUniProtId').textContent = data.details.uniprot_id || 'N/A';
-                    document.getElementById('resultPlddt').textContent = data.details.plddt ? data.details.plddt.toFixed(2) : 'N/A';
-
-                    const proteinUrlLink = document.getElementById('resultProteinUrl');
-                    proteinUrlLink.href = data.details.protein_url || '#';
-                    proteinUrlLink.style.display = data.details.protein_url ? 'flex' : 'none';
-
-                    const paeUrlLink = document.getElementById('resultPaeUrl');
-                    paeUrlLink.href = data.details.pae_url || '#';
-                    paeUrlLink.style.display = data.details.pae_url ? 'flex' : 'none';
-
-                    resultDiv.style.display = 'block';
-                    showModalMessage('proteinStructureModal', 'Fehérje struktúra sikeresen lekérdezve!', false);
-                } else {
-                    showModalMessage('proteinStructureModal', data.message || 'Nem található adat a megadott fehérje ID-hez.');
-                }
-            } catch (error) {
-                showModalMessage('proteinStructureModal', `Hiba: ${error.message}`);
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = 'Keresés';
-            }
-        });
-
-        // Custom GCP Model Form
-        document.getElementById('customGCPModelForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const gcpEndpointId = document.getElementById('gcpEndpointId').value.trim();
-            const gcpInputDataRaw = document.getElementById('gcpInputData').value.trim();
-            const submitBtn = document.getElementById('customGCPModelSubmitBtn');
-            const resultDiv = document.getElementById('gcpResult');
-
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = 'Hívás...';
-            resultDiv.style.display = 'none';
-
-            let inputData;
-            try {
-                inputData = JSON.parse(gcpInputDataRaw);
-            } catch (jsonError) {
-                showModalMessage('customGCPModelModal', `Érvénytelen JSON bemeneti adat: ${jsonError.message}`);
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = 'Hívás';
-                return;
-            }
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/deep_discovery/custom_gcp_model`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        gcp_endpoint_id: gcpEndpointId, 
-                        input_data: inputData 
-                    })
-                });
-
-                if (!response.ok) {
-                    const errorBody = await response.json();
-                    throw new Error(errorBody.detail || response.statusText);
-                }
-
-                const data = await response.json();
-                document.getElementById('gcpResponseData').textContent = JSON.stringify(data.model_response, null, 2);
-                resultDiv.style.display = 'block';
-                showModalMessage('customGCPModelModal', 'GCP modell hívás sikeres!', false);
-            } catch (error) {
-                showModalMessage('customGCPModelModal', `Hiba: ${error.message}`);
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = 'Hívás';
-            }
-        });
-
-        // Simulation Optimizer Form
-        document.getElementById('simulationOptimizerForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const simulationType = document.getElementById('simulationType').value.trim();
-            const simulationInputParamsRaw = document.getElementById('simulationInputParams').value.trim();
-            const optimizationGoal = document.getElementById('optimizationGoal').value.trim();
-            const submitBtn = document.getElementById('simulationOptimizerSubmitBtn');
-            const resultDiv = document.getElementById('simulationResult');
-
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = 'Optimalizálás...';
-            resultDiv.style.display = 'none';
-
-            let inputParams;
-            try {
-                inputParams = JSON.parse(simulationInputParamsRaw);
-            } catch (jsonError) {
-                showModalMessage('simulationOptimizerModal', `Érvénytelen JSON bemeneti paraméterek: ${jsonError.message}`);
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = 'Optimalizálás';
-                return;
-            }
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/deep_discovery/simulation_optimizer`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        simulation_type: simulationType, 
-                        input_parameters: inputParams,
-                        optimization_goal: optimizationGoal
-                    })
-                });
-
-                if (!response.ok) {
-                    const errorBody = await response.json();
-                    throw new Error(errorBody.detail || response.statusText);
-                }
-
-                const data = await response.json();
-                document.getElementById('simulationOptimizedOutput').textContent = data.optimized_output;
-                document.getElementById('simulationModelUsed').textContent = data.model_used;
-                resultDiv.style.display = 'block';
-                showModalMessage('simulationOptimizerModal', 'Szimuláció optimalizálás sikeres!', false);
-            } catch (error) {
-                showModalMessage('simulationOptimizerModal', `Hiba: ${error.message}`);
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = 'Optimalizálás';
-            }
-        });
-
-        // AlphaGenome form handling
-        document.getElementById('alphaGenomeForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            const genomeSequence = document.getElementById('genomeSequence').value.trim();
-            const analysisType = document.getElementById('analysisType').value;
-            const organism = document.getElementById('organism').value;
-            const includePredictions = document.getElementById('includePredictions').checked;
-
-            if (genomeSequence.length < 10) {
-                showModalMessage('alphaGenomeModal', 'A genom szekvencia túl rövid! Minimum 10 karakter szükséges.', 'error');
-                return;
-            }
-
-            const button = document.getElementById('alphaGenomeButton');
-            const originalText = button.innerHTML;
-            button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Elemzés folyamatban...';
-            button.disabled = true;
-
-            try {
-                const response = await fetch('/api/deep_discovery/alphagenome', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        genome_sequence: genomeSequence,
-                        analysis_type: analysisType,
-                        organism: organism,
-                        include_predictions: includePredictions
-                    })
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    // Szekvencia információk megjelenítése
-                    const sequenceInfo = data.sequence_info;
-                    document.getElementById('sequenceInfo').innerHTML = `
-                        <div class="space-y-2">
-                            <p><strong>Hossz:</strong> ${sequenceInfo.length} bázispár</p>
-                            <p><strong>GC tartalom:</strong> ${sequenceInfo.gc_content}%</p>
-                            <p><strong>Organizmus:</strong> ${sequenceInfo.organism}</p>
-                            <p><strong>Elemzés típusa:</strong> ${sequenceInfo.analysis_type}</p>
-                        </div>
-                    `;
-
-                    // AI elemzés megjelenítése
-                    document.getElementById('aiAnalysis').innerHTML = `
-                        <div class="space-y-2">
-                            <div class="whitespace-pre-wrap">${data.ai_analysis.content}</div>
-                            <p class="text-blue-400 text-xs mt-2">Modell: ${data.ai_analysis.model_used}</p>
-                        </div>
-                    `;
-
-                    // AlphaFold adatok megjelenítése, ha vannak
-                    if (data.alphafold_predictions) {
-                        const alphafoldData = data.alphafold_predictions;
-                        document.getElementById('alphafoldData').innerHTML = `
-                            <div class="space-y-2">
-                                <p><strong>Modell ID:</strong> ${alphafoldData.model_id || 'N/A'}</p>
-                                <p><strong>UniProt ID:</strong> ${alphafoldData.uniprot_id || 'N/A'}</p>
-                                <p><strong>Konfidencia (pLDDT):</strong> ${alphafoldData.plddt || 'N/A'}</p>
-                                ${alphafoldData.protein_url ? `<p><strong>Struktúra URL:</strong> <a href="${alphafoldData.protein_url}" target="_blank" class="text-blue-400 hover:underline">Letöltés</a></p>` : ''}
-                            </div>
-                        `;
-                        document.getElementById('alphafoldSection').style.display = 'block';
-                    } else {
-                        document.getElementById('alphafoldSection').style.display = 'none';
-                    }
-
-                    document.getElementById('alphaGenomeResult').style.display = 'block';
-                    showModalMessage('alphaGenomeModal', 'AlphaGenome elemzés sikeresen befejezve!', 'success');
-                } else {
-                    showModalMessage('alphaGenomeModal', data.detail || 'Hiba történt az AlphaGenome elemzés során!', 'error');
-                }
-            } catch (error) {
-                showModalMessage('alphaGenomeModal', 'Hálózati hiba történt!', 'error');
-            } finally {
-                button.innerHTML = originalText;
-                button.disabled = false;
-            }
-        });
-
-        // Focus input on load
-        window.addEventListener('load', () => {
-            messageInput.focus();
-            // Ha van mentett előzmény, töltsük be
-            // fetch(`${API_BASE_URL}/api/deep_discovery/chat_history/${currentUserId}`)
-            //     .then(res => res.json())
-            //     .then(data => {
-            //         if (data.history && data.history.length > 0) {
-            //             welcomeScreen.style.display = 'none';
-            //             data.history.forEach(msg => {
-            //                 if (msg.role === 'user') {
-            //                     addMessage('user', msg.content);
-            //                 } else if (msg.role === 'assistant') {
-            //                     // Itt kellene újra feldolgozni a válaszokat, hogy a javaslatok is megjelenjenek.
-            //                     // Egyszerűsítésként most csak a szöveget adjuk hozzá.
-            //                     addMessage('ai', msg.content); 
-            //                 }
-            //             });
-            //         }
-            //     })
-            //     .catch(error => console.error("Error loading chat history:", error));
         });
     </script>
 </body>
