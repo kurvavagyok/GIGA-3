@@ -8,6 +8,8 @@ import logging
 from datetime import datetime
 import hashlib
 import base64
+from functools import lru_cache
+import time
 
 # Google Cloud kliensekhez
 from google.cloud import aiplatform
@@ -187,8 +189,10 @@ class AlphaGenomeRequest(BaseModel):
     analysis_type: str = Field(..., description="Elemzés típusa")
     include_predictions: bool = Field(default=False, description="Fehérje előrejelzések")
 
-# Beszélgetési előzmények
+# Beszélgetési előzmények és cache
 chat_histories: Dict[str, List[Message]] = {}
+response_cache: Dict[str, Dict[str, Any]] = {}
+CACHE_EXPIRY = 300  # 5 perc cache
 
 # --- Alpha Services definíciója ---
 ALPHA_SERVICES = {
@@ -615,7 +619,7 @@ async def execute_simple_alpha_service(service_name: str, request: SimpleAlphaRe
 
 @app.post("/api/deep_discovery/chat")
 async def deep_discovery_chat(req: ChatRequest):
-    """Chat funkcionalitás"""
+    """Optimalizált chat funkcionalitás cache-eléssel"""
     if not cerebras_client and not gemini_model:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -624,58 +628,62 @@ async def deep_discovery_chat(req: ChatRequest):
 
     user_id = req.user_id
     current_message = req.message
+    
+    # Cache ellenőrzés
+    cache_key = hashlib.md5(f"{user_id}:{current_message}".encode()).hexdigest()
+    current_time = time.time()
+    
+    if cache_key in response_cache:
+        cached_response = response_cache[cache_key]
+        if current_time - cached_response['timestamp'] < CACHE_EXPIRY:
+            logger.info("Serving cached response")
+            return cached_response['data']
+    
     history = chat_histories.get(user_id, [])
-
+    
+    # Rövidebb system message a gyorsaságért
     system_message = {
         "role": "system",
-        "content": f"""Te Jade vagy, egy fejlett AI asszisztens, aki magyarul válaszol. 
-        Szakértő vagy tudományos és technológiai területeken.
-        
-        Rendelkezel {sum(len(services) for services in ALPHA_SERVICES.values())} Alpha szolgáltatással:
-        - Biológiai/Orvosi: {len(ALPHA_SERVICES['biologiai_orvosi'])} szolgáltatás
-        - Kémiai/Anyagtudományi: {len(ALPHA_SERVICES['kemiai_anyagtudomanyi'])} szolgáltatás
-        - Környezeti/Fenntartható: {len(ALPHA_SERVICES['kornyezeti_fenntarthato'])} szolgáltatás
-        - Fizikai/Asztrofizikai: {len(ALPHA_SERVICES['fizikai_asztrofizikai'])} szolgáltatás
-        - Technológiai/Mélyműszaki: {len(ALPHA_SERVICES['technologiai_melymu'])} szolgáltatás
-        - Társadalmi/Gazdasági: {len(ALPHA_SERVICES['tarsadalmi_gazdasagi'])} szolgáltatás
-        
-        Segítőkész, részletes és innovatív válaszokat adsz."""
+        "content": "Te Jade vagy, egy fejlett AI asszisztens magyarul. Szakértő vagy tudományos és technológiai területeken. Segítőkész, részletes válaszokat adsz."
     }
 
-    messages_for_llm = [system_message] + history + [{"role": "user", "content": current_message}]
+    # Csak az utolsó 10 üzenetet használjuk a kontextushoz
+    recent_history = history[-10:] if len(history) > 10 else history
+    messages_for_llm = [system_message] + recent_history + [{"role": "user", "content": current_message}]
 
     try:
         response_text = ""
         model_used = ""
 
-        # Gemini 2.5 Pro elsőként
-        if gemini_25_pro:
-            response = await gemini_25_pro.generate_content_async(
-                '\n'.join([msg['content'] for msg in messages_for_llm]),
-                generation_config=genai.types.GenerationConfig(
-                    max_output_tokens=2048,
-                    temperature=0.2
-                )
-            )
-            response_text = response.text
-            model_used = "Gemini 2.5 Pro"
-        elif cerebras_client:
+        # Cerebras elsőként a gyorsaság miatt
+        if cerebras_client:
             stream = cerebras_client.chat.completions.create(
                 messages=messages_for_llm,
                 model="llama-4-scout-17b-16e-instruct",
                 stream=True,
-                max_completion_tokens=2048,
-                temperature=0.2
+                max_completion_tokens=1500,  # Csökkentett token limit
+                temperature=0.2,
+                top_p=0.9  # Gyorsabb sampling
             )
             for chunk in stream:
                 if chunk.choices[0].delta.content:
                     response_text += chunk.choices[0].delta.content
             model_used = "Cerebras Llama 4"
+        elif gemini_25_pro:
+            response = await gemini_25_pro.generate_content_async(
+                '\n'.join([msg['content'] for msg in messages_for_llm]),
+                generation_config=genai.types.GenerationConfig(
+                    max_output_tokens=1500,
+                    temperature=0.2
+                )
+            )
+            response_text = response.text
+            model_used = "Gemini 2.5 Pro"
         elif gemini_model:
             response = await gemini_model.generate_content_async(
                 '\n'.join([msg['content'] for msg in messages_for_llm]),
                 generation_config=genai.types.GenerationConfig(
-                    max_output_tokens=2048,
+                    max_output_tokens=1500,
                     temperature=0.2
                 )
             )
@@ -684,13 +692,26 @@ async def deep_discovery_chat(req: ChatRequest):
 
         history.append({"role": "user", "content": current_message})
         history.append({"role": "assistant", "content": response_text})
+        
+        # Memória optimalizálás: csak az utolsó 20 üzenetet tartjuk meg
+        if len(history) > 20:
+            history = history[-20:]
+        
         chat_histories[user_id] = history
 
-        return {
+        result = {
             'response': response_text,
             'model_used': model_used,
             'status': 'success'
         }
+
+        # Válasz cache-elése
+        response_cache[cache_key] = {
+            'data': result,
+            'timestamp': current_time
+        }
+
+        return result
 
     except Exception as e:
         logger.error(f"Error in chat: {e}")
@@ -1302,8 +1323,10 @@ async def protein_structure_lookup(req: ProteinLookupRequest):
     ebi_alphafold_api_url = f"https://alphafold.ebi.ac.uk/api/prediction/{req.protein_id}"
 
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(ebi_alphafold_api_url, timeout=30)
+        # Optimalizált HTTP kliens gyorsabb timeout-tal
+        timeout = httpx.Timeout(10.0, connect=5.0)
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            response = await client.get(ebi_alphafold_api_url)
             response.raise_for_status()
             data = response.json()
 
@@ -1506,6 +1529,36 @@ async def alphagenome_analysis(req: AlphaGenomeRequest):
             detail=f"Hiba az AlphaGenome elemzésben: {e}"
         )
 
+# Cache tisztítási funkció
+async def cleanup_cache():
+    """Lejárt cache bejegyzések törlése"""
+    current_time = time.time()
+    expired_keys = [
+        key for key, value in response_cache.items() 
+        if current_time - value['timestamp'] > CACHE_EXPIRY
+    ]
+    for key in expired_keys:
+        del response_cache[key]
+    logger.info(f"Cleaned up {len(expired_keys)} expired cache entries")
+
+@app.on_event("startup")
+async def startup_event():
+    """Alkalmazás indításkor futó események"""
+    logger.info("Jade alkalmazás elindult - optimalizált verzió")
+
+# Cache tisztítás endpoint
+@app.post("/api/admin/clear_cache")
+async def clear_cache():
+    """Cache manuális törlése"""
+    response_cache.clear()
+    return {"message": "Cache törölve", "status": "success"}
+
 if __name__ == '__main__':
     import uvicorn
-    uvicorn.run(app, host='0.0.0.0', port=5000)
+    uvicorn.run(
+        app, 
+        host='0.0.0.0', 
+        port=5000,
+        workers=1,  # Egy worker a memória takarékosság miatt
+        access_log=False  # Gyorsabb I/O
+    )
