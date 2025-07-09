@@ -9,3 +9,4 @@ google-auth>=2.23.0
 google-api-core>=2.14.0
 cerebras-cloud-sdk>=1.35.0
 exa-py>=1.0.0
+openai>=1.0.0

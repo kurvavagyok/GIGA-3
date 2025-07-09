@@ -1,4 +1,3 @@
-
 import os
 import json
 from typing import List, Dict, Any, Optional
@@ -48,6 +47,27 @@ GCP_REGION = os.environ.get("GCP_REGION")
 CEREBRAS_API_KEY = os.environ.get("CEREBRAS_API_KEY")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 EXA_API_KEY = os.environ.get("EXA_API_KEY")
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+OPENAI_ORG_ID = os.environ.get("OPENAI_ORG_ID")
+OPENAI_ADMIN_KEY = os.environ.get("OPENAI_ADMIN_KEY")
+
+# --- Token Limit Definíciók ---
+TOKEN_LIMITS = {
+    "gpt-3.5-turbo": 200000,
+    "gpt-4.1": 900000,
+    "gpt-4.1-long-context": 200000,
+    "gpt-4.1-mini": 200000,
+    "gpt-4.1-mini-long-context": 400000,
+    "gpt-4.1-nano": 200000,
+    "gpt-4.1-nano-long-context": 400000,
+    "gpt-4.5-preview": 200,
+    "gpt-4.0": 90000,
+    "gpt-4.0-mini": 200000,
+    "dall-e-2": 200,
+    "dall-e-3": 200,
+    "tts-1": 200,
+    "whisper-1": 200
+}
 
 # --- Kliensek inicializálása ---
 gcp_credentials = None
@@ -360,77 +380,52 @@ ALPHA_SERVICES = {
     }
 }
 
-# --- Egyszerű Alpha Service Handler ---
-async def handle_simple_alpha_service(service_name: str, query: str, details: str = "") -> Dict[str, Any]:
-    """Egyszerű Alpha szolgáltatás kezelő szöveges bemenetnél"""
-    
-    # Keresés a kategóriákban
-    service_category = None
-    service_description = None
-    
-    for category, services in ALPHA_SERVICES.items():
-        if service_name in services:
-            service_category = category
-            service_description = services[service_name]
-            break
-    
-    if not service_category:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Ismeretlen Alpha szolgáltatás: {service_name}"
-        )
-    
-    # Gemini 2.5 Pro használata elsőként
-    selected_model = gemini_25_pro if gemini_25_pro else (gemini_model if gemini_model else cerebras_client)
-    
+# --- Backend Model Selection ---
+async def select_backend_model(prompt: str, service_name: str = None):
+    """Backend modell kiválasztása a kérés és a token limitek alapján."""
+    # Alapértelmezett: Gemini 2.5 Pro ha elérhető
+    selected_model = gemini_25_pro
+    model_name = "gemini-2.5-pro"
+
+    # Ha a Gemini 2.5 Pro nem elérhető, Cerebras a következő
+    if not selected_model and cerebras_client:
+        selected_model = cerebras_client
+        model_name = "llama-4-scout-17b-16e-instruct"
+
+    # Ha Cerebras sem, Gemini 1.5 Pro
+    if not selected_model and gemini_model:
+        selected_model = gemini_model
+        model_name = "gemini-1.5-pro"
+
     if not selected_model:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Nincs elérhető AI modell"
         )
-    
-    # Prompt összeállítása
-    prompt = f"""
-    {service_name} Alpha Szolgáltatás Elemzés
-    Kategória: {service_category}
-    Szolgáltatás leírása: {service_description}
-    
-    Felhasználó kérése: {query}
-    
-    További részletek: {details if details else "Nincs további részlet"}
-    
-    Kérlek, végezz professzionális, tudományos elemzést és adj részletes válaszokat a megadott kérés alapján.
-    A válaszod legyen strukturált, magyar nyelvű és gyakorlati szempontokat is tartalmazzon.
-    Használd a legfrissebb tudományos információkat és módszereket.
-    """
-    
+
+    return {"model": selected_model, "name": model_name}
+
+# --- Model Execution ---
+async def execute_model(model_info: Dict[str, Any], prompt: str):
+    """Modell futtatása a kiválasztott backenddel."""
+    model = model_info["model"]
+    model_name = model_info["name"]
+    response_text = ""
+
     try:
-        response_text = ""
-        model_used = ""
-        
-        if selected_model == gemini_25_pro:
-            response = await gemini_25_pro.generate_content_async(
+        if model == gemini_25_pro or model == gemini_model:
+            generation_config = genai.types.GenerationConfig(
+                max_output_tokens=2048,
+                temperature=0.1
+            )
+            response = await model.generate_content_async(
                 prompt,
-                generation_config=genai.types.GenerationConfig(
-                    max_output_tokens=2048,
-                    temperature=0.1
-                )
+                generation_config=generation_config
             )
             response_text = response.text
-            model_used = "Gemini 2.5 Pro"
-            
-        elif selected_model == gemini_model:
-            response = await gemini_model.generate_content_async(
-                prompt,
-                generation_config=genai.types.GenerationConfig(
-                    max_output_tokens=2048,
-                    temperature=0.1
-                )
-            )
-            response_text = response.text
-            model_used = "Gemini 1.5 Pro"
-            
-        elif selected_model == cerebras_client:
+            return {"response": response_text, "model_used": model_name, "selected_backend": model_name}
+
+        elif model == cerebras_client:
             stream = cerebras_client.chat.completions.create(
                 messages=[{"role": "user", "content": prompt}],
                 model="llama-4-scout-17b-16e-instruct",
@@ -441,18 +436,74 @@ async def handle_simple_alpha_service(service_name: str, query: str, details: st
             for chunk in stream:
                 if chunk.choices[0].delta.content:
                     response_text += chunk.choices[0].delta.content
-            model_used = "Cerebras Llama 4"
-        
+            return {"response": response_text, "model_used": "Cerebras Llama 4", "selected_backend": "Cerebras Llama 4"}
+
+        else:
+            raise ValueError("Érvénytelen modell")
+
+    except Exception as e:
+        logger.error(f"Modell végrehajtási hiba: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Hiba a modell végrehajtása során: {e}"
+        )
+
+# --- Egyszerű Alpha Service Handler ---
+async def handle_simple_alpha_service(service_name: str, query: str, details: str = "") -> Dict[str, Any]:
+    """Egyszerű Alpha szolgáltatás kezelő szöveges bemenetnél"""
+
+    # Keresés a kategóriákban
+    service_category = None
+    service_description = None
+
+    for category, services in ALPHA_SERVICES.items():
+        if service_name in services:
+            service_category = category
+            service_description = services[service_name]
+            break
+
+    if not service_category:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Ismeretlen Alpha szolgáltatás: {service_name}"
+        )
+
+    # Backend modell kiválasztása
+    model_info = await select_backend_model(query, service_name)
+
+    # Prompt összeállítása
+    prompt = f"""
+    {service_name} Alpha Szolgáltatás Elemzés
+    Kategória: {service_category}
+    Szolgáltatás leírása: {service_description}
+
+    Felhasználó kérése: {query}
+
+    További részletek: {details if details else "Nincs további részlet"}
+
+    Kérlek, végezz professzionális, tudományos elemzést és adj részletes válaszokat a megadott kérés alapján.
+    A válaszod legyen strukturált, magyar nyelvű és gyakorlati szempontokat is tartalmazzon.
+    Használd a legfrissebb tudományos információkat és módszereket.
+    """
+
+    try:
+        # Modell futtatása
+        result = await execute_model(model_info, prompt)
+
         return {
             "service_name": service_name,
             "category": service_category,
             "description": service_description,
-            "analysis": response_text,
-            "model_used": model_used,
+            "analysis": result["response"],
+            "model_used": result["model_used"],
+            "performance_data": {
+                "backend_model": result["selected_backend"],
+                "tokens_used": result.get("tokens_used", 0)
+            },
             "timestamp": datetime.now().isoformat(),
             "status": "success"
         }
-        
+
     except Exception as e:
         logger.error(f"Error in {service_name}: {e}")
         raise HTTPException(
@@ -463,97 +514,63 @@ async def handle_simple_alpha_service(service_name: str, query: str, details: st
 # --- Általános Alpha Service Handler ---
 async def handle_alpha_service(service_name: str, input_data: Dict[str, Any], parameters: Dict[str, Any] = None) -> Dict[str, Any]:
     """Univerzális Alpha szolgáltatás kezelő"""
-    
+
     # Keresés a kategóriákban
     service_category = None
     service_description = None
-    
+
     for category, services in ALPHA_SERVICES.items():
         if service_name in services:
             service_category = category
             service_description = services[service_name]
             break
-    
+
     if not service_category:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Ismeretlen Alpha szolgáltatás: {service_name}"
         )
-    
-    # Gemini 2.5 Pro használata elsőként
-    selected_model = gemini_25_pro if gemini_25_pro else (gemini_model if gemini_model else cerebras_client)
-    
-    if not selected_model:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Nincs elérhető AI modell"
-        )
-    
+
+    # Bemeneti adatok stringgé alakítása a modellválasztáshoz
+    input_str = json.dumps(input_data, ensure_ascii=False)
+
+    # Backend modell kiválasztása
+    model_info = await select_backend_model(input_str, service_name)
+
     # Prompt összeállítása
     prompt = f"""
     {service_name} Alpha Szolgáltatás
     Kategória: {service_category}
     Leírás: {service_description}
-    
+
     Bemeneti adatok:
     {json.dumps(input_data, indent=2, ensure_ascii=False)}
-    
+
     Paraméterek:
     {json.dumps(parameters or {}, indent=2, ensure_ascii=False)}
-    
+
     Kérlek, végezz professzionális, tudományos elemzést és adj részletes válaszokat a megadott adatok alapján.
     A válaszod legyen strukturált, magyar nyelvű és gyakorlati szempontokat is tartalmazzon.
     """
-    
+
     try:
-        response_text = ""
-        model_used = ""
-        
-        if selected_model == gemini_25_pro:
-            response = await gemini_25_pro.generate_content_async(
-                prompt,
-                generation_config=genai.types.GenerationConfig(
-                    max_output_tokens=2048,
-                    temperature=0.1
-                )
-            )
-            response_text = response.text
-            model_used = "Gemini 2.5 Pro"
-            
-        elif selected_model == gemini_model:
-            response = await gemini_model.generate_content_async(
-                prompt,
-                generation_config=genai.types.GenerationConfig(
-                    max_output_tokens=2048,
-                    temperature=0.1
-                )
-            )
-            response_text = response.text
-            model_used = "Gemini 1.5 Pro"
-            
-        elif selected_model == cerebras_client:
-            stream = cerebras_client.chat.completions.create(
-                messages=[{"role": "user", "content": prompt}],
-                model="llama-4-scout-17b-16e-instruct",
-                stream=True,
-                max_completion_tokens=2048,
-                temperature=0.1
-            )
-            for chunk in stream:
-                if chunk.choices[0].delta.content:
-                    response_text += chunk.choices[0].delta.content
-            model_used = "Cerebras Llama 4"
-        
+        # Modell futtatása
+        result = await execute_model(model_info, prompt)
+
         return {
             "service_name": service_name,
             "category": service_category,
             "description": service_description,
-            "analysis": response_text,
-            "model_used": model_used,
+            "analysis": result["response"],
+            "model_used": result["model_used"],
+            "performance_data": {
+                "backend_model": result["selected_backend"],
+                "tokens_used": result.get("tokens_used", 0)
+            },
             "timestamp": datetime.now().isoformat(),
             "status": "success"
         }
-        
+
     except Exception as e:
         logger.error(f"Error in {service_name}: {e}")
         raise HTTPException(
@@ -593,7 +610,7 @@ async def get_services_by_category(category: str):
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Ismeretlen kategória: {category}"
         )
-    
+
     return {
         "category": category,
         "services": ALPHA_SERVICES[category]
@@ -628,19 +645,19 @@ async def deep_discovery_chat(req: ChatRequest):
 
     user_id = req.user_id
     current_message = req.message
-    
+
     # Cache ellenőrzés
     cache_key = hashlib.md5(f"{user_id}:{current_message}".encode()).hexdigest()
     current_time = time.time()
-    
+
     if cache_key in response_cache:
         cached_response = response_cache[cache_key]
         if current_time - cached_response['timestamp'] < CACHE_EXPIRY:
             logger.info("Serving cached response")
             return cached_response['data']
-    
+
     history = chat_histories.get(user_id, [])
-    
+
     # Rövidebb system message a gyorsaságért
     system_message = {
         "role": "system",
@@ -692,11 +709,11 @@ async def deep_discovery_chat(req: ChatRequest):
 
         history.append({"role": "user", "content": current_message})
         history.append({"role": "assistant", "content": response_text})
-        
+
         # Memória optimalizálás: csak az utolsó 20 üzenetet tartjuk meg
         if len(history) > 20:
             history = history[-20:]
-        
+
         chat_histories[user_id] = history
 
         result = {
@@ -732,7 +749,7 @@ async def deep_research(req: DeepResearchRequest):
     try:
         # 1. Exa keresés több típussal
         logger.info(f"Starting deep research for: {req.query}")
-        
+
         # Neurális keresés
         neural_results = []
         try:
@@ -766,7 +783,7 @@ async def deep_research(req: DeepResearchRequest):
             "cell.com", "nejm.org", "thelancet.com", "bmj.com", "plos.org",
             "ieee.org", "acm.org", "springer.com", "wiley.com", "biorxiv.org"
         ]
-        
+
         scientific_results = []
         try:
             scientific_search = exa_client.search(
@@ -783,19 +800,19 @@ async def deep_research(req: DeepResearchRequest):
 
         # 2. Összes találat kombinálása
         all_results = neural_results + keyword_results + scientific_results
-        
+
         # Duplikátumok eltávolítása URL alapján
         unique_results = {}
         for result in all_results:
             if result.url not in unique_results:
                 unique_results[result.url] = result
-        
+
         sorted_results = sorted(unique_results.values(), key=lambda x: getattr(x, 'score', 0), reverse=True)[:20]
 
         # 3. Tartalom összegyűjtése
         combined_content = ""
         sources = []
-        
+
         for i, result in enumerate(sorted_results):
             if result.text_contents and result.text_contents.text:
                 combined_content += f"--- Forrás {i+1}: {result.title} ({result.url}) ---\n{result.text_contents.text}\n\n"
@@ -808,26 +825,26 @@ async def deep_research(req: DeepResearchRequest):
 
         # 4. Minden modell elemzése
         analyses = {}
-        
+
         # Gemini 2.5 Pro elemzés
         if gemini_25_pro:
             try:
                 gemini_prompt = f"""
                 Készíts rendkívül részletes, tudományos színvonalú elemzést a következő témáról: {req.query}
-                
+
                 Felhasznált források:
                 {combined_content[:15000]}
-                
+
                 Kérlek, adj átfogó, strukturált elemzést a következő szempontok szerint:
                 1. Jelenlegi tudományos állás
                 2. Főbb kutatási eredmények
                 3. Kritikus pontok és viták
                 4. Jövőbeli kutatási irányok
                 5. Gyakorlati alkalmazások
-                
+
                 Használj szakmai terminológiákat, de magyarázd el őket is. Legyél részletes és precíz.
                 """
-                
+
                 gemini_response = await gemini_25_pro.generate_content_async(
                     gemini_prompt,
                     generation_config=genai.types.GenerationConfig(
@@ -844,13 +861,13 @@ async def deep_research(req: DeepResearchRequest):
             try:
                 cerebras_prompt = f"""
                 Végezz mélyreható technológiai és innovációs elemzést a következő témáról: {req.query}
-                
+
                 Források:
                 {combined_content[:12000]}
-                
+
                 Fókuszálj a technológiai aspektusokra, innovációs lehetőségekre és gyakorlati megvalósításra.
                 """
-                
+
                 cerebras_response = ""
                 stream = cerebras_client.chat.completions.create(
                     messages=[{"role": "user", "content": cerebras_prompt}],
@@ -862,7 +879,7 @@ async def deep_research(req: DeepResearchRequest):
                 for chunk in stream:
                     if chunk.choices[0].delta.content:
                         cerebras_response += chunk.choices[0].delta.content
-                
+
                 analyses["Cerebras Llama 4"] = cerebras_response
             except Exception as e:
                 logger.error(f"Cerebras analysis error: {e}")
@@ -872,16 +889,16 @@ async def deep_research(req: DeepResearchRequest):
             try:
                 gemini15_prompt = f"""
                 Adj kiegészítő perspektívát és összegző elemzést a következő témáról: {req.query}
-                
+
                 Már meglévő elemzések kiegészítéseként fókuszálj a:
                 - Interdiszciplináris kapcsolatokra
                 - Etikai megfontolásokra
                 - Társadalmi hatásokra
                 - Gazdasági vonatkozásokra
-                
+
                 Források: {combined_content[:10000]}
                 """
-                
+
                 gemini15_response = await gemini_model.generate_content_async(
                     gemini15_prompt,
                     generation_config=genai.types.GenerationConfig(
@@ -899,22 +916,22 @@ async def deep_research(req: DeepResearchRequest):
             try:
                 synthesis_prompt = f"""
                 Készíts egy átfogó, tudományos szintézist a következő témáról: {req.query}
-                
+
                 Felhasználva a következő különböző AI modellek elemzéseit:
                 {json.dumps(analyses, indent=2, ensure_ascii=False)}
-                
+
                 Eredeti források: {len(sources)} tudományos és szakmai forrás
-                
+
                 Készíts egy komplex, strukturált dokumentumot amely:
                 1. Integrálja az összes perspektívát
                 2. Kiemeli a konszenzust és az eltéréseket
                 3. Azonosítja a legfontosabb megállapításokat
                 4. Javasol konkrét lépéseket/következtetéseket
                 5. Összegzi a legfontosabb forrásokat
-                
+
                 Ez legyen a legteljesebb, legpontosabb és leghasználhatóbb dokumentum a témában.
                 """
-                
+
                 synthesis_response = await gemini_25_pro.generate_content_async(
                     synthesis_prompt,
                     generation_config=genai.types.GenerationConfig(
@@ -1128,12 +1145,12 @@ async def exa_get_contents(req: ExaContentsRequest):
         summary = ""
         if req.summary and (gemini_model or cerebras_client):
             combined_text = "\n\n".join([c["text"] for c in contents if c["text"]])[:10000]
-            
+
             summary_prompt = f"""
             Készíts részletes összefoglalót a következő tartalmakról:
-            
+
             {combined_text}
-            
+
             Az összefoglaló legyen strukturált és informatív.
             """
 
@@ -1256,7 +1273,7 @@ async def get_research_trends(req: ScientificInsightRequest):
             "cell.com", "nejm.org", "thelancet.com", "bmj.com", "plos.org",
             "ieee.org", "acm.org", "springer.com", "wiley.com", "biorxiv.org"
         ]
-        
+
         search_response = exa_client.search(
             query=req.query,
             type="neural",
@@ -1405,7 +1422,7 @@ async def simulation_optimizer(req: SimulationOptimizerRequest):
     {req.simulation_type} szimuláció optimalizálása:
     Paraméterek: {json.dumps(req.input_parameters, indent=2)}
     Cél: {req.optimization_goal}
-    
+
     Generálj optimalizált paramétereket vagy Python kódot.
     """
 
@@ -1478,7 +1495,7 @@ async def alphagenome_analysis(req: AlphaGenomeRequest):
         Elemzés: {req.analysis_type}
         Hossz: {sequence_length} bp
         GC: {gc_content:.1f}%
-        
+
         Végezz részletes genomikai elemzést magyar nyelven.
         """
 
