@@ -93,7 +93,7 @@
             animation: particleGlow 3s ease-in-out infinite alternate;
         }
 
-        
+
 
         @keyframes particleFloat {
             0%, 100% { 
@@ -164,63 +164,81 @@
             50% { background-position: 100% 50%; }
         }
 
-        /* Kezdő képernyő stílusok */
-        .opening-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            transition: opacity 1s ease-out;
-        }
-
-        .opening-screen.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-
+        /* Logo megjelenése váratlan effektekkel */
         .logo-container {
             opacity: 0;
-            transform: translateY(30px);
+            transform: translateY(30px) rotateX(45deg);
             animation: logoAppear 2s ease-out 1s forwards;
+            position: relative;
+        }
+
+        .logo-container::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(from 0deg, transparent, rgba(16, 185, 129, 0.1), transparent, rgba(59, 130, 246, 0.1), transparent);
+            animation: mysterySpin 8s linear infinite;
+            z-index: -1;
+            opacity: 0.7;
         }
 
         .title-container {
             opacity: 0;
-            transform: translateY(20px);
+            transform: translateY(20px) scale(0.8);
             animation: titleAppear 1.5s ease-out 2s forwards;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .title-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            animation: mysteryGlow 3s ease-in-out 3s infinite;
         }
 
         .login-container {
             opacity: 0;
-            transform: translateY(20px);
+            transform: translateY(20px) perspective(1000px) rotateY(15deg);
             animation: loginAppear 1.5s ease-out 3s forwards;
         }
 
         @keyframes logoAppear {
             to {
                 opacity: 1;
-                transform: translateY(0);
+                transform: translateY(0) rotateX(0deg);
             }
         }
 
         @keyframes titleAppear {
             to {
                 opacity: 1;
-                transform: translateY(0);
+                transform: translateY(0) scale(1);
             }
         }
 
         @keyframes loginAppear {
             to {
                 opacity: 1;
-                transform: translateY(0);
+                transform: translateY(0) perspective(0) rotateY(0deg);
             }
+        }
+
+        @keyframes mysterySpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes mysteryGlow {
+            0% { left: -100%; }
+            100% { left: 100%; }
         }
 
         .logo-glow {
@@ -688,7 +706,7 @@
                             <span>Egyedi AI modellek</span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <i class="fas fa-microchip text-yellow-400"></i>
+                            <i class="fas fa-microchip text-yellow-400">400"></i>
                             <span>Szimuláció optimalizálás</span>
                         </div>
                         <div class="flex items-center gap-2">
@@ -1093,23 +1111,23 @@
             for (let i = 0; i < particleCount; i++) {
                 const particle = document.createElement('div');
                 particle.className = 'particle';
-                
+
                 // Véletlenszerű pozíció
                 particle.style.left = Math.random() * 100 + '%';
                 particle.style.top = Math.random() * 100 + '%';
-                
+
                 // Véletlenszerű animáció időzítés
                 const duration = 15 + Math.random() * 20;
                 particle.style.setProperty('--duration', duration + 's');
-                
+
                 // Véletlenszerű késleltetés
                 particle.style.animationDelay = Math.random() * 10 + 's';
-                
+
                 // Véletlenszerű méret
                 const size = 1 + Math.random() * 3;
                 particle.style.width = size + 'px';
                 particle.style.height = size + 'px';
-                
+
                 container.appendChild(particle);
             }
         }
@@ -1117,7 +1135,7 @@
         // Mágikus csillogás effekt
         function createMagicSparkles(element) {
             const sparkleCount = 8;
-            
+
             for (let i = 0; i < sparkleCount; i++) {
                 const sparkle = document.createElement('div');
                 sparkle.style.position = 'absolute';
@@ -1128,16 +1146,16 @@
                 sparkle.style.pointerEvents = 'none';
                 sparkle.style.animation = 'magicSparkle 2s ease-in-out infinite';
                 sparkle.style.animationDelay = (i * 0.2) + 's';
-                
+
                 // Véletlenszerű pozíció az elem körül
                 const angle = (i / sparkleCount) * 2 * Math.PI;
                 const radius = 60 + Math.random() * 20;
                 const x = Math.cos(angle) * radius;
                 const y = Math.sin(angle) * radius;
-                
+
                 sparkle.style.left = `calc(50% + ${x}px)`;
                 sparkle.style.top = `calc(50% + ${y}px)`;
-                
+
                 element.appendChild(sparkle);
             }
         }
@@ -1146,13 +1164,13 @@
         window.addEventListener('load', () => {
             // Részecske rendszer inicializálása
             createParticles();
-            
+
             // Mágikus effektek hozzáadása a logo-hoz
             const logoContainer = document.querySelector('.logo-container');
             if (logoContainer) {
                 createMagicSparkles(logoContainer);
             }
-            
+
             // A kezdő animáció automatikusan elindul a CSS-ben
             console.log('Jade AI betöltve - Fejlett UX aktiválva');
         });
