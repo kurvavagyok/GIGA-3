@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="hu">
 <head>
@@ -13,16 +12,17 @@
         :root {
             --color-primary: #00ff88;
             --color-secondary: #0088ff;
-            --color-accent: #ff1493;
+            --color-accent: #8b5cf6;
             --color-bg: #000000;
-            --color-surface: rgba(10, 10, 10, 0.95);
-            --color-glass: rgba(255, 255, 255, 0.05);
-            --color-border: rgba(255, 255, 255, 0.1);
+            --color-surface: rgba(10, 10, 10, 0.85);
+            --color-glass: rgba(255, 255, 255, 0.03);
+            --color-glass-strong: rgba(255, 255, 255, 0.08);
+            --color-border: rgba(255, 255, 255, 0.08);
             --color-text: #ffffff;
-            --color-text-muted: #a0aec0;
-            --color-success: #10b981;
-            --color-warning: #f59e0b;
-            --color-error: #ef4444;
+            --color-text-muted: #94a3b8;
+            --blur-strength: 20px;
+            --border-radius: 24px;
+            --haptic-scale: 0.97;
         }
 
         * { 
@@ -62,206 +62,204 @@
             width: 200%;
             height: 200%;
             background: 
-                radial-gradient(circle at 20% 50%, rgba(0, 255, 136, 0.08) 0%, transparent 60%),
-                radial-gradient(circle at 80% 80%, rgba(0, 136, 255, 0.06) 0%, transparent 60%),
-                radial-gradient(circle at 40% 40%, rgba(255, 20, 147, 0.04) 0%, transparent 60%);
-            animation: floatGradient 30s ease-in-out infinite;
+                radial-gradient(circle at 25% 25%, rgba(0, 255, 136, 0.04) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(0, 136, 255, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.02) 0%, transparent 50%);
+            animation: floatGradient 40s ease-in-out infinite;
             pointer-events: none;
             z-index: -1;
         }
 
         @keyframes floatGradient {
             0%, 100% { transform: rotate(0deg) scale(1); }
-            33% { transform: rotate(120deg) scale(1.1); }
-            66% { transform: rotate(240deg) scale(0.9); }
+            33% { transform: rotate(120deg) scale(1.05); }
+            66% { transform: rotate(240deg) scale(0.95); }
+        }
+
+        .glass-panel {
+            background: var(--color-glass);
+            backdrop-filter: blur(var(--blur-strength));
+            border: 1px solid var(--color-border);
+            border-radius: var(--border-radius);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-panel:hover {
+            background: var(--color-glass-strong);
+            border-color: rgba(255, 255, 255, 0.12);
+            transform: translateY(-1px);
+        }
+
+        .haptic-feedback {
+            transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .haptic-feedback:active {
+            transform: scale(var(--haptic-scale));
         }
 
         .sidebar {
             background: var(--color-surface);
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(var(--blur-strength));
             border-right: 1px solid var(--color-border);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            width: 380px;
+            width: 320px;
             height: 100vh;
             overflow-y: auto;
             position: fixed;
             left: 0;
             top: 0;
             z-index: 100;
-            scrollbar-width: thin;
-            touch-action: pan-y;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
         }
 
-        .sidebar::-webkit-scrollbar { width: 6px; }
-        .sidebar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); }
-        .sidebar::-webkit-scrollbar-thumb { 
-            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); 
-            border-radius: 3px; 
-        }
+        .sidebar::-webkit-scrollbar { display: none; }
 
         .main-content {
-            margin-left: 380px;
+            margin-left: 320px;
             height: 100vh;
             display: flex;
             flex-direction: column;
             transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .exa-section {
-            border: 1px solid var(--color-border);
-            border-radius: 16px;
-            background: var(--color-glass);
-            margin-bottom: 1rem;
-            overflow: hidden;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .exa-section:hover {
-            border-color: var(--color-primary);
-            background: rgba(255, 255, 255, 0.08);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 32px rgba(0, 255, 136, 0.1);
-        }
-
-        .exa-header {
-            padding: 1.25rem;
+        .section-header {
             background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
             color: #000;
+            padding: 0.75rem 1rem;
+            border-radius: 16px;
             font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 0.75rem;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
         }
 
-        .exa-header:hover {
-            background: linear-gradient(135deg, var(--color-secondary), var(--color-primary));
-            transform: scale(1.02);
+        .section-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.6s ease;
         }
 
-        .exa-header:active {
-            transform: scale(0.98);
+        .section-header:hover::before {
+            left: 100%;
         }
 
-        .exa-content {
+        .section-content {
             max-height: 0;
             overflow: hidden;
             transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .exa-content.expanded {
-            max-height: 800px;
+        .section-content.expanded {
+            max-height: 600px;
         }
 
-        .exa-option {
-            padding: 1.25rem;
-            border-bottom: 1px solid var(--color-border);
+        .service-item {
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-radius: 12px;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 0.75rem;
+            background: var(--color-glass);
+            border: 1px solid rgba(255, 255, 255, 0.05);
             position: relative;
+            overflow: hidden;
         }
 
-        .exa-option::before {
+        .service-item::before {
             content: '';
             position: absolute;
             left: 0;
             top: 0;
             bottom: 0;
-            width: 4px;
+            width: 3px;
             background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
             transform: scaleY(0);
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .exa-option:hover {
-            background: var(--color-glass);
-            transform: translateX(8px);
-            padding-left: 2rem;
+        .service-item:hover {
+            background: var(--color-glass-strong);
+            transform: translateX(6px);
+            border-color: rgba(255, 255, 255, 0.1);
         }
 
-        .exa-option:hover::before {
+        .service-item:hover::before {
             transform: scaleY(1);
         }
 
-        .exa-option:last-child {
-            border-bottom: none;
-        }
-
-        .exa-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
+        .service-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
+            font-size: 14px;
             color: #000;
             flex-shrink: 0;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
         }
 
-        .exa-option:hover .exa-icon {
-            transform: scale(1.1) rotate(5deg);
-        }
-
-        .exa-info {
+        .service-info {
             flex: 1;
             min-width: 0;
         }
 
-        .exa-title {
+        .service-title {
             font-weight: 600;
-            font-size: 1rem;
+            font-size: 0.8rem;
             color: var(--color-text);
-            margin-bottom: 0.5rem;
-            transition: color 0.3s ease;
+            margin-bottom: 0.25rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        .exa-option:hover .exa-title {
-            color: var(--color-primary);
-        }
-
-        .exa-desc {
-            font-size: 0.85rem;
+        .service-desc {
+            font-size: 0.7rem;
             color: var(--color-text-muted);
-            line-height: 1.4;
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
-
-        .neural-search { background: linear-gradient(135deg, #10b981, #059669); }
-        .keyword-search { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
-        .similarity-search { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
-        .research-api { background: linear-gradient(135deg, #f59e0b, #d97706); }
-        .rag-integration { background: linear-gradient(135deg, #ef4444, #dc2626); }
-        .content-extraction { background: linear-gradient(135deg, #22c55e, #16a34a); }
 
         .chat-container {
             flex: 1;
             overflow-y: auto;
-            padding: 2rem;
+            padding: 1.5rem;
             scroll-behavior: smooth;
-            scrollbar-width: thin;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
         }
 
-        .chat-container::-webkit-scrollbar { width: 6px; }
-        .chat-container::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); }
-        .chat-container::-webkit-scrollbar-thumb { 
-            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); 
-            border-radius: 3px; 
-        }
+        .chat-container::-webkit-scrollbar { display: none; }
 
         .message {
-            margin-bottom: 2rem;
-            animation: slideInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-bottom: 1.5rem;
+            animation: slideInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         @keyframes slideInUp {
             from { 
                 opacity: 0; 
-                transform: translateY(30px); 
+                transform: translateY(20px); 
             }
             to { 
                 opacity: 1; 
@@ -272,181 +270,110 @@
         .user-message {
             background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
             color: #000;
-            padding: 1.25rem 2rem;
-            border-radius: 24px 24px 8px 24px;
+            padding: 0.875rem 1.25rem;
+            border-radius: 18px 18px 6px 18px;
             margin-left: auto;
-            max-width: 70%;
+            max-width: 75%;
             font-weight: 500;
-            box-shadow: 0 4px 20px rgba(0, 255, 136, 0.2);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .user-message:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 32px rgba(0, 255, 136, 0.3);
+            font-size: 0.9rem;
+            box-shadow: 0 4px 24px rgba(0, 255, 136, 0.15);
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: pre-wrap;
         }
 
         .ai-message {
             background: var(--color-glass);
             border: 1px solid var(--color-border);
-            padding: 2rem;
-            border-radius: 24px 24px 24px 8px;
+            padding: 1.25rem;
+            border-radius: 18px 18px 18px 6px;
             max-width: 85%;
-            backdrop-filter: blur(10px);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .ai-message:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: var(--color-primary);
-            transform: translateY(-1px);
+            backdrop-filter: blur(var(--blur-strength));
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: pre-wrap;
         }
 
         .ai-header {
             display: flex;
             align-items: center;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
             border-bottom: 1px solid var(--color-border);
         }
 
         .ai-avatar {
-            width: 48px;
-            height: 48px;
-            border-radius: 16px;
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
             background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
             display: flex;
             align-items: center;
             justify-content: center;
             color: #000;
             font-weight: 600;
-            font-size: 1.2rem;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+            font-size: 0.9rem;
         }
 
         .ai-info h4 {
             margin: 0;
-            font-size: 1.1rem;
+            font-size: 0.9rem;
             font-weight: 600;
             color: var(--color-text);
         }
 
         .ai-info p {
             margin: 0;
-            font-size: 0.85rem;
+            font-size: 0.7rem;
             color: var(--color-text-muted);
         }
 
-        .search-result {
-            background: var(--color-glass);
-            border: 1px solid var(--color-border);
-            border-radius: 16px;
-            padding: 1.25rem;
-            margin: 1rem 0;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            backdrop-filter: blur(10px);
-        }
-
-        .search-result:hover {
-            background: rgba(255, 255, 255, 0.08);
-            transform: translateY(-4px);
-            box-shadow: 0 12px 40px rgba(0, 255, 136, 0.15);
-            border-color: var(--color-primary);
-        }
-
-        .search-result-title {
-            font-weight: 600;
-            color: var(--color-primary);
-            margin-bottom: 0.75rem;
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-
-        .search-result-title:hover {
-            color: var(--color-secondary);
-            text-decoration: underline;
-        }
-
-        .search-result-url {
-            font-size: 0.85rem;
-            color: var(--color-secondary);
-            margin-bottom: 0.75rem;
-        }
-
-        .search-result-snippet {
-            font-size: 0.95rem;
-            color: var(--color-text-muted);
+        .ai-content {
             line-height: 1.6;
-        }
-
-        .search-result-meta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            margin-top: 0.75rem;
-            font-size: 0.8rem;
-            color: var(--color-text-muted);
+            color: var(--color-text);
+            font-size: 0.85rem;
         }
 
         .input-container {
-            padding: 1.5rem;
+            padding: 1rem;
             background: var(--color-surface);
             border-top: 1px solid var(--color-border);
-            backdrop-filter: blur(20px);
-            position: relative;
-        }
-
-        .input-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
+            backdrop-filter: blur(var(--blur-strength));
         }
 
         .input-wrapper {
             display: flex;
-            gap: 0.75rem;
-            align-items: center;
-            max-width: 1200px;
+            gap: 0.5rem;
+            align-items: flex-end;
+            max-width: 1000px;
             margin: 0 auto;
         }
 
         .input-field {
             flex: 1;
-            padding: 0.875rem 1.25rem;
+            padding: 0.75rem 1rem;
             background: var(--color-glass);
             border: 1px solid var(--color-border);
-            border-radius: 24px;
+            border-radius: 20px;
             color: var(--color-text);
-            font-size: 0.95rem;
+            font-size: 0.85rem;
             resize: none;
             outline: none;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            min-height: 22px;
-            max-height: 100px;
-            backdrop-filter: blur(10px);
+            min-height: 20px;
+            max-height: 80px;
+            backdrop-filter: blur(var(--blur-strength));
             line-height: 1.4;
             word-wrap: break-word;
             overflow-wrap: break-word;
             white-space: pre-wrap;
-            -webkit-appearance: none;
-            -webkit-user-select: text;
-            user-select: text;
         }
 
         .input-field:focus {
             border-color: var(--color-primary);
-            box-shadow: 0 0 0 4px rgba(0, 255, 136, 0.15);
-            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.1);
+            background: var(--color-glass-strong);
         }
 
         .input-field::placeholder {
@@ -454,48 +381,24 @@
         }
 
         .send-button {
-            width: 44px;
-            height: 44px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
             border: none;
             color: #000;
-            font-size: 1rem;
+            font-size: 0.9rem;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .send-button::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .send-button:hover {
-            transform: scale(1.1);
-            box-shadow: 0 8px 32px rgba(0, 255, 136, 0.4);
-        }
-
-        .send-button:hover::before {
-            width: 100%;
-            height: 100%;
-        }
-
-        .send-button:active {
-            transform: scale(0.95);
+            transform: scale(1.05);
+            box-shadow: 0 4px 20px rgba(0, 255, 136, 0.3);
         }
 
         .send-button:disabled {
@@ -504,19 +407,77 @@
             transform: none;
         }
 
+        .welcome-section {
+            text-align: center;
+            padding: 3rem 2rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .welcome-logo {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2rem;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #000;
+        }
+
+        .welcome-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .welcome-subtitle {
+            font-size: 1rem;
+            color: var(--color-text-muted);
+            margin-bottom: 2.5rem;
+            line-height: 1.5;
+        }
+
+        .intro-button {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            color: #000;
+            border: none;
+            padding: 0.875rem 2rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .intro-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(0, 255, 136, 0.3);
+        }
+
         .typing-indicator {
             display: flex;
-            gap: 8px;
-            padding: 1.5rem;
+            gap: 6px;
+            padding: 1rem;
             align-items: center;
         }
 
         .typing-dot {
-            width: 10px;
-            height: 10px;
+            width: 8px;
+            height: 8px;
             background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
             border-radius: 50%;
-            animation: typing 1.6s infinite ease-in-out;
+            animation: typing 1.4s infinite ease-in-out;
         }
 
         .typing-dot:nth-child(2) { animation-delay: 0.2s; }
@@ -528,7 +489,7 @@
                 opacity: 0.5; 
             }
             30% { 
-                transform: scale(1.3); 
+                transform: scale(1.2); 
                 opacity: 1; 
             }
         }
@@ -539,7 +500,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(0, 0, 0, 0.85);
             display: none;
             align-items: center;
             justify-content: center;
@@ -555,14 +516,14 @@
 
         .modal-content {
             background: var(--color-surface);
-            border-radius: 20px;
-            padding: 2.5rem;
+            border-radius: var(--border-radius);
+            padding: 2rem;
             width: 90%;
-            max-width: 800px;
-            max-height: 85vh;
+            max-width: 600px;
+            max-height: 80vh;
             overflow-y: auto;
             border: 1px solid var(--color-border);
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(var(--blur-strength));
             transform: scale(0.9);
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -575,13 +536,13 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 2rem;
-            padding-bottom: 1.5rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
             border-bottom: 1px solid var(--color-border);
         }
 
         .modal-title {
-            font-size: 1.75rem;
+            font-size: 1.25rem;
             font-weight: 600;
             background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
             -webkit-background-clip: text;
@@ -590,8 +551,8 @@
         }
 
         .modal-close {
-            width: 44px;
-            height: 44px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             background: var(--color-glass);
             border: 1px solid var(--color-border);
@@ -604,327 +565,34 @@
         }
 
         .modal-close:hover {
-            background: var(--color-accent);
-            color: #fff;
-            transform: scale(1.1);
-        }
-
-        .form-group {
-            margin-bottom: 2rem;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 0.75rem;
-            font-weight: 500;
-            color: var(--color-text);
-        }
-
-        .form-input, .form-select, .form-textarea {
-            width: 100%;
-            padding: 1rem 1.5rem;
-            background: var(--color-glass);
-            border: 1px solid var(--color-border);
-            border-radius: 12px;
-            color: var(--color-text);
-            font-size: 1rem;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            backdrop-filter: blur(10px);
-        }
-
-        .form-input:focus, .form-select:focus, .form-textarea:focus {
-            outline: none;
-            border-color: var(--color-primary);
-            box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.15);
-            background: rgba(255, 255, 255, 0.08);
-        }
-
-        .form-textarea {
-            min-height: 120px;
-            resize: vertical;
-        }
-
-        .form-button {
-            width: 100%;
-            padding: 1.25rem 2rem;
-            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
-            border: none;
-            border-radius: 12px;
-            color: #000;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .form-button::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .form-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 32px rgba(0, 255, 136, 0.4);
-        }
-
-        .form-button:hover::before {
-            width: 300%;
-            height: 300%;
-        }
-
-        .form-button:active {
-            transform: translateY(-1px);
-        }
-
-        .form-button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .welcome-section {
-            text-align: center;
-            padding: 4rem 2rem;
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
-        .welcome-title {
-            font-size: 3rem;
-            font-weight: 700;
-            margin-bottom: 1.5rem;
-            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: slideInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .welcome-subtitle {
-            font-size: 1.25rem;
-            color: var(--color-text-muted);
-            margin-bottom: 3rem;
-            line-height: 1.6;
-            animation: slideInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.2s both;
-        }
-
-        .quick-actions {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin-top: 3rem;
-        }
-
-        .quick-action {
-            background: var(--color-glass);
-            border: 1px solid var(--color-border);
-            border-radius: 20px;
-            padding: 2rem;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            text-align: center;
-            backdrop-filter: blur(10px);
-            animation: slideInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.4s both;
-        }
-
-        .quick-action:hover {
-            background: rgba(255, 255, 255, 0.08);
-            transform: translateY(-8px);
-            box-shadow: 0 16px 48px rgba(0, 255, 136, 0.2);
-            border-color: var(--color-primary);
-        }
-
-        .quick-action-icon {
-            font-size: 2.5rem;
-            margin-bottom: 1.5rem;
-            color: var(--color-primary);
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .quick-action:hover .quick-action-icon {
-            transform: scale(1.1) rotate(5deg);
-        }
-
-        .quick-action-title {
-            font-weight: 600;
-            margin-bottom: 0.75rem;
-            font-size: 1.1rem;
-        }
-
-        .quick-action-desc {
-            font-size: 0.95rem;
-            color: var(--color-text-muted);
-            line-height: 1.5;
-        }
-
-        .domain-tag {
-            display: inline-block;
-            background: var(--color-glass);
-            border: 1px solid var(--color-border);
-            border-radius: 20px;
-            padding: 0.5rem 1rem;
-            font-size: 0.8rem;
-            margin: 0.25rem;
-            color: var(--color-text-muted);
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            user-select: none;
-        }
-
-        .domain-tag:hover {
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateY(-2px);
-        }
-
-        .domain-tag.selected {
-            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
-            color: #000;
-            border-color: transparent;
+            background: var(--color-glass-strong);
             transform: scale(1.05);
         }
 
-        .ai-content {
-            line-height: 1.7;
-            color: var(--color-text);
-        }
-
-        .ai-actions {
-            margin-top: 1.5rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid var(--color-border);
-        }
-
-        .deep-research-btn {
+        .new-chat-btn {
+            width: 100%;
             background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
             color: #000;
+            font-weight: 600;
+            border-radius: 16px;
+            padding: 0.75rem;
             border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 24px;
             cursor: pointer;
-            font-size: 0.95rem;
-            font-weight: 500;
+            font-size: 0.85rem;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .deep-research-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
-        }
-
-        .deep-research-btn:active {
-            transform: translateY(-1px);
-        }
-
-        .ai-content h1, .ai-content h2, .ai-content h3 {
-            color: var(--color-primary);
-            margin-top: 2rem;
-            margin-bottom: 1rem;
-        }
-
-        .ai-content h1 { font-size: 1.6rem; }
-        .ai-content h2 { font-size: 1.4rem; }
-        .ai-content h3 { font-size: 1.2rem; }
-
-        .ai-content p {
-            margin-bottom: 1.25rem;
-        }
-
-        .ai-content ul, .ai-content ol {
-            margin-left: 2rem;
-            margin-bottom: 1.25rem;
-        }
-
-        .ai-content li {
-            margin-bottom: 0.75rem;
-        }
-
-        .ai-content code {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 0.25rem 0.5rem;
-            border-radius: 6px;
-            font-family: 'Fira Code', monospace;
-        }
-
-        .ai-content pre {
-            background: rgba(0, 0, 0, 0.5);
-            padding: 1.5rem;
-            border-radius: 12px;
-            overflow-x: auto;
-            margin: 1.5rem 0;
-            border: 1px solid var(--color-border);
-        }
-
-        .ai-content blockquote {
-            border-left: 4px solid var(--color-primary);
-            padding-left: 1.5rem;
-            margin: 1.5rem 0;
-            font-style: italic;
-            background: rgba(255, 255, 255, 0.02);
-            padding: 1rem 1.5rem;
-            border-radius: 8px;
-        }
-
-        .toast-notification {
-            position: fixed;
-            top: 2rem;
-            right: 2rem;
-            background: var(--color-surface);
-            border: 1px solid var(--color-border);
-            border-radius: 12px;
-            padding: 1rem 1.5rem;
-            z-index: 1001;
-            transform: translateX(400px);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            backdrop-filter: blur(20px);
-        }
-
-        .toast-notification.show {
-            transform: translateX(0);
-        }
-
-        .toast-notification.success {
-            border-color: var(--color-success);
-        }
-
-        .toast-notification.error {
-            border-color: var(--color-error);
-        }
-
-        .drag-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 255, 136, 0.1);
-            border: 4px dashed var(--color-primary);
-            display: none;
+            display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 999;
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: var(--color-primary);
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
         }
 
-        .drag-overlay.show {
-            display: flex;
+        .new-chat-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 255, 136, 0.3);
         }
 
-        @media (max-width: 1200px) {
+        @media (max-width: 1024px) {
             .sidebar {
                 transform: translateX(-100%);
                 transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -945,15 +613,11 @@
             }
 
             .welcome-title {
-                font-size: 2.5rem;
+                font-size: 2rem;
             }
 
             .welcome-subtitle {
-                font-size: 1.1rem;
-            }
-
-            .quick-actions {
-                grid-template-columns: 1fr;
+                font-size: 0.9rem;
             }
 
             .chat-container {
@@ -961,33 +625,24 @@
             }
 
             .input-container {
-                padding: 1rem;
+                padding: 0.75rem;
             }
 
             .user-message {
                 max-width: 85%;
+                font-size: 0.85rem;
             }
 
             .ai-message {
                 max-width: 95%;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .welcome-title {
-                font-size: 2rem;
-            }
-            
-            .modal-content {
-                padding: 1.5rem;
-                width: 95%;
+                font-size: 0.8rem;
             }
         }
 
         .loading-spinner {
             display: inline-block;
-            width: 20px;
-            height: 20px;
+            width: 16px;
+            height: 16px;
             border: 2px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
             border-top-color: var(--color-primary);
@@ -997,351 +652,267 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        .search-result {
+            background: var(--color-glass);
+            border: 1px solid var(--color-border);
+            border-radius: 12px;
+            padding: 1rem;
+            margin: 0.75rem 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(var(--blur-strength));
+        }
+
+        .search-result:hover {
+            background: var(--color-glass-strong);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(0, 255, 136, 0.1);
+            border-color: var(--color-primary);
+        }
+
+        .search-result-title {
+            font-weight: 600;
+            color: var(--color-primary);
+            margin-bottom: 0.5rem;
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: block;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .search-result-url {
+            font-size: 0.75rem;
+            color: var(--color-secondary);
+            margin-bottom: 0.5rem;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .search-result-snippet {
+            font-size: 0.8rem;
+            color: var(--color-text-muted);
+            line-height: 1.5;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        /* Vibration API support */
+        @media (hover: hover) and (pointer: fine) {
+            .haptic-feedback:hover {
+                cursor: pointer;
+            }
+        }
+
+        /* Touch feedback */
+        .touch-feedback {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .touch-feedback::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        .touch-feedback:active::before {
+            width: 200px;
+            height: 200px;
+        }
     </style>
 </head>
 <body class="gradient-bg">
-    <!-- Drag & Drop Overlay -->
-    <div class="drag-overlay" id="dragOverlay">
-        <div>
-            <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-            <div>Húzd ide a fájlokat!</div>
-        </div>
-    </div>
-
     <div class="sidebar" id="sidebar">
-        <!-- Sidebar Header -->
-        <div class="p-4 border-b border-gray-800">
+        <div class="p-4">
             <div class="flex items-center gap-3 mb-4">
-                <div class="w-12 h-12 bg-gradient-to-br from-green-400 to-blue-500 rounded-xl flex items-center justify-center">
-                    <span class="text-black font-bold text-xl">J</span>
+                <div class="w-10 h-10 bg-gradient-to-br from-green-400 to-blue-500 rounded-xl flex items-center justify-center">
+                    <span class="text-black font-bold text-lg">J</span>
                 </div>
                 <div>
-                    <h1 class="text-xl font-bold text-white">Jade</h1>
+                    <h1 class="text-lg font-bold text-white">Jade</h1>
                     <p class="text-xs text-gray-400">Deep Discovery AI</p>
                 </div>
             </div>
 
-            <button id="newChatBtn" class="w-full bg-gradient-to-r from-green-500 to-blue-500 text-black font-semibold rounded-xl px-4 py-3 flex items-center justify-center gap-2 hover:shadow-lg transition-all">
+            <button id="newChatBtn" class="new-chat-btn haptic-feedback touch-feedback">
                 <i class="fas fa-plus"></i>
                 <span>Új beszélgetés</span>
             </button>
         </div>
 
-        <!-- Exa AI Search Functions -->
-        <div class="p-4" id="exaSearchFunctions">
-            <h3 class="text-xs uppercase tracking-wider text-gray-500 mb-4">Exa AI Keresési Funkciók</h3>
+        <div class="px-4" id="exaSearchFunctions">
+            <h3 class="text-xs uppercase tracking-wider text-gray-500 mb-3">Exa AI Keresési Funkciók</h3>
 
-            <!-- Neural Search -->
-            <div class="exa-section">
-                <div class="exa-header" onclick="toggleExaSection('neural')">
+            <div class="mb-4">
+                <div class="section-header haptic-feedback touch-feedback" onclick="toggleSection('neural')">
                     <div class="flex items-center gap-2">
-                        <i class="fas fa-brain"></i>
+                        <i class="fas fa-brain text-sm"></i>
                         <span>Neurális Keresés</span>
                     </div>
-                    <i class="fas fa-chevron-down transition-transform transform" id="chevron-neural"></i>
+                    <i class="fas fa-chevron-down transition-transform transform text-sm" id="chevron-neural"></i>
                 </div>
-                <div class="exa-content" id="content-neural">
-                    <div class="exa-option" onclick="openExaModal('neural_search')">
-                        <div class="exa-icon neural-search">
+                <div class="section-content" id="content-neural">
+                    <div class="service-item haptic-feedback touch-feedback" onclick="openExaModal('neural_search')">
+                        <div class="service-icon">
                             <i class="fas fa-search"></i>
                         </div>
-                        <div class="exa-info">
-                            <div class="exa-title">Természetes Nyelvű Keresés</div>
-                            <div class="exa-desc">Embedding-alapú intelligens keresés természetes nyelven</div>
+                        <div class="service-info">
+                            <div class="service-title">Természetes Nyelvű Keresés</div>
+                            <div class="service-desc">Embedding-alapú intelligens keresés</div>
                         </div>
                     </div>
-                    <div class="exa-option" onclick="openExaModal('keyword_search')">
-                        <div class="exa-icon keyword-search">
+                    <div class="service-item haptic-feedback touch-feedback" onclick="openExaModal('keyword_search')">
+                        <div class="service-icon">
                             <i class="fas fa-key"></i>
                         </div>
-                        <div class="exa-info">
-                            <div class="exa-title">Kulcsszavas Keresés</div>
-                            <div class="exa-desc">Google-stílusú kulcsszó alapú keresés</div>
+                        <div class="service-info">
+                            <div class="service-title">Kulcsszavas Keresés</div>
+                            <div class="service-desc">Google-stílusú keresés</div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Similarity Search -->
-            <div class="exa-section">
-                <div class="exa-header" onclick="toggleExaSection('similarity')">
+            <div class="mb-4">
+                <div class="section-header haptic-feedback touch-feedback" onclick="toggleSection('similarity')">
                     <div class="flex items-center gap-2">
-                        <i class="fas fa-clone"></i>
+                        <i class="fas fa-clone text-sm"></i>
                         <span>Hasonlósági Keresés</span>
                     </div>
-                    <i class="fas fa-chevron-down transition-transform transform" id="chevron-similarity"></i>
+                    <i class="fas fa-chevron-down transition-transform transform text-sm" id="chevron-similarity"></i>
                 </div>
-                <div class="exa-content" id="content-similarity">
-                    <div class="exa-option" onclick="openExaModal('find_similar')">
-                        <div class="exa-icon similarity-search">
+                <div class="section-content" id="content-similarity">
+                    <div class="service-item haptic-feedback touch-feedback" onclick="openExaModal('find_similar')">
+                        <div class="service-icon">
                             <i class="fas fa-link"></i>
                         </div>
-                        <div class="exa-info">
-                            <div class="exa-title">URL Alapú Hasonlóság</div>
-                            <div class="exa-desc">Hasonló oldalak keresése megadott URL alapján</div>
-                        </div>
-                    </div>
-                    <div class="exa-option" onclick="openExaModal('content_similarity')">
-                        <div class="exa-icon similarity-search">
-                            <i class="fas fa-file-text"></i>
-                        </div>
-                        <div class="exa-info">
-                            <div class="exa-title">Szöveg Alapú Hasonlóság</div>
-                            <div class="exa-desc">Hasonló tartalmak keresése szöveg alapján</div>
+                        <div class="service-info">
+                            <div class="service-title">URL Alapú Hasonlóság</div>
+                            <div class="service-desc">Hasonló oldalak keresése</div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Content Extraction -->
-            <div class="exa-section">
-                <div class="exa-header" onclick="toggleExaSection('content')">
+            <div class="mb-4">
+                <div class="section-header haptic-feedback touch-feedback" onclick="toggleSection('research')">
                     <div class="flex items-center gap-2">
-                        <i class="fas fa-download"></i>
-                        <span>Tartalom Kinyerés</span>
-                    </div>
-                    <i class="fas fa-chevron-down transition-transform transform" id="chevron-content"></i>
-                </div>
-                <div class="exa-content" id="content-content">
-                    <div class="exa-option" onclick="openExaModal('get_contents')">
-                        <div class="exa-icon content-extraction">
-                            <i class="fas fa-file-code"></i>
-                        </div>
-                        <div class="exa-info">
-                            <div class="exa-title">Strukturált HTML Tartalom</div>
-                            <div class="exa-desc">Teljes HTML tartalom lekérése keresési találatokból</div>
-                        </div>
-                    </div>
-                    <div class="exa-option" onclick="openExaModal('highlights')">
-                        <div class="exa-icon content-extraction">
-                            <i class="fas fa-highlighter"></i>
-                        </div>
-                        <div class="exa-info">
-                            <div class="exa-title">Kiemelések</div>
-                            <div class="exa-desc">Relevans szövegrészek kiemelése a találatokban</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Research API -->
-            <div class="exa-section">
-                <div class="exa-header" onclick="toggleExaSection('research')">
-                    <div class="flex items-center gap-2">
-                        <i class="fas fa-microscope"></i>
+                        <i class="fas fa-microscope text-sm"></i>
                         <span>Kutatási API</span>
                     </div>
-                    <i class="fas fa-chevron-down transition-transform transform" id="chevron-research"></i>
+                    <i class="fas fa-chevron-down transition-transform transform text-sm" id="chevron-research"></i>
                 </div>
-                <div class="exa-content" id="content-research">
-                    <div class="exa-option" onclick="openExaModal('research_automation')">
-                        <div class="exa-icon research-api">
+                <div class="section-content" id="content-research">
+                    <div class="service-item haptic-feedback touch-feedback" onclick="openExaModal('research_automation')">
+                        <div class="service-icon">
                             <i class="fas fa-robot"></i>
                         </div>
-                        <div class="exa-info">
-                            <div class="exa-title">Automatizált Kutatás</div>
-                            <div class="exa-desc">Strukturált webes kutatás automatizálása</div>
-                        </div>
-                    </div>
-                    <div class="exa-option" onclick="openExaModal('direct_answer')">
-                        <div class="exa-icon research-api">
-                            <i class="fas fa-question-circle"></i>
-                        </div>
-                        <div class="exa-info">
-                            <div class="exa-title">Közvetlen Válasz</div>
-                            <div class="exa-desc">Közvetlen választ ad kérdésre hivatkozásokkal</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- RAG Integration -->
-            <div class="exa-section">
-                <div class="exa-header" onclick="toggleExaSection('rag')">
-                    <div class="flex items-center gap-2">
-                        <i class="fas fa-cogs"></i>
-                        <span>RAG Integráció</span>
-                    </div>
-                    <i class="fas fa-chevron-down transition-transform transform" id="chevron-rag"></i>
-                </div>
-                <div class="exa-content" id="content-rag">
-                    <div class="exa-option" onclick="openExaModal('rag_pipeline')">
-                        <div class="exa-icon rag-integration">
-                            <i class="fas fa-stream"></i>
-                        </div>
-                        <div class="exa-info">
-                            <div class="exa-title">RAG Pipeline</div>
-                            <div class="exa-desc">Retrieval-Augmented Generation munkafolyamat</div>
-                        </div>
-                    </div>
-                    <div class="exa-option" onclick="openExaModal('langchain_integration')">
-                        <div class="exa-icon rag-integration">
-                            <i class="fas fa-link"></i>
-                        </div>
-                        <div class="exa-info">
-                            <div class="exa-title">LangChain Integráció</div>
-                            <div class="exa-desc">LangChain kompatibilis keresés és feldolgozás</div>
+                        <div class="service-info">
+                            <div class="service-title">Automatizált Kutatás</div>
+                            <div class="service-desc">Strukturált webes kutatás</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Alpha Services -->
-        <div class="p-4" id="alphaServices">
-            <h3 class="text-xs uppercase tracking-wider text-gray-500 mb-4">Alpha Services</h3>
-            <div id="categoriesContainer">
-                <!-- Categories will be loaded here -->
-            </div>
+        <div class="px-4" id="alphaServices">
+            <h3 class="text-xs uppercase tracking-wider text-gray-500 mb-3">Alpha Services</h3>
+            <div id="categoriesContainer"></div>
         </div>
 
-        <!-- Footer -->
         <div class="p-4 border-t border-gray-800 mt-auto">
             <p class="text-xs text-gray-500 text-center">Jade made by Kollár Sándor</p>
         </div>
     </div>
 
-    <!-- Main Content -->
     <div class="main-content">
-        <!-- Top Bar -->
         <div class="flex items-center justify-between p-4 border-b border-gray-800 bg-black/50 backdrop-blur-sm">
-            <button id="menuToggle" class="lg:hidden p-2 rounded-lg hover:bg-gray-800 text-white">
+            <button id="menuToggle" class="lg:hidden p-2 rounded-lg hover:bg-gray-800 text-white haptic-feedback touch-feedback">
                 <i class="fas fa-bars"></i>
             </button>
             <div class="flex items-center gap-3">
-                <h1 class="text-xl font-semibold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
+                <h1 class="text-lg font-semibold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
                     Jade AI Platform
                 </h1>
-                <span id="modelBadge" class="px-3 py-1 bg-green-500/20 text-green-400 text-xs rounded-full font-medium">
+                <span id="modelBadge" class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full font-medium">
                     Hibrid AI + Exa
                 </span>
             </div>
         </div>
 
-        <!-- Chat Container -->
         <div class="chat-container" id="chatContainer">
-            <!-- Welcome Screen -->
             <div id="welcomeScreen" class="welcome-section">
-                <div class="w-12 h-12 bg-gradient-to-br from-green-400 to-blue-500 rounded-xl flex items-center justify-center mx-auto mb-4">
-                    <span class="text-black font-bold text-xl">J</span>
-                </div>
+                <div class="welcome-logo">J</div>
                 <h1 class="welcome-title">Jade</h1>
-                <p class="welcome-subtitle">
-                    Deep Discovery AI Platform
-                </p>
-                
-                <button onclick="showAppIntroduction()" class="form-button mt-8 max-w-md mx-auto">
-                    <i class="fas fa-compass mr-2"></i>
-                    Ismerd meg a Jade-t
+                <p class="welcome-subtitle">Deep Discovery AI Platform</p>
+
+                <button onclick="showAppIntroduction()" class="intro-button haptic-feedback touch-feedback">
+                    <i class="fas fa-compass"></i>
+                    <span>Ismerd meg</span>
                 </button>
             </div>
 
-            <!-- Messages Container -->
             <div id="messagesContainer"></div>
         </div>
 
-        <!-- Input Container -->
         <div class="input-container">
             <div class="input-wrapper">
                 <textarea 
                     id="messageInput" 
                     class="input-field" 
-                    placeholder="Kérdezz bármit, vagy használd az Exa keresési funkciókat..."
+                    placeholder="Kérdezz bármit..."
                     rows="1"
                 ></textarea>
-                <button id="sendButton" class="send-button">
+                <button id="sendButton" class="send-button haptic-feedback touch-feedback">
                     <i class="fas fa-paper-plane"></i>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Exa Search Modal -->
     <div class="modal-overlay" id="exaSearchModal">
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title" id="exaModalTitle">Exa Keresés</h2>
-                <button class="modal-close" onclick="closeModal('exaSearchModal')">
+                <button class="modal-close haptic-feedback touch-feedback" onclick="closeModal('exaSearchModal')">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-
-            <div id="exaModalContent">
-                <!-- Dynamic content based on search type -->
-            </div>
-
-            <div id="exaModalResult" style="display: none;">
-                <div class="mt-6 p-4 bg-gray-800 rounded-lg">
-                    <h3 class="text-lg font-semibold mb-2 text-green-400">Keresési Eredmények</h3>
-                    <div id="exaResultContent" class="text-gray-300"></div>
-                </div>
-            </div>
+            <div id="exaModalContent"></div>
+            <div id="exaModalResult" style="display: none;"></div>
         </div>
     </div>
 
-    <!-- Alpha Service Modal -->
     <div class="modal-overlay" id="alphaServiceModal">
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title" id="alphaModalTitle">Alpha Service</h2>
-                <button class="modal-close" onclick="closeModal('alphaServiceModal')">
+                <button class="modal-close haptic-feedback touch-feedback" onclick="closeModal('alphaServiceModal')">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-
-            <div id="alphaModalContent">
-                <form id="alphaServiceForm">
-                    <div class="form-group">
-                        <label class="form-label" for="serviceDescription">Szolgáltatás leírása</label>
-                        <p id="serviceDescription" class="text-gray-400 text-sm mb-4"></p>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="inputData">Bemeneti adatok (JSON)</label>
-                        <textarea 
-                            id="inputData" 
-                            class="form-textarea" 
-                            placeholder='{"key": "value", "parameter": "data"}'
-                            required
-                        ></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="parameters">Paraméterek (opcionális)</label>
-                        <textarea 
-                            id="parameters" 
-                            class="form-textarea" 
-                            placeholder='{"temperature": 0.1, "max_tokens": 1000}'
-                        ></textarea>
-                    </div>
-
-                    <button type="submit" class="form-button" id="executeButton">
-                        <i class="fas fa-play mr-2"></i>
-                        Szolgáltatás futtatása
-                    </button>
-                </form>
-            </div>
-
-            <div id="alphaModalResult" style="display: none;">
-                <div class="mt-6 p-4 bg-gray-800 rounded-lg">
-                    <h3 class="text-lg font-semibold mb-2 text-green-400">Eredmény</h3>
-                    <div id="alphaResultContent" class="text-gray-300"></div>
-                </div>
-            </div>
+            <div id="alphaModalContent"></div>
+            <div id="alphaModalResult" style="display: none;"></div>
         </div>
     </div>
 
     <script>
-        // Global variables
         let isTyping = false;
         let currentUserId = localStorage.getItem('jadeUserId') || `user_${Math.random().toString(36).substring(2, 15)}`;
-        let currentService = null;
-        let currentExaFunction = null;
         let alphaServices = {};
 
         localStorage.setItem('jadeUserId', currentUserId);
 
-        // DOM elements
         const sidebar = document.getElementById('sidebar');
         const menuToggle = document.getElementById('menuToggle');
         const newChatBtn = document.getElementById('newChatBtn');
@@ -1351,83 +922,30 @@
         const messageInput = document.getElementById('messageInput');
         const sendButton = document.getElementById('sendButton');
         const modelBadge = document.getElementById('modelBadge');
-        const dragOverlay = document.getElementById('dragOverlay');
 
-        // Initialize app
         document.addEventListener('DOMContentLoaded', async () => {
             await loadAlphaServices();
             setupEventListeners();
-            setupDragAndDrop();
+            setupHapticFeedback();
             messageInput.focus();
         });
 
-        // Drag and drop functionality
-        function setupDragAndDrop() {
-            let dragCounter = 0;
+        function setupHapticFeedback() {
+            document.querySelectorAll('.haptic-feedback').forEach(element => {
+                element.addEventListener('touchstart', () => {
+                    if (navigator.vibrate) {
+                        navigator.vibrate(10);
+                    }
+                }, { passive: true });
 
-            document.addEventListener('dragenter', (e) => {
-                e.preventDefault();
-                dragCounter++;
-                dragOverlay.classList.add('show');
-            });
-
-            document.addEventListener('dragleave', (e) => {
-                e.preventDefault();
-                dragCounter--;
-                if (dragCounter === 0) {
-                    dragOverlay.classList.remove('show');
-                }
-            });
-
-            document.addEventListener('dragover', (e) => {
-                e.preventDefault();
-            });
-
-            document.addEventListener('drop', (e) => {
-                e.preventDefault();
-                dragCounter = 0;
-                dragOverlay.classList.remove('show');
-                
-                const files = Array.from(e.dataTransfer.files);
-                if (files.length > 0) {
-                    handleFileUpload(files);
-                }
+                element.addEventListener('click', () => {
+                    if (navigator.vibrate) {
+                        navigator.vibrate(5);
+                    }
+                });
             });
         }
 
-        // Handle file upload
-        function handleFileUpload(files) {
-            showToast('Fájl feltöltés funkció fejlesztés alatt...', 'info');
-            console.log('Uploaded files:', files);
-            // Itt implementálhatod a fájl feltöltési logikát
-        }
-
-        // Toast notification system
-        function showToast(message, type = 'success') {
-            const toast = document.createElement('div');
-            toast.className = `toast-notification ${type}`;
-            toast.innerHTML = `
-                <div class="flex items-center gap-2">
-                    <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'times' : 'info'}-circle"></i>
-                    <span>${message}</span>
-                </div>
-            `;
-            
-            document.body.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.classList.add('show');
-            }, 100);
-            
-            setTimeout(() => {
-                toast.classList.remove('show');
-                setTimeout(() => {
-                    document.body.removeChild(toast);
-                }, 300);
-            }, 3000);
-        }
-
-        // Load Alpha services from API
         async function loadAlphaServices() {
             try {
                 const response = await fetch('/api/services');
@@ -1436,11 +954,9 @@
                 renderServiceCategories();
             } catch (error) {
                 console.error('Error loading services:', error);
-                showToast('Hiba a szolgáltatások betöltésekor', 'error');
             }
         }
 
-        // Render service categories in sidebar
         function renderServiceCategories() {
             const container = document.getElementById('categoriesContainer');
             container.innerHTML = '';
@@ -1465,33 +981,33 @@
 
             for (const [categoryKey, services] of Object.entries(alphaServices)) {
                 const categoryDiv = document.createElement('div');
-                categoryDiv.className = 'exa-section';
+                categoryDiv.className = 'mb-4';
 
                 const header = document.createElement('div');
-                header.className = 'exa-header';
+                header.className = 'section-header haptic-feedback touch-feedback';
                 header.innerHTML = `
                     <div class="flex items-center gap-2">
-                        <i class="${categoryIcons[categoryKey]}"></i>
+                        <i class="${categoryIcons[categoryKey]} text-sm"></i>
                         <span>${categoryNames[categoryKey]}</span>
                         <span class="text-xs opacity-70">(${Object.keys(services).length})</span>
                     </div>
-                    <i class="fas fa-chevron-down transition-transform transform" id="alpha-chevron-${categoryKey}"></i>
+                    <i class="fas fa-chevron-down transition-transform transform text-sm" id="alpha-chevron-${categoryKey}"></i>
                 `;
 
                 const servicesDiv = document.createElement('div');
-                servicesDiv.className = 'exa-content';
+                servicesDiv.className = 'section-content';
                 servicesDiv.id = `alpha-services-${categoryKey}`;
 
                 for (const [serviceName, serviceDesc] of Object.entries(services)) {
                     const serviceItem = document.createElement('div');
-                    serviceItem.className = 'exa-option';
+                    serviceItem.className = 'service-item haptic-feedback touch-feedback';
                     serviceItem.innerHTML = `
-                        <div class="exa-icon ${categoryKey}">
+                        <div class="service-icon">
                             <i class="${categoryIcons[categoryKey]}"></i>
                         </div>
-                        <div class="exa-info">
-                            <div class="exa-title">${serviceName}</div>
-                            <div class="exa-desc">${serviceDesc}</div>
+                        <div class="service-info">
+                            <div class="service-title">${serviceName}</div>
+                            <div class="service-desc">${serviceDesc}</div>
                         </div>
                     `;
 
@@ -1512,8 +1028,7 @@
             }
         }
 
-        // Toggle Exa section expansion
-        function toggleExaSection(sectionKey) {
+        function toggleSection(sectionKey) {
             const contentDiv = document.getElementById(`content-${sectionKey}`);
             const chevron = document.getElementById(`chevron-${sectionKey}`);
 
@@ -1526,7 +1041,6 @@
             }
         }
 
-        // Toggle Alpha category expansion
         function toggleAlphaCategory(categoryKey) {
             const servicesDiv = document.getElementById(`alpha-services-${categoryKey}`);
             const chevron = document.getElementById(`alpha-chevron-${categoryKey}`);
@@ -1540,491 +1054,49 @@
             }
         }
 
-        // Open Exa modal
         function openExaModal(functionType) {
-            currentExaFunction = functionType;
             const modal = document.getElementById('exaSearchModal');
             const title = document.getElementById('exaModalTitle');
             const content = document.getElementById('exaModalContent');
 
-            const functionConfigs = {
-                'neural_search': {
-                    title: 'Neurális Keresés',
-                    content: createNeuralSearchForm()
-                },
-                'keyword_search': {
-                    title: 'Kulcsszavas Keresés',
-                    content: createKeywordSearchForm()
-                },
-                'find_similar': {
-                    title: 'Hasonló Oldalak Keresése',
-                    content: createSimilaritySearchForm()
-                },
-                'content_similarity': {
-                    title: 'Szöveg Alapú Hasonlóság',
-                    content: createContentSimilarityForm()
-                },
-                'get_contents': {
-                    title: 'Tartalom Kinyerés',
-                    content: createContentExtractionForm()
-                },
-                'highlights': {
-                    title: 'Kiemelések',
-                    content: createHighlightsForm()
-                },
-                'research_automation': {
-                    title: 'Automatizált Kutatás',
-                    content: createResearchForm()
-                },
-                'direct_answer': {
-                    title: 'Közvetlen Válasz',
-                    content: createDirectAnswerForm()
-                },
-                'rag_pipeline': {
-                    title: 'RAG Pipeline',
-                    content: createRAGForm()
-                },
-                'langchain_integration': {
-                    title: 'LangChain Integráció',
-                    content: createLangChainForm()
-                }
-            };
-
-            const config = functionConfigs[functionType];
-            title.textContent = config.title;
-            content.innerHTML = config.content;
+            title.textContent = 'Exa Keresés';
+            content.innerHTML = '<p class="text-gray-400">Funkció fejlesztés alatt...</p>';
 
             modal.style.display = 'flex';
             setTimeout(() => {
                 modal.classList.add('show');
             }, 10);
-            
-            document.getElementById('exaModalResult').style.display = 'none';
         }
 
-        // Create form for neural search
-        function createNeuralSearchForm() {
-            return `
-                <form id="exaSearchForm">
-                    <div class="form-group">
-                        <label class="form-label">Keresési lekérdezés</label>
-                        <input type="text" class="form-input" id="searchQuery" placeholder="Mire vagy kíváncsi?" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Találatok száma</label>
-                        <select class="form-select" id="numResults">
-                            <option value="5">5 találat</option>
-                            <option value="10" selected>10 találat</option>
-                            <option value="20">20 találat</option>
-                            <option value="50">50 találat</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Tudományos domainok</label>
-                        <div id="domainTags">
-                            <span class="domain-tag" onclick="toggleDomain(this)" data-domain="arxiv.org">arXiv</span>
-                            <span class="domain-tag" onclick="toggleDomain(this)" data-domain="pubmed.ncbi.nlm.nih.gov">PubMed</span>
-                            <span class="domain-tag" onclick="toggleDomain(this)" data-domain="nature.com">Nature</span>
-                            <span class="domain-tag" onclick="toggleDomain(this)" data-domain="science.org">Science</span>
-                            <span class="domain-tag" onclick="toggleDomain(this)" data-domain="ieee.org">IEEE</span>
-                            <span class="domain-tag" onclick="toggleDomain(this)" data-domain="springer.com">Springer</span>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Időszűrő</label>
-                        <select class="form-select" id="dateFilter">
-                            <option value="">Minden idő</option>
-                            <option value="2024-01-01">2024 óta</option>
-                            <option value="2023-01-01">2023 óta</option>
-                            <option value="2020-01-01">2020 óta</option>
-                        </select>
-                    </div>
-
-                    <button type="submit" class="form-button">
-                        <i class="fas fa-search mr-2"></i>
-                        Keresés indítása
-                    </button>
-                </form>
-            `;
-        }
-
-        // Create form for keyword search
-        function createKeywordSearchForm() {
-            return `
-                <form id="exaSearchForm">
-                    <div class="form-group">
-                        <label class="form-label">Kulcsszavak</label>
-                        <input type="text" class="form-input" id="searchQuery" placeholder="kulcsszó1 kulcsszó2" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Keresés típusa</label>
-                        <select class="form-select" id="searchType">
-                            <option value="keyword">Kulcsszavas</option>
-                            <option value="neural" selected>Neurális</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Kizárt domainok</label>
-                        <input type="text" class="form-input" id="excludeDomains" placeholder="facebook.com, twitter.com">
-                    </div>
-
-                    <button type="submit" class="form-button">
-                        <i class="fas fa-search mr-2"></i>
-                        Kulcsszavas keresés
-                    </button>
-                </form>
-            `;
-        }
-
-        // Create form for similarity search
-        function createSimilaritySearchForm() {
-            return `
-                <form id="exaSearchForm">
-                    <div class="form-group">
-                        <label class="form-label">Referencia URL</label>
-                        <input type="url" class="form-input" id="referenceUrl" placeholder="https://example.com/article" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Hasonló találatok száma</label>
-                        <select class="form-select" id="numResults">
-                            <option value="5">5 találat</option>
-                            <option value="10" selected>10 találat</option>
-                            <option value="20">20 találat</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Forrás domain kizárása</label>
-                        <select class="form-select" id="excludeSource">
-                            <option value="true" selected>Igen</option>
-                            <option value="false">Nem</option>
-                        </select>
-                    </div>
-
-                    <button type="submit" class="form-button">
-                        <i class="fas fa-clone mr-2"></i>
-                        Hasonló oldalak keresése
-                    </button>
-                </form>
-            `;
-        }
-
-        // Create form for content similarity
-        function createContentSimilarityForm() {
-            return `
-                <form id="exaSearchForm">
-                    <div class="form-group">
-                        <label class="form-label">Referencia szöveg</label>
-                        <textarea class="form-textarea" id="referenceText" placeholder="Illeszd be a szöveget, amelyhez hasonlót keresel..." required></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Találatok száma</label>
-                        <select class="form-select" id="numResults">
-                            <option value="5">5 találat</option>
-                            <option value="10" selected>10 találat</option>
-                            <option value="15">15 találat</option>
-                        </select>
-                    </div>
-
-                    <button type="submit" class="form-button">
-                        <i class="fas fa-file-text mr-2"></i>
-                        Szöveg alapú keresés
-                    </button>
-                </form>
-            `;
-        }
-
-        // Create form for content extraction
-        function createContentExtractionForm() {
-            return `
-                <form id="exaSearchForm">
-                    <div class="form-group">
-                        <label class="form-label">Exa Result ID-k</label>
-                        <textarea class="form-textarea" id="resultIds" placeholder="result_id_1, result_id_2, result_id_3" required></textarea>
-                        <small class="text-gray-500">Vesszővel elválasztott ID-k az Exa keresési eredményekből</small>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">AI összefoglaló</label>
-                        <select class="form-select" id="generateSummary">
-                            <option value="true" selected>Igen</option>
-                            <option value="false">Nem</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Maximális karakterek</label>
-                        <select class="form-select" id="maxChars">
-                            <option value="2000">2000 karakter</option>
-                            <option value="5000" selected>5000 karakter</option>
-                            <option value="10000">10000 karakter</option>
-                        </select>
-                    </div>
-
-                    <button type="submit" class="form-button">
-                        <i class="fas fa-download mr-2"></i>
-                        Tartalom lekérése
-                    </button>
-                </form>
-            `;
-        }
-
-        // Create form for highlights
-        function createHighlightsForm() {
-            return `
-                <form id="exaSearchForm">
-                    <div class="form-group">
-                        <label class="form-label">Keresési lekérdezés</label>
-                        <input type="text" class="form-input" id="searchQuery" placeholder="Keresési kifejezés" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Kiemelendő kulcsszavak</label>
-                        <input type="text" class="form-input" id="highlightKeywords" placeholder="kulcsszó1, kulcsszó2">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Kiemelés hossza</label>
-                        <select class="form-select" id="highlightLength">
-                            <option value="100">100 karakter</option>
-                            <option value="200" selected>200 karakter</option>
-                            <option value="300">300 karakter</option>
-                        </select>
-                    </div>
-
-                    <button type="submit" class="form-button">
-                        <i class="fas fa-highlighter mr-2"></i>
-                        Kiemelések létrehozása
-                    </button>
-                </form>
-            `;
-        }
-
-        // Create form for research automation
-        function createResearchForm() {
-            return `
-                <form id="exaSearchForm">
-                    <div class="form-group">
-                        <label class="form-label">Kutatási téma</label>
-                        <input type="text" class="form-input" id="researchTopic" placeholder="pl. quantum computing applications" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Kutatás mélysége</label>
-                        <select class="form-select" id="researchDepth">
-                            <option value="quick">Gyors áttekintés (10 forrás)</option>
-                            <option value="medium" selected>Közepes (25 forrás)</option>
-                            <option value="deep">Mély kutatás (50 forrás)</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Forrás típusok</label>
-                        <div id="sourceTypes">
-                            <span class="domain-tag selected" onclick="toggleDomain(this)" data-domain="academic">Tudományos cikkek</span>
-                            <span class="domain-tag" onclick="toggleDomain(this)" data-domain="news">Hírek</span>
-                            <span class="domain-tag" onclick="toggleDomain(this)" data-domain="blogs">Blogok</span>
-                            <span class="domain-tag" onclick="toggleDomain(this)" data-domain="reports">Jelentések</span>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="form-button">
-                        <i class="fas fa-microscope mr-2"></i>
-                        Automatizált kutatás indítása
-                    </button>
-                </form>
-            `;
-        }
-
-        // Create form for direct answer
-        function createDirectAnswerForm() {
-            return `
-                <form id="exaSearchForm">
-                    <div class="form-group">
-                        <label class="form-label">Kérdés</label>
-                        <textarea class="form-textarea" id="question" placeholder="Tedd fel a kérdésedet, és közvetlen választ kapsz hivatkozásokkal..." required></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Válasz részletessége</label>
-                        <select class="form-select" id="answerDetail">
-                            <option value="brief">Rövid válasz</option>
-                            <option value="detailed" selected>Részletes válasz</option>
-                            <option value="comprehensive">Átfogó válasz</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Hivatkozások száma</label>
-                        <select class="form-select" id="numReferences">
-                            <option value="3">3 hivatkozás</option>
-                            <option value="5" selected>5 hivatkozás</option>
-                            <option value="10">10 hivatkozás</option>
-                        </select>
-                    </div>
-
-                    <button type="submit" class="form-button">
-                        <i class="fas fa-question-circle mr-2"></i>
-                        Közvetlen válasz kérése
-                    </button>
-                </form>
-            `;
-        }
-
-        // Create form for RAG pipeline
-        function createRAGForm() {
-            return `
-                <form id="exaSearchForm">
-                    <div class="form-group">
-                        <label class="form-label">RAG lekérdezés</label>
-                        <textarea class="form-textarea" id="ragQuery" placeholder="Tedd fel a kérdésedet a RAG pipeline-hoz..." required></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Kontextus források száma</label>
-                        <select class="form-select" id="contextSources">
-                            <option value="5">5 forrás</option>
-                            <option value="10" selected>10 forrás</option>
-                            <option value="15">15 forrás</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">AI modell</label>
-                        <select class="form-select" id="aiModel">
-                            <option value="gemini" selected>Gemini 1.5 Pro</option>
-                            <option value="cerebras">Cerebras Llama 4</option>
-                            <option value="hybrid">Hibrid megközelítés</option>
-                        </select>
-                    </div>
-
-                    <button type="submit" class="form-button">
-                        <i class="fas fa-stream mr-2"></i>
-                        RAG Pipeline indítása
-                    </button>
-                </form>
-            `;
-        }
-
-        // Create form for LangChain integration
-        function createLangChainForm() {
-            return `
-                <form id="exaSearchForm">
-                    <div class="form-group">
-                        <label class="form-label">LangChain munkafolyamat</label>
-                        <select class="form-select" id="workflowType">
-                            <option value="search_summarize" selected>Keresés + Összefoglalás</option>
-                            <option value="search_qa">Keresés + Q&A</option>
-                            <option value="search_compare">Keresés + Összehasonlítás</option>
-                            <option value="search_analyze">Keresés + Elemzés</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Bemeneti lekérdezés</label>
-                        <textarea class="form-textarea" id="workflowQuery" placeholder="A LangChain munkafolyamat bemenete..." required></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Kimenet formátuma</label>
-                        <select class="form-select" id="outputFormat">
-                            <option value="text" selected>Szöveg</option>
-                            <option value="json">JSON</option>
-                            <option value="markdown">Markdown</option>
-                        </select>
-                    </div>
-
-                    <button type="submit" class="form-button">
-                        <i class="fas fa-link mr-2"></i>
-                        LangChain integráció futtatása
-                    </button>
-                </form>
-            `;
-        }
-
-        // Toggle domain selection
-        function toggleDomain(element) {
-            element.classList.toggle('selected');
-        }
-
-        // Open Alpha service modal
         function openAlphaService(serviceName, serviceDesc, category) {
-            currentService = serviceName;
-            document.getElementById('alphaModalTitle').textContent = serviceName;
-            document.getElementById('serviceDescription').textContent = serviceDesc;
-            
             const modal = document.getElementById('alphaServiceModal');
+            const title = document.getElementById('alphaModalTitle');
+            const content = document.getElementById('alphaModalContent');
+
+            title.textContent = serviceName;
+            content.innerHTML = `<p class="text-gray-400">${serviceDesc}</p><p class="text-sm text-gray-500 mt-2">Funkció fejlesztés alatt...</p>`;
+
             modal.style.display = 'flex';
             setTimeout(() => {
                 modal.classList.add('show');
             }, 10);
-
-            // Set example data based on category
-            setExampleData(category);
         }
 
-        // Set example data for different categories
-        function setExampleData(category) {
-            const examples = {
-                'biologiai_orvosi': {
-                    input: '{"sequence": "ATCGATCGATCG", "organism": "human", "analysis_type": "mutation"}',
-                    params: '{"confidence_threshold": 0.8, "include_variants": true}'
-                },
-                'kemiai_anyagtudomanyi': {
-                    input: '{"compound": "C6H12O6", "temperature": 298.15, "pressure": 101325}',
-                    params: '{"method": "DFT", "basis_set": "B3LYP"}'
-                },
-                'kornyezeti_fenntarthato': {
-                    input: '{"location": "Budapest", "timeframe": "2024-2030", "parameters": ["temperature", "precipitation"]}',
-                    params: '{"model": "IPCC", "scenario": "RCP4.5"}'
-                },
-                'fizikai_asztrofizikai': {
-                    input: '{"mass": 1.989e30, "radius": 696340000, "temperature": 5778}',
-                    params: '{"simulation_time": 1000, "precision": "high"}'
-                },
-                'technologiai_melymu': {
-                    input: '{"algorithm": "neural_network", "data_size": 10000, "features": 512}',
-                    params: '{"learning_rate": 0.001, "epochs": 100}'
-                },
-                'tarsadalmi_gazdasagi': {
-                    input: '{"market": "technology", "period": "2024-Q1", "metrics": ["growth", "volatility"]}',
-                    params: '{"model": "ARIMA", "confidence_interval": 0.95}'
-                }
-            };
-
-            const example = examples[category] || examples['biologiai_orvosi'];
-            document.getElementById('inputData').value = example.input;
-            document.getElementById('parameters').value = example.params;
-        }
-
-        // Setup event listeners
         function setupEventListeners() {
-            // Mobile menu toggle
             menuToggle.addEventListener('click', () => {
                 sidebar.classList.toggle('open');
             });
 
-            // Swipe gesture support
             setupSwipeGestures();
 
-            // Close sidebar when clicking outside on mobile
             document.addEventListener('click', (e) => {
-                if (window.innerWidth <= 1200 && !sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+                if (window.innerWidth <= 1024 && !sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
                     sidebar.classList.remove('open');
                 }
             });
 
-            // New chat button
             newChatBtn.addEventListener('click', startNewChat);
 
-            // Send message
             sendButton.addEventListener('click', sendMessage);
             messageInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
@@ -2033,19 +1105,11 @@
                 }
             });
 
-            // Auto-resize textarea
             messageInput.addEventListener('input', () => {
                 messageInput.style.height = 'auto';
-                messageInput.style.height = Math.min(messageInput.scrollHeight, 120) + 'px';
+                messageInput.style.height = Math.min(messageInput.scrollHeight, 100) + 'px';
             });
 
-            // Alpha service form
-            document.getElementById('alphaServiceForm').addEventListener('submit', executeAlphaService);
-
-            // Exa search form (dynamic)
-            document.addEventListener('submit', handleExaFormSubmit);
-
-            // Escape key to close modals
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
                     closeModal('exaSearchModal');
@@ -2054,277 +1118,6 @@
             });
         }
 
-        // Handle Exa form submission
-        async function handleExaFormSubmit(e) {
-            if (e.target.id === 'exaSearchForm') {
-                e.preventDefault();
-                await executeExaFunction();
-            }
-        }
-
-        // Execute Exa function
-        async function executeExaFunction() {
-            const button = document.querySelector('#exaSearchForm button[type="submit"]');
-            const originalText = button.innerHTML;
-
-            try {
-                button.disabled = true;
-                button.innerHTML = '<div class="loading-spinner"></div>Futtatás...';
-
-                let result;
-                switch (currentExaFunction) {
-                    case 'neural_search':
-                    case 'keyword_search':
-                        result = await performAdvancedSearch();
-                        break;
-                    case 'find_similar':
-                        result = await performSimilaritySearch();
-                        break;
-                    case 'get_contents':
-                        result = await performContentExtraction();
-                        break;
-                    case 'research_automation':
-                        result = await performResearchTrends();
-                        break;
-                    default:
-                        throw new Error('Nem támogatott funkció');
-                }
-
-                showExaResult(result);
-                showToast('Keresés sikeresen befejezve!', 'success');
-
-            } catch (error) {
-                showToast(`Hiba: ${error.message}`, 'error');
-            } finally {
-                button.disabled = false;
-                button.innerHTML = originalText;
-            }
-        }
-
-        // Perform advanced search
-        async function performAdvancedSearch() {
-            const query = document.getElementById('searchQuery').value;
-            const numResults = parseInt(document.getElementById('numResults').value);
-
-            const selectedDomains = Array.from(document.querySelectorAll('.domain-tag.selected'))
-                .map(tag => tag.dataset.domain).filter(Boolean);
-
-            const dateFilter = document.getElementById('dateFilter')?.value;
-            const searchType = document.getElementById('searchType')?.value || 'neural';
-
-            const requestData = {
-                query: query,
-                type: searchType,
-                num_results: numResults,
-                include_domains: selectedDomains,
-                text_contents_options: {
-                    max_characters: 2000,
-                    include_html_tags: false,
-                    strategy: "comprehensive"
-                }
-            };
-
-            if (dateFilter) {
-                requestData.start_published_date = dateFilter;
-            }
-
-            const response = await fetch('/api/exa/advanced_search', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(requestData)
-            });
-
-            if (!response.ok) {
-                throw new Error('Keresési hiba');
-            }
-
-            return await response.json();
-        }
-
-        // Perform similarity search
-        async function performSimilaritySearch() {
-            const url = document.getElementById('referenceUrl').value;
-            const numResults = parseInt(document.getElementById('numResults').value);
-            const excludeSource = document.getElementById('excludeSource').value === 'true';
-
-            const response = await fetch('/api/exa/find_similar', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    url: url,
-                    num_results: numResults,
-                    exclude_source_domain: excludeSource
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error('Hasonlósági keresési hiba');
-            }
-
-            return await response.json();
-        }
-
-        // Perform content extraction
-        async function performContentExtraction() {
-            const ids = document.getElementById('resultIds').value
-                .split(',').map(id => id.trim()).filter(Boolean);
-            const generateSummary = document.getElementById('generateSummary').value === 'true';
-
-            const response = await fetch('/api/exa/get_contents', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    ids: ids,
-                    summary: generateSummary
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error('Tartalom kinyerési hiba');
-            }
-
-            return await response.json();
-        }
-
-        // Perform research trends
-        async function performResearchTrends() {
-            const topic = document.getElementById('researchTopic')?.value || 
-                        document.getElementById('ragQuery')?.value ||
-                        document.getElementById('question')?.value;
-
-            const response = await fetch('/api/deep_discovery/research_trends', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    query: topic,
-                    num_results: 10,
-                    summary_length: 300
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error('Kutatási trend elemzési hiba');
-            }
-
-            return await response.json();
-        }
-
-        // Show Exa result
-        function showExaResult(result) {
-            const resultDiv = document.getElementById('exaModalResult');
-            const contentDiv = document.getElementById('exaResultContent');
-
-            let resultHTML = '';
-
-            if (result.results) {
-                // Search results
-                resultHTML = `
-                    <div class="mb-4">
-                        <h4 class="text-blue-400 font-semibold mb-2">Keresési eredmények (${result.total_results})</h4>
-                    </div>
-                `;
-
-                result.results.forEach((item, index) => {
-                    resultHTML += `
-                        <div class="search-result">
-                            <a href="${item.url}" target="_blank" class="search-result-title">
-                                ${item.title || 'Cím nélkül'}
-                            </a>
-                            <div class="search-result-url">${item.url}</div>
-                            ${item.text_content ? `<div class="search-result-snippet">${item.text_content.substring(0, 200)}...</div>` : ''}
-                            <div class="search-result-meta">
-                                ${item.published_date ? `<span>📅 ${item.published_date}</span>` : ''}
-                                ${item.score ? `<span>⭐ ${(item.score * 100).toFixed(1)}%</span>` : ''}
-                                ${item.author ? `<span>👤 ${item.author}</span>` : ''}
-                            </div>
-                        </div>
-                    `;
-                });
-
-            } else if (result.similar_results) {
-                // Similarity results
-                resultHTML = `
-                    <div class="mb-4">
-                        <h4 class="text-blue-400 font-semibold mb-2">Hasonló oldalak (${result.total_found})</h4>
-                        <p class="text-sm text-gray-400">Referencia: ${result.reference_url}</p>
-                    </div>
-                `;
-
-                result.similar_results.forEach(item => {
-                    resultHTML += `
-                        <div class="search-result">
-                            <a href="${item.url}" target="_blank" class="search-result-title">
-                                ${item.title || 'Cím nélkül'}
-                            </a>
-                            <div class="search-result-url">${item.url}</div>
-                            ${item.text_content ? `<div class="search-result-snippet">${item.text_content.substring(0, 200)}...</div>` : ''}
-                            <div class="search-result-meta">
-                                ${item.similarity_score ? `<span>🔗 ${(item.similarity_score * 100).toFixed(1)}% hasonlóság</span>` : ''}
-                            </div>
-                        </div>
-                    `;
-                });
-
-            } else if (result.contents) {
-                // Content extraction results
-                resultHTML = `
-                    <div class="mb-4">
-                        <h4 class="text-blue-400 font-semibold mb-2">Kinyert tartalmak (${result.total_contents})</h4>
-                    </div>
-                `;
-
-                result.contents.forEach(item => {
-                    resultHTML += `
-                        <div class="search-result">
-                            <div class="search-result-title">${item.title || 'Cím nélkül'}</div>
-                            <div class="search-result-url">${item.url}</div>
-                            ${item.text ? `<div class="search-result-snippet">${item.text.substring(0, 500)}...</div>` : ''}
-                        </div>
-                    `;
-                });
-
-                if (result.ai_summary) {
-                    resultHTML += `
-                        <div class="mt-4 p-4 bg-gray-900 rounded-lg">
-                            <h4 class="text-green-400 font-semibold mb-2">AI Összefoglaló</h4>
-                            <div class="text-gray-300">${result.ai_summary}</div>
-                        </div>
-                    `;
-                }
-
-            } else if (result.summary) {
-                // Research trends result
-                resultHTML = `
-                    <div class="mb-4">
-                        <h4 class="text-blue-400 font-semibold mb-2">Kutatási trendek</h4>
-                        <div class="bg-gray-900 p-4 rounded-lg mb-4">
-                            <div class="text-gray-300">${result.summary}</div>
-                        </div>
-                    </div>
-                `;
-
-                if (result.sources) {
-                    resultHTML += `<h4 class="text-blue-400 font-semibold mb-2">Források</h4>`;
-                    result.sources.forEach(source => {
-                        resultHTML += `
-                            <div class="search-result">
-                                <a href="${source.url}" target="_blank" class="search-result-title">
-                                    ${source.title}
-                                </a>
-                                <div class="search-result-meta">
-                                    ${source.published_date ? `<span>📅 ${source.published_date}</span>` : ''}
-                                </div>
-                            </div>
-                        `;
-                    });
-                }
-            }
-
-            contentDiv.innerHTML = resultHTML;
-            resultDiv.style.display = 'block';
-        }
-
-        // Send chat message
         async function sendMessage() {
             const message = messageInput.value.trim();
             if (!message || isTyping) return;
@@ -2349,81 +1142,9 @@
             } catch (error) {
                 hideTypingIndicator();
                 addMessage('ai', `Hiba történt: ${error.message}`, 'Error');
-                showToast('Kommunikációs hiba', 'error');
             }
         }
 
-        // Execute Alpha service
-        async function executeAlphaService(e) {
-            e.preventDefault();
-
-            const inputData = document.getElementById('inputData').value;
-            const parameters = document.getElementById('parameters').value;
-            const button = document.getElementById('executeButton');
-
-            try {
-                const inputJson = JSON.parse(inputData);
-                const paramsJson = parameters ? JSON.parse(parameters) : {};
-
-                button.disabled = true;
-                button.innerHTML = '<div class="loading-spinner"></div>Futtatás...';
-
-                const response = await fetch(`/api/alpha/${currentService}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        service_name: currentService,
-                        input_data: inputJson,
-                        parameters: paramsJson
-                    })
-                });
-
-                const result = await response.json();
-
-                if (response.ok) {
-                    showAlphaResult(result);
-                    showToast('Alpha szolgáltatás sikeresen futtatva!', 'success');
-                } else {
-                    throw new Error(result.detail || 'Hiba történt');
-                }
-            } catch (error) {
-                showToast(`Hiba: ${error.message}`, 'error');
-            } finally {
-                button.disabled = false;
-                button.innerHTML = '<i class="fas fa-play mr-2"></i>Szolgáltatás futtatása';
-            }
-        }
-
-        // Show Alpha service result
-        function showAlphaResult(result) {
-            const resultDiv = document.getElementById('alphaModalResult');
-            const contentDiv = document.getElementById('alphaResultContent');
-
-            contentDiv.innerHTML = `
-                <div class="space-y-4">
-                    <div>
-                        <h4 class="font-semibold text-blue-400 mb-2">Szolgáltatás</h4>
-                        <p class="text-sm">${result.service_name}</p>
-                    </div>
-                    <div>
-                        <h4 class="font-semibold text-blue-400 mb-2">Kategória</h4>
-                        <p class="text-sm">${result.category}</p>
-                    </div>
-                    <div>
-                        <h4 class="font-semibold text-blue-400 mb-2">Elemzés</h4>
-                        <div class="text-sm whitespace-pre-wrap bg-gray-900 p-3 rounded">${result.analysis}</div>
-                    </div>
-                    <div>
-                        <h4 class="font-semibold text-blue-400 mb-2">Használt modell</h4>
-                        <p class="text-sm">${result.model_used}</p>
-                    </div>
-                </div>
-            `;
-
-            resultDiv.style.display = 'block';
-        }
-
-        // Add message to chat
         function addMessage(type, content, model = null) {
             const messageDiv = document.createElement('div');
             messageDiv.className = 'message';
@@ -2450,11 +1171,6 @@
                         <div class="ai-content">
                             ${content.replace(/\n/g, '<br>')}
                         </div>
-                        <div class="ai-actions">
-                            <button class="deep-research-btn" onclick="startDeepResearch('${content.replace(/'/g, '\\\'').substring(0, 100)}')">
-                                <i class="fas fa-search-plus"></i> Mélyebb kutatás
-                            </button>
-                        </div>
                     </div>
                 `;
             }
@@ -2463,7 +1179,6 @@
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
 
-        // Utility functions
         function hideWelcomeScreen() {
             welcomeScreen.style.display = 'none';
         }
@@ -2505,137 +1220,63 @@
             setTimeout(() => {
                 modal.style.display = 'none';
             }, 300);
-            
-            document.getElementById('exaModalResult').style.display = 'none';
-            document.getElementById('alphaModalResult').style.display = 'none';
         }
 
-        // Quick actions
-        function quickExaSearch() {
-            const query = prompt('Add meg a keresési kulcsszót:');
-            if (query) {
-                messageInput.value = `Keress rá az Exa AI-jal: ${query}`;
-                sendMessage();
-            }
+        function showAppIntroduction() {
+            const modal = document.getElementById('exaSearchModal');
+            const title = document.getElementById('exaModalTitle');
+            const content = document.getElementById('exaModalContent');
+
+            title.textContent = 'Ismerd meg a Jade-t';
+            content.innerHTML = `
+                <div class="space-y-4">
+                    <div class="text-center">
+                        <div class="w-12 h-12 bg-gradient-to-br from-green-400 to-blue-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                            <span class="text-black font-bold text-lg">J</span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3 bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
+                            Jade Deep Discovery AI Platform
+                        </h3>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-3">
+                        <div class="p-3 bg-gray-800 rounded-lg">
+                            <h4 class="font-semibold text-green-400 mb-1 text-sm">🔍 Exa AI Keresés</h4>
+                            <p class="text-xs text-gray-300">Neurális és kulcsszavas keresés a weben</p>
+                        </div>
+
+                        <div class="p-3 bg-gray-800 rounded-lg">
+                            <h4 class="font-semibold text-blue-400 mb-1 text-sm">⚡ 150+ Alpha Szolgáltatás</h4>
+                            <p class="text-xs text-gray-300">Biológiai, kémiai, környezeti, fizikai elemzések</p>
+                        </div>
+
+                        <div class="p-3 bg-gray-800 rounded-lg">
+                            <h4 class="font-semibold text-purple-400 mb-1 text-sm">🧬 Fehérje Struktúra</h4>
+                            <p class="text-xs text-gray-300">AlphaFold adatbázis lekérdezés</p>
+                        </div>
+
+                        <div class="p-3 bg-gray-800 rounded-lg">
+                            <h4 class="font-semibold text-yellow-400 mb-1 text-sm">🤖 Hibrid AI</h4>
+                            <p class="text-xs text-gray-300">Cerebras Llama 4 és Google Gemini modellek</p>
+                        </div>
+                    </div>
+
+                    <div class="text-center">
+                        <p class="text-gray-400 mb-3 text-sm">Kezdj el beszélgetni, vagy válassz a menüből!</p>
+                        <button onclick="closeModal('exaSearchModal')" class="intro-button haptic-feedback touch-feedback">
+                            <i class="fas fa-rocket"></i>
+                            <span>Kezdjük el!</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.classList.add('show');
+            }, 10);
         }
 
-        function quickAlphaService() {
-            const serviceName = prompt('Add meg az Alpha szolgáltatás nevét (pl: AlphaFold, AlphaClimate, AlphaAI):');
-            if (serviceName) {
-                const query = prompt('Mit szeretnél elemezni/kutatni?');
-                if (query) {
-                    startSimpleAlphaService(serviceName, query);
-                }
-            }
-        }
-
-        function quickProteinLookup() {
-            const proteinId = prompt('Add meg a fehérje azonosítót:');
-            if (proteinId) {
-                messageInput.value = `Keress fehérje struktúrát: ${proteinId}`;
-                sendMessage();
-            }
-        }
-
-        // Deep research function
-        async function startDeepResearch(query) {
-            if (isTyping) return;
-            
-            addMessage('user', `Mélyebb kutatás: ${query}`);
-            showTypingIndicator();
-
-            try {
-                const response = await fetch('/api/deep_research', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        query: query,
-                        user_id: currentUserId
-                    })
-                });
-
-                const data = await response.json();
-                hideTypingIndicator();
-
-                if (data.status === 'success') {
-                    let researchResult = `# 🎯 Mélyreható Kutatási Eredmények\n\n`;
-                    researchResult += `**Kutatott téma:** ${data.query}\n`;
-                    researchResult += `**Források száma:** ${data.total_sources}\n`;
-                    researchResult += `**Felhasznált modellek:** ${data.models_used.join(', ')}\n\n`;
-
-                    if (data.individual_analyses) {
-                        researchResult += `## 📊 Különböző AI Modellek Elemzései\n\n`;
-                        for (const [model, analysis] of Object.entries(data.individual_analyses)) {
-                            researchResult += `### ${model} Elemzése\n${analysis}\n\n`;
-                        }
-                    }
-
-                    if (data.final_synthesis) {
-                        researchResult += `## 🔬 Végső Szintézis\n\n${data.final_synthesis}\n\n`;
-                    }
-
-                    if (data.sources && data.sources.length > 0) {
-                        researchResult += `## 📚 Felhasznált Források\n\n`;
-                        data.sources.slice(0, 10).forEach((source, i) => {
-                            researchResult += `${i + 1}. [${source.title}](${source.url})\n`;
-                        });
-                    }
-
-                    addMessage('ai', researchResult, 'Deep Research Complete');
-                    showToast('Mélyreható kutatás befejezve!', 'success');
-                } else {
-                    addMessage('ai', 'Hiba történt a mélyreható kutatás során.', 'Error');
-                    showToast('Kutatási hiba', 'error');
-                }
-            } catch (error) {
-                hideTypingIndicator();
-                addMessage('ai', 'Hiba történt a mélyreható kutatás során.', 'Error');
-                showToast('Kutatási hiba', 'error');
-            }
-        }
-
-        // Simple Alpha service execution
-        async function startSimpleAlphaService(serviceName, query, details = '') {
-            if (isTyping) return;
-
-            addMessage('user', `${serviceName} elemzés: ${query}`);
-            showTypingIndicator();
-
-            try {
-                const response = await fetch(`/api/alpha/simple/${serviceName}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        service_name: serviceName,
-                        query: query,
-                        details: details
-                    })
-                });
-
-                const data = await response.json();
-                hideTypingIndicator();
-
-                if (data.status === 'success') {
-                    let result = `# 🎯 ${data.service_name} Elemzés\n\n`;
-                    result += `**Kategória:** ${data.category}\n`;
-                    result += `**Leírás:** ${data.description}\n`;
-                    result += `**Használt modell:** ${data.model_used}\n\n`;
-                    result += `## 📊 Elemzési Eredmények\n\n${data.analysis}`;
-
-                    addMessage('ai', result, data.model_used);
-                    showToast('Alpha szolgáltatás sikeresen futtatva!', 'success');
-                } else {
-                    addMessage('ai', 'Hiba történt az Alpha szolgáltatás során.', 'Error');
-                    showToast('Alpha szolgáltatás hiba', 'error');
-                }
-            } catch (error) {
-                hideTypingIndicator();
-                addMessage('ai', `Hiba történt az Alpha szolgáltatás során: ${error.message}`, 'Error');
-                showToast('Alpha szolgáltatás hiba', 'error');
-            }
-        }
-
-        // Swipe gesture setup
         function setupSwipeGestures() {
             let startX, startY, currentX, currentY;
             let isSwipeEnabled = false;
@@ -2648,14 +1289,13 @@
 
             document.addEventListener('touchmove', (e) => {
                 if (!isSwipeEnabled) return;
-                
+
                 currentX = e.touches[0].clientX;
                 currentY = e.touches[0].clientY;
-                
+
                 const deltaX = currentX - startX;
                 const deltaY = currentY - startY;
-                
-                // Prevent scrolling during horizontal swipe
+
                 if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
                     e.preventDefault();
                 }
@@ -2663,91 +1303,26 @@
 
             document.addEventListener('touchend', (e) => {
                 if (!isSwipeEnabled) return;
-                
+
                 const deltaX = currentX - startX;
                 const deltaY = currentY - startY;
-                
-                // Horizontal swipe detection
+
                 if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+                    if (navigator.vibrate) {
+                        navigator.vibrate(20);
+                    }
+
                     if (deltaX > 0 && startX < 50) {
-                        // Swipe right from left edge - open sidebar
                         sidebar.classList.add('open');
                     } else if (deltaX < 0 && sidebar.classList.contains('open')) {
-                        // Swipe left - close sidebar
                         sidebar.classList.remove('open');
                     }
                 }
-                
+
                 isSwipeEnabled = false;
             }, { passive: true });
         }
 
-        // App introduction modal
-        function showAppIntroduction() {
-            const modal = document.getElementById('exaSearchModal');
-            const title = document.getElementById('exaModalTitle');
-            const content = document.getElementById('exaModalContent');
-            
-            title.textContent = 'Ismerd meg a Jade-t';
-            content.innerHTML = `
-                <div class="space-y-6">
-                    <div class="text-center">
-                        <div class="w-16 h-16 bg-gradient-to-br from-green-400 to-blue-500 rounded-xl flex items-center justify-center mx-auto mb-4">
-                            <span class="text-black font-bold text-2xl">J</span>
-                        </div>
-                        <h3 class="text-2xl font-bold mb-4 bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
-                            Jade Deep Discovery AI Platform
-                        </h3>
-                    </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="p-4 bg-gray-800 rounded-lg">
-                            <h4 class="font-semibold text-green-400 mb-2">🔍 Exa AI Keresés</h4>
-                            <p class="text-sm text-gray-300">Neurális és kulcsszavas keresés a weben, hasonlósági elemzés, tartalom kinyerés</p>
-                        </div>
-                        
-                        <div class="p-4 bg-gray-800 rounded-lg">
-                            <h4 class="font-semibold text-blue-400 mb-2">⚡ 150+ Alpha Szolgáltatás</h4>
-                            <p class="text-sm text-gray-300">Biológiai, kémiai, környezeti, fizikai, technológiai és gazdasági elemzések</p>
-                        </div>
-                        
-                        <div class="p-4 bg-gray-800 rounded-lg">
-                            <h4 class="font-semibold text-purple-400 mb-2">🧬 Fehérje Struktúra</h4>
-                            <p class="text-sm text-gray-300">AlphaFold adatbázis lekérdezés és strukturális elemzés</p>
-                        </div>
-                        
-                        <div class="p-4 bg-gray-800 rounded-lg">
-                            <h4 class="font-semibold text-yellow-400 mb-2">🤖 Hibrid AI</h4>
-                            <p class="text-sm text-gray-300">Cerebras Llama 4 és Google Gemini modellek kombinációja</p>
-                        </div>
-                    </div>
-                    
-                    <div class="text-center">
-                        <p class="text-gray-400 mb-4">Kezdj el beszélgetni, vagy válassz a bal menüből!</p>
-                        <button onclick="closeModal('exaSearchModal')" class="form-button">
-                            <i class="fas fa-rocket mr-2"></i>
-                            Kezdjük el!
-                        </button>
-                    </div>
-                </div>
-            `;
-            
-            modal.style.display = 'flex';
-            setTimeout(() => {
-                modal.classList.add('show');
-            }, 10);
-            
-            document.getElementById('exaModalResult').style.display = 'none';
-        }
-
-        // Prevent zoom on input focus (iOS fix)
-        document.addEventListener('touchstart', function() {
-            if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
-                document.activeElement.blur();
-            }
-        });
-
-        // Close modal when clicking outside
         document.addEventListener('click', (e) => {
             if (e.target.classList.contains('modal-overlay')) {
                 closeModal('exaSearchModal');
