@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="hu">
 <head>
@@ -252,7 +253,7 @@
         .chat-container::-webkit-scrollbar { display: none; }
 
         .message {
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
             animation: slideInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
@@ -270,12 +271,12 @@
         .user-message {
             background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
             color: #000;
-            padding: 0.875rem 1.25rem;
-            border-radius: 18px 18px 6px 18px;
+            padding: 0.75rem 1rem;
+            border-radius: 16px 16px 6px 16px;
             margin-left: auto;
-            max-width: 75%;
+            max-width: 65%;
             font-weight: 500;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             box-shadow: 0 4px 24px rgba(0, 255, 136, 0.15);
             word-wrap: break-word;
             overflow-wrap: break-word;
@@ -285,54 +286,85 @@
         .ai-message {
             background: var(--color-glass);
             border: 1px solid var(--color-border);
-            padding: 1.25rem;
-            border-radius: 18px 18px 18px 6px;
-            max-width: 85%;
+            padding: 1rem;
+            border-radius: 16px 16px 16px 6px;
+            max-width: 75%;
             backdrop-filter: blur(var(--blur-strength));
             word-wrap: break-word;
             overflow-wrap: break-word;
             white-space: pre-wrap;
+            position: relative;
         }
 
         .ai-header {
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            margin-bottom: 1rem;
-            padding-bottom: 0.75rem;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
             border-bottom: 1px solid var(--color-border);
         }
 
         .ai-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 12px;
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
             background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
             display: flex;
             align-items: center;
             justify-content: center;
             color: #000;
             font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
         .ai-info h4 {
             margin: 0;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: 600;
             color: var(--color-text);
         }
 
         .ai-info p {
             margin: 0;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             color: var(--color-text-muted);
         }
 
         .ai-content {
             line-height: 1.6;
             color: var(--color-text);
-            font-size: 0.85rem;
+            font-size: 0.8rem;
+        }
+
+        .message-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--color-border);
+        }
+
+        .action-button {
+            background: var(--color-glass);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            padding: 0.5rem 0.75rem;
+            color: var(--color-text-muted);
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            backdrop-filter: blur(var(--blur-strength));
+        }
+
+        .action-button:hover {
+            background: var(--color-glass-strong);
+            color: var(--color-text);
+            border-color: var(--color-primary);
+            transform: translateY(-1px);
         }
 
         .input-container {
@@ -415,17 +447,92 @@
         }
 
         .welcome-logo {
-            width: 64px;
-            height: 64px;
-            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
-            border-radius: 20px;
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 2rem;
+            position: relative;
+            background: linear-gradient(135deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #feca57);
+            border-radius: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 2rem;
-            font-size: 2rem;
-            font-weight: 700;
-            color: #000;
+            box-shadow: 
+                0 8px 32px rgba(0, 255, 136, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transform-style: preserve-3d;
+            animation: brainPulse 3s ease-in-out infinite;
+        }
+
+        .brain-3d {
+            width: 50px;
+            height: 50px;
+            position: relative;
+            transform-style: preserve-3d;
+        }
+
+        .brain-hemisphere {
+            position: absolute;
+            width: 22px;
+            height: 35px;
+            border-radius: 15px 15px 15px 5px;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            box-shadow: 
+                inset 2px 2px 4px rgba(255, 255, 255, 0.3),
+                inset -2px -2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .brain-left {
+            left: 2px;
+            transform: rotateY(-10deg);
+        }
+
+        .brain-right {
+            right: 2px;
+            transform: rotateY(10deg) scaleX(-1);
+        }
+
+        .brain-stem {
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 8px;
+            height: 12px;
+            background: linear-gradient(180deg, var(--color-secondary), var(--color-accent));
+            border-radius: 0 0 4px 4px;
+        }
+
+        .neural-network {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.6;
+        }
+
+        .neural-node {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: var(--color-primary);
+            border-radius: 50%;
+            animation: neuralPulse 2s ease-in-out infinite;
+        }
+
+        .neural-node:nth-child(1) { top: 20%; left: 25%; animation-delay: 0s; }
+        .neural-node:nth-child(2) { top: 35%; left: 70%; animation-delay: 0.3s; }
+        .neural-node:nth-child(3) { top: 60%; left: 30%; animation-delay: 0.6s; }
+        .neural-node:nth-child(4) { top: 75%; left: 65%; animation-delay: 0.9s; }
+
+        @keyframes brainPulse {
+            0%, 100% { transform: scale(1) rotateY(0deg); }
+            50% { transform: scale(1.05) rotateY(5deg); }
+        }
+
+        @keyframes neuralPulse {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.5); }
         }
 
         .welcome-title {
@@ -446,9 +553,10 @@
         }
 
         .intro-button {
-            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
-            color: #000;
-            border: none;
+            background: var(--color-glass);
+            backdrop-filter: blur(var(--blur-strength));
+            border: 1px solid var(--color-border);
+            color: var(--color-text);
             padding: 0.875rem 2rem;
             border-radius: 20px;
             font-weight: 600;
@@ -458,11 +566,30 @@
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .intro-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 136, 0.1), transparent);
+            transition: left 0.6s ease;
         }
 
         .intro-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 32px rgba(0, 255, 136, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 255, 136, 0.2);
+            border-color: var(--color-primary);
+            background: var(--color-glass-strong);
+        }
+
+        .intro-button:hover::before {
+            left: 100%;
         }
 
         .typing-indicator {
@@ -592,6 +719,65 @@
             box-shadow: 0 8px 24px rgba(0, 255, 136, 0.3);
         }
 
+        .fullscreen-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--color-bg);
+            z-index: 2000;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .fullscreen-overlay.show {
+            opacity: 1;
+        }
+
+        .fullscreen-content {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            position: relative;
+            transform: scale(0.8);
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .fullscreen-overlay.show .fullscreen-content {
+            transform: scale(1);
+        }
+
+        .fullscreen-close {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--color-glass);
+            border: 1px solid var(--color-border);
+            color: var(--color-text);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(var(--blur-strength));
+            font-size: 1.2rem;
+        }
+
+        .fullscreen-close:hover {
+            background: var(--color-glass-strong);
+            transform: scale(1.1);
+            box-shadow: 0 8px 32px rgba(255, 255, 255, 0.1);
+        }
+
         @media (max-width: 1024px) {
             .sidebar {
                 transform: translateX(-100%);
@@ -629,13 +815,13 @@
             }
 
             .user-message {
-                max-width: 85%;
-                font-size: 0.85rem;
+                max-width: 80%;
+                font-size: 0.8rem;
             }
 
             .ai-message {
-                max-width: 95%;
-                font-size: 0.8rem;
+                max-width: 85%;
+                font-size: 0.75rem;
             }
         }
 
@@ -852,7 +1038,19 @@
 
         <div class="chat-container" id="chatContainer">
             <div id="welcomeScreen" class="welcome-section">
-                <div class="welcome-logo">J</div>
+                <div class="welcome-logo">
+                    <div class="brain-3d">
+                        <div class="brain-hemisphere brain-left"></div>
+                        <div class="brain-hemisphere brain-right"></div>
+                        <div class="brain-stem"></div>
+                        <div class="neural-network">
+                            <div class="neural-node"></div>
+                            <div class="neural-node"></div>
+                            <div class="neural-node"></div>
+                            <div class="neural-node"></div>
+                        </div>
+                    </div>
+                </div>
                 <h1 class="welcome-title">Jade</h1>
                 <p class="welcome-subtitle">Deep Discovery AI Platform</p>
 
@@ -877,6 +1075,15 @@
                     <i class="fas fa-paper-plane"></i>
                 </button>
             </div>
+        </div>
+    </div>
+
+    <div class="fullscreen-overlay" id="fullscreenOverlay">
+        <div class="fullscreen-content">
+            <button class="fullscreen-close haptic-feedback touch-feedback" onclick="closeFullscreen()">
+                <i class="fas fa-times"></i>
+            </button>
+            <div id="fullscreenContent"></div>
         </div>
     </div>
 
@@ -922,6 +1129,7 @@
         const messageInput = document.getElementById('messageInput');
         const sendButton = document.getElementById('sendButton');
         const modelBadge = document.getElementById('modelBadge');
+        const fullscreenOverlay = document.getElementById('fullscreenOverlay');
 
         document.addEventListener('DOMContentLoaded', async () => {
             await loadAlphaServices();
@@ -1114,6 +1322,7 @@
                 if (e.key === 'Escape') {
                     closeModal('exaSearchModal');
                     closeModal('alphaServiceModal');
+                    closeFullscreen();
                 }
             });
         }
@@ -1158,8 +1367,9 @@
                     </div>
                 `;
             } else {
+                const messageId = 'msg_' + Date.now();
                 messageDiv.innerHTML = `
-                    <div class="ai-message">
+                    <div class="ai-message" id="${messageId}">
                         <div class="ai-header">
                             <div class="ai-avatar">
                                 <i class="fas fa-robot"></i>
@@ -1171,12 +1381,73 @@
                         <div class="ai-content">
                             ${content.replace(/\n/g, '<br>')}
                         </div>
+                        <div class="message-actions">
+                            <button class="action-button haptic-feedback touch-feedback" onclick="copyMessage('${messageId}')">
+                                <i class="fas fa-copy"></i>
+                                <span>Másolás</span>
+                            </button>
+                            <button class="action-button haptic-feedback touch-feedback" onclick="expandMessage('${messageId}')">
+                                <i class="fas fa-expand-alt"></i>
+                                <span>Bővebben</span>
+                            </button>
+                        </div>
                     </div>
                 `;
             }
 
             messagesContainer.appendChild(messageDiv);
             chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function copyMessage(messageId) {
+            const messageElement = document.getElementById(messageId);
+            const content = messageElement.querySelector('.ai-content').textContent;
+            
+            navigator.clipboard.writeText(content).then(() => {
+                if (navigator.vibrate) {
+                    navigator.vibrate(50);
+                }
+            });
+        }
+
+        function expandMessage(messageId) {
+            const messageElement = document.getElementById(messageId);
+            const content = messageElement.querySelector('.ai-content').innerHTML;
+            
+            const fullscreenContent = document.getElementById('fullscreenContent');
+            fullscreenContent.innerHTML = `
+                <div class="max-w-4xl mx-auto">
+                    <div class="ai-message" style="max-width: 100%; border: none;">
+                        <div class="ai-header">
+                            <div class="ai-avatar">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="ai-info">
+                                <h4>Jade AI - Részletes Válasz</h4>
+                            </div>
+                        </div>
+                        <div class="ai-content" style="font-size: 1rem; line-height: 1.8;">
+                            ${content}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            showFullscreen();
+        }
+
+        function showFullscreen() {
+            fullscreenOverlay.style.display = 'flex';
+            setTimeout(() => {
+                fullscreenOverlay.classList.add('show');
+            }, 10);
+        }
+
+        function closeFullscreen() {
+            fullscreenOverlay.classList.remove('show');
+            setTimeout(() => {
+                fullscreenOverlay.style.display = 'none';
+            }, 500);
         }
 
         function hideWelcomeScreen() {
@@ -1223,47 +1494,72 @@
         }
 
         function showAppIntroduction() {
-            const modal = document.getElementById('exaSearchModal');
-            const title = document.getElementById('exaModalTitle');
-            const content = document.getElementById('exaModalContent');
-
-            title.textContent = 'Ismerd meg a Jade-t';
-            content.innerHTML = `
-                <div class="space-y-4">
-                    <div class="text-center">
-                        <div class="w-12 h-12 bg-gradient-to-br from-green-400 to-blue-500 rounded-xl flex items-center justify-center mx-auto mb-3">
-                            <span class="text-black font-bold text-lg">J</span>
-                        </div>
-                        <h3 class="text-xl font-bold mb-3 bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
-                            Jade Deep Discovery AI Platform
-                        </h3>
-                    </div>
-
-                    <div class="grid grid-cols-1 gap-3">
-                        <div class="p-3 bg-gray-800 rounded-lg">
-                            <h4 class="font-semibold text-green-400 mb-1 text-sm">🔍 Exa AI Keresés</h4>
-                            <p class="text-xs text-gray-300">Neurális és kulcsszavas keresés a weben</p>
-                        </div>
-
-                        <div class="p-3 bg-gray-800 rounded-lg">
-                            <h4 class="font-semibold text-blue-400 mb-1 text-sm">⚡ 150+ Alpha Szolgáltatás</h4>
-                            <p class="text-xs text-gray-300">Biológiai, kémiai, környezeti, fizikai elemzések</p>
-                        </div>
-
-                        <div class="p-3 bg-gray-800 rounded-lg">
-                            <h4 class="font-semibold text-purple-400 mb-1 text-sm">🧬 Fehérje Struktúra</h4>
-                            <p class="text-xs text-gray-300">AlphaFold adatbázis lekérdezés</p>
-                        </div>
-
-                        <div class="p-3 bg-gray-800 rounded-lg">
-                            <h4 class="font-semibold text-yellow-400 mb-1 text-sm">🤖 Hibrid AI</h4>
-                            <p class="text-xs text-gray-300">Cerebras Llama 4 és Google Gemini modellek</p>
+            const fullscreenContent = document.getElementById('fullscreenContent');
+            fullscreenContent.innerHTML = `
+                <div class="max-w-4xl mx-auto text-center">
+                    <div class="welcome-logo mb-8">
+                        <div class="brain-3d">
+                            <div class="brain-hemisphere brain-left"></div>
+                            <div class="brain-hemisphere brain-right"></div>
+                            <div class="brain-stem"></div>
+                            <div class="neural-network">
+                                <div class="neural-node"></div>
+                                <div class="neural-node"></div>
+                                <div class="neural-node"></div>
+                                <div class="neural-node"></div>
+                            </div>
                         </div>
                     </div>
 
+                    <h1 class="text-4xl font-bold mb-4 bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
+                        Jade Deep Discovery AI Platform
+                    </h1>
+
+                    <p class="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
+                        A következő generációs AI platform, amely egyesíti a legfejlettebb mesterséges intelligencia modelleket és tudományos kutatási eszközöket.
+                    </p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                        <div class="glass-panel p-6">
+                            <div class="text-4xl mb-4">🔍</div>
+                            <h3 class="text-lg font-semibold mb-2 text-green-400">Exa AI Keresés</h3>
+                            <p class="text-sm text-gray-300">Neurális és kulcsszavas keresés a weben valós időben</p>
+                        </div>
+
+                        <div class="glass-panel p-6">
+                            <div class="text-4xl mb-4">⚡</div>
+                            <h3 class="text-lg font-semibold mb-2 text-blue-400">150+ Alpha Szolgáltatás</h3>
+                            <p class="text-sm text-gray-300">Biológiai, kémiai, környezeti és fizikai elemzések</p>
+                        </div>
+
+                        <div class="glass-panel p-6">
+                            <div class="text-4xl mb-4">🧬</div>
+                            <h3 class="text-lg font-semibold mb-2 text-purple-400">Fehérje Struktúra</h3>
+                            <p class="text-sm text-gray-300">AlphaFold adatbázis közvetlen lekérdezés</p>
+                        </div>
+
+                        <div class="glass-panel p-6">
+                            <div class="text-4xl mb-4">🤖</div>
+                            <h3 class="text-lg font-semibold mb-2 text-yellow-400">Hibrid AI</h3>
+                            <p class="text-sm text-gray-300">Cerebras Llama 4 és Google Gemini modellek</p>
+                        </div>
+
+                        <div class="glass-panel p-6">
+                            <div class="text-4xl mb-4">🔬</div>
+                            <h3 class="text-lg font-semibold mb-2 text-red-400">Deep Research</h3>
+                            <p class="text-sm text-gray-300">Többmodelles párhuzamos kutatási elemzés</p>
+                        </div>
+
+                        <div class="glass-panel p-6">
+                            <div class="text-4xl mb-4">🌊</div>
+                            <h3 class="text-lg font-semibold mb-2 text-cyan-400">Glassmorphism 3.0</h3>
+                            <p class="text-sm text-gray-300">Modern, érintésvezérelt felhasználói élmény</p>
+                        </div>
+                    </div>
+
                     <div class="text-center">
-                        <p class="text-gray-400 mb-3 text-sm">Kezdj el beszélgetni, vagy válassz a menüből!</p>
-                        <button onclick="closeModal('exaSearchModal')" class="intro-button haptic-feedback touch-feedback">
+                        <p class="text-gray-400 mb-6 text-lg">Kezdj el beszélgetni, vagy válassz a menüből egy speciális funkciókat!</p>
+                        <button onclick="closeFullscreen()" class="intro-button haptic-feedback touch-feedback text-lg px-8 py-4">
                             <i class="fas fa-rocket"></i>
                             <span>Kezdjük el!</span>
                         </button>
@@ -1271,10 +1567,7 @@
                 </div>
             `;
 
-            modal.style.display = 'flex';
-            setTimeout(() => {
-                modal.classList.add('show');
-            }, 10);
+            showFullscreen();
         }
 
         function setupSwipeGestures() {
@@ -1327,6 +1620,10 @@
             if (e.target.classList.contains('modal-overlay')) {
                 closeModal('exaSearchModal');
                 closeModal('alphaServiceModal');
+            }
+            
+            if (e.target.classList.contains('fullscreen-overlay')) {
+                closeFullscreen();
             }
         });
     </script>
