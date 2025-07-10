@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="hu">
 <head>
@@ -24,7 +25,10 @@
             --color-error: #ef4444;
         }
 
-        * { box-sizing: border-box; }
+        * { 
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -33,6 +37,8 @@
             margin: 0;
             padding: 0;
             overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         .gradient-bg::before {
@@ -46,21 +52,22 @@
                 radial-gradient(circle at 20% 50%, rgba(0, 255, 136, 0.08) 0%, transparent 60%),
                 radial-gradient(circle at 80% 80%, rgba(0, 136, 255, 0.06) 0%, transparent 60%),
                 radial-gradient(circle at 40% 40%, rgba(255, 20, 147, 0.04) 0%, transparent 60%);
-            animation: floatGradient 25s ease-in-out infinite;
+            animation: floatGradient 30s ease-in-out infinite;
             pointer-events: none;
             z-index: -1;
         }
 
         @keyframes floatGradient {
             0%, 100% { transform: rotate(0deg) scale(1); }
-            50% { transform: rotate(180deg) scale(1.1); }
+            33% { transform: rotate(120deg) scale(1.1); }
+            66% { transform: rotate(240deg) scale(0.9); }
         }
 
         .sidebar {
             background: var(--color-surface);
             backdrop-filter: blur(20px);
             border-right: 1px solid var(--color-border);
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             width: 380px;
             height: 100vh;
             overflow-y: auto;
@@ -68,6 +75,7 @@
             left: 0;
             top: 0;
             z-index: 100;
+            scrollbar-width: thin;
         }
 
         .sidebar::-webkit-scrollbar { width: 6px; }
@@ -82,18 +90,27 @@
             height: 100vh;
             display: flex;
             flex-direction: column;
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .exa-section {
             border: 1px solid var(--color-border);
-            border-radius: 12px;
+            border-radius: 16px;
             background: var(--color-glass);
             margin-bottom: 1rem;
             overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .exa-section:hover {
+            border-color: var(--color-primary);
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(0, 255, 136, 0.1);
         }
 
         .exa-header {
-            padding: 1rem;
+            padding: 1.25rem;
             background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
             color: #000;
             font-weight: 600;
@@ -101,17 +118,22 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .exa-header:hover {
             background: linear-gradient(135deg, var(--color-secondary), var(--color-primary));
+            transform: scale(1.02);
+        }
+
+        .exa-header:active {
+            transform: scale(0.98);
         }
 
         .exa-content {
             max-height: 0;
             overflow: hidden;
-            transition: max-height 0.3s ease;
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .exa-content.expanded {
@@ -119,18 +141,36 @@
         }
 
         .exa-option {
-            padding: 1rem;
+            padding: 1.25rem;
             border-bottom: 1px solid var(--color-border);
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
             gap: 1rem;
+            position: relative;
+        }
+
+        .exa-option::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            transform: scaleY(0);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .exa-option:hover {
             background: var(--color-glass);
-            transform: translateX(5px);
+            transform: translateX(8px);
+            padding-left: 2rem;
+        }
+
+        .exa-option:hover::before {
+            transform: scaleY(1);
         }
 
         .exa-option:last-child {
@@ -138,15 +178,20 @@
         }
 
         .exa-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
+            font-size: 18px;
             color: #000;
             flex-shrink: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .exa-option:hover .exa-icon {
+            transform: scale(1.1) rotate(5deg);
         }
 
         .exa-info {
@@ -156,13 +201,18 @@
 
         .exa-title {
             font-weight: 600;
-            font-size: 0.95rem;
+            font-size: 1rem;
             color: var(--color-text);
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.5rem;
+            transition: color 0.3s ease;
+        }
+
+        .exa-option:hover .exa-title {
+            color: var(--color-primary);
         }
 
         .exa-desc {
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             color: var(--color-text-muted);
             line-height: 1.4;
         }
@@ -177,8 +227,9 @@
         .chat-container {
             flex: 1;
             overflow-y: auto;
-            padding: 1.5rem;
+            padding: 2rem;
             scroll-behavior: smooth;
+            scrollbar-width: thin;
         }
 
         .chat-container::-webkit-scrollbar { width: 6px; }
@@ -189,117 +240,162 @@
         }
 
         .message {
-            margin-bottom: 1.5rem;
-            animation: fadeInUp 0.4s ease-out;
+            margin-bottom: 2rem;
+            animation: slideInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        @keyframes slideInUp {
+            from { 
+                opacity: 0; 
+                transform: translateY(30px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
         }
 
         .user-message {
             background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
             color: #000;
-            padding: 1rem 1.5rem;
-            border-radius: 20px 20px 5px 20px;
+            padding: 1.25rem 2rem;
+            border-radius: 24px 24px 8px 24px;
             margin-left: auto;
             max-width: 70%;
             font-weight: 500;
+            box-shadow: 0 4px 20px rgba(0, 255, 136, 0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .user-message:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(0, 255, 136, 0.3);
         }
 
         .ai-message {
             background: var(--color-glass);
             border: 1px solid var(--color-border);
-            padding: 1.5rem;
-            border-radius: 20px 20px 20px 5px;
+            padding: 2rem;
+            border-radius: 24px 24px 24px 8px;
             max-width: 85%;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .ai-message:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--color-primary);
+            transform: translateY(-1px);
         }
 
         .ai-header {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
             border-bottom: 1px solid var(--color-border);
         }
 
         .ai-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
             background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
             display: flex;
             align-items: center;
             justify-content: center;
             color: #000;
             font-weight: 600;
+            font-size: 1.2rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
         }
 
         .ai-info h4 {
             margin: 0;
-            font-size: 1rem;
+            font-size: 1.1rem;
             font-weight: 600;
             color: var(--color-text);
         }
 
         .ai-info p {
             margin: 0;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             color: var(--color-text-muted);
         }
 
         .search-result {
             background: var(--color-glass);
             border: 1px solid var(--color-border);
-            border-radius: 12px;
-            padding: 1rem;
-            margin: 0.75rem 0;
-            transition: all 0.2s ease;
+            border-radius: 16px;
+            padding: 1.25rem;
+            margin: 1rem 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
         }
 
         .search-result:hover {
             background: rgba(255, 255, 255, 0.08);
-            transform: translateY(-2px);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 255, 136, 0.15);
+            border-color: var(--color-primary);
         }
 
         .search-result-title {
             font-weight: 600;
             color: var(--color-primary);
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
             text-decoration: none;
+            transition: color 0.3s ease;
         }
 
         .search-result-title:hover {
+            color: var(--color-secondary);
             text-decoration: underline;
         }
 
         .search-result-url {
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             color: var(--color-secondary);
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
         }
 
         .search-result-snippet {
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             color: var(--color-text-muted);
-            line-height: 1.5;
+            line-height: 1.6;
         }
 
         .search-result-meta {
             display: flex;
+            flex-wrap: wrap;
             gap: 1rem;
-            margin-top: 0.5rem;
-            font-size: 0.75rem;
+            margin-top: 0.75rem;
+            font-size: 0.8rem;
             color: var(--color-text-muted);
         }
 
         .input-container {
-            padding: 1.5rem;
+            padding: 2rem;
             background: var(--color-surface);
             border-top: 1px solid var(--color-border);
             backdrop-filter: blur(20px);
+            position: relative;
+        }
+
+        .input-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
         }
 
         .input-wrapper {
@@ -312,22 +408,24 @@
 
         .input-field {
             flex: 1;
-            padding: 1rem 1.5rem;
+            padding: 1.25rem 1.75rem;
             background: var(--color-glass);
             border: 1px solid var(--color-border);
-            border-radius: 24px;
+            border-radius: 28px;
             color: var(--color-text);
             font-size: 1rem;
             resize: none;
             outline: none;
-            transition: all 0.2s ease;
-            min-height: 24px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            min-height: 28px;
             max-height: 120px;
+            backdrop-filter: blur(10px);
         }
 
         .input-field:focus {
             border-color: var(--color-primary);
-            box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.1);
+            box-shadow: 0 0 0 4px rgba(0, 255, 136, 0.15);
+            background: rgba(255, 255, 255, 0.08);
         }
 
         .input-field::placeholder {
@@ -335,24 +433,48 @@
         }
 
         .send-button {
-            width: 48px;
-            height: 48px;
+            width: 56px;
+            height: 56px;
             border-radius: 50%;
             background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
             border: none;
             color: #000;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .send-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .send-button:hover {
             transform: scale(1.1);
-            box-shadow: 0 4px 20px rgba(0, 255, 136, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 255, 136, 0.4);
+        }
+
+        .send-button:hover::before {
+            width: 100%;
+            height: 100%;
+        }
+
+        .send-button:active {
+            transform: scale(0.95);
         }
 
         .send-button:disabled {
@@ -363,24 +485,31 @@
 
         .typing-indicator {
             display: flex;
-            gap: 4px;
-            padding: 1rem;
+            gap: 8px;
+            padding: 1.5rem;
+            align-items: center;
         }
 
         .typing-dot {
-            width: 8px;
-            height: 8px;
+            width: 10px;
+            height: 10px;
             background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
             border-radius: 50%;
-            animation: typing 1.4s infinite ease-in-out;
+            animation: typing 1.6s infinite ease-in-out;
         }
 
         .typing-dot:nth-child(2) { animation-delay: 0.2s; }
         .typing-dot:nth-child(3) { animation-delay: 0.4s; }
 
         @keyframes typing {
-            0%, 60%, 100% { transform: scale(0.8); opacity: 0.5; }
-            30% { transform: scale(1.2); opacity: 1; }
+            0%, 60%, 100% { 
+                transform: scale(0.8); 
+                opacity: 0.5; 
+            }
+            30% { 
+                transform: scale(1.3); 
+                opacity: 1; 
+            }
         }
 
         .modal-overlay {
@@ -389,36 +518,49 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.85);
+            background: rgba(0, 0, 0, 0.9);
             display: none;
             align-items: center;
             justify-content: center;
             z-index: 1000;
-            backdrop-filter: blur(15px);
+            backdrop-filter: blur(20px);
+            opacity: 0;
+            transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
         }
 
         .modal-content {
             background: var(--color-surface);
-            border-radius: 16px;
-            padding: 2rem;
+            border-radius: 20px;
+            padding: 2.5rem;
             width: 90%;
             max-width: 800px;
             max-height: 85vh;
             overflow-y: auto;
             border: 1px solid var(--color-border);
+            backdrop-filter: blur(20px);
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .modal-overlay.show .modal-content {
+            transform: scale(1);
         }
 
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
             border-bottom: 1px solid var(--color-border);
         }
 
         .modal-title {
-            font-size: 1.5rem;
+            font-size: 1.75rem;
             font-weight: 600;
             background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
             -webkit-background-clip: text;
@@ -427,8 +569,8 @@
         }
 
         .modal-close {
-            width: 36px;
-            height: 36px;
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
             background: var(--color-glass);
             border: 1px solid var(--color-border);
@@ -437,63 +579,90 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .modal-close:hover {
             background: var(--color-accent);
             color: #fff;
+            transform: scale(1.1);
         }
 
         .form-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
         }
 
         .form-label {
             display: block;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
             font-weight: 500;
             color: var(--color-text);
         }
 
         .form-input, .form-select, .form-textarea {
             width: 100%;
-            padding: 0.75rem 1rem;
+            padding: 1rem 1.5rem;
             background: var(--color-glass);
             border: 1px solid var(--color-border);
-            border-radius: 8px;
+            border-radius: 12px;
             color: var(--color-text);
             font-size: 1rem;
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
         }
 
         .form-input:focus, .form-select:focus, .form-textarea:focus {
             outline: none;
             border-color: var(--color-primary);
-            box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.1);
+            box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.15);
+            background: rgba(255, 255, 255, 0.08);
         }
 
         .form-textarea {
-            min-height: 100px;
+            min-height: 120px;
             resize: vertical;
         }
 
         .form-button {
             width: 100%;
-            padding: 0.875rem 1.5rem;
+            padding: 1.25rem 2rem;
             background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             color: #000;
-            font-size: 1rem;
+            font-size: 1.1rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .form-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .form-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 20px rgba(0, 255, 136, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 32px rgba(0, 255, 136, 0.4);
+        }
+
+        .form-button:hover::before {
+            width: 300%;
+            height: 300%;
+        }
+
+        .form-button:active {
+            transform: translateY(-1px);
         }
 
         .form-button:disabled {
@@ -505,90 +674,112 @@
         .welcome-section {
             text-align: center;
             padding: 4rem 2rem;
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
         }
 
         .welcome-title {
-            font-size: 2.5rem;
+            font-size: 3rem;
             font-weight: 700;
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
             background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            animation: slideInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .welcome-subtitle {
-            font-size: 1.2rem;
+            font-size: 1.25rem;
             color: var(--color-text-muted);
-            margin-bottom: 2rem;
+            margin-bottom: 3rem;
             line-height: 1.6;
+            animation: slideInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.2s both;
         }
 
         .quick-actions {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-top: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 3rem;
         }
 
         .quick-action {
             background: var(--color-glass);
             border: 1px solid var(--color-border);
-            border-radius: 12px;
-            padding: 1.5rem;
+            border-radius: 20px;
+            padding: 2rem;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             text-align: center;
+            backdrop-filter: blur(10px);
+            animation: slideInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.4s both;
         }
 
         .quick-action:hover {
-            background: var(--color-border);
-            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-8px);
+            box-shadow: 0 16px 48px rgba(0, 255, 136, 0.2);
+            border-color: var(--color-primary);
         }
 
         .quick-action-icon {
-            font-size: 2rem;
-            margin-bottom: 1rem;
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
             color: var(--color-primary);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .quick-action:hover .quick-action-icon {
+            transform: scale(1.1) rotate(5deg);
         }
 
         .quick-action-title {
             font-weight: 600;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
         }
 
         .quick-action-desc {
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             color: var(--color-text-muted);
+            line-height: 1.5;
         }
 
         .domain-tag {
             display: inline-block;
             background: var(--color-glass);
             border: 1px solid var(--color-border);
-            border-radius: 16px;
-            padding: 0.25rem 0.75rem;
-            font-size: 0.75rem;
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
             margin: 0.25rem;
             color: var(--color-text-muted);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            user-select: none;
+        }
+
+        .domain-tag:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
         }
 
         .domain-tag.selected {
             background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
             color: #000;
             border-color: transparent;
+            transform: scale(1.05);
         }
 
         .ai-content {
-            line-height: 1.6;
+            line-height: 1.7;
             color: var(--color-text);
         }
 
         .ai-actions {
-            margin-top: 1rem;
-            padding-top: 1rem;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
             border-top: 1px solid var(--color-border);
         }
 
@@ -596,75 +787,126 @@
             background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
             color: #000;
             border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
+            padding: 0.75rem 1.5rem;
+            border-radius: 24px;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             font-weight: 500;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
         }
 
         .deep-research-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
         }
 
         .deep-research-btn:active {
-            transform: translateY(0);
+            transform: translateY(-1px);
         }
 
         .ai-content h1, .ai-content h2, .ai-content h3 {
             color: var(--color-primary);
-            margin-top: 1.5rem;
-            margin-bottom: 0.5rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
         }
 
-        .ai-content h1 { font-size: 1.5rem; }
-        .ai-content h2 { font-size: 1.3rem; }
-        .ai-content h3 { font-size: 1.1rem; }
+        .ai-content h1 { font-size: 1.6rem; }
+        .ai-content h2 { font-size: 1.4rem; }
+        .ai-content h3 { font-size: 1.2rem; }
 
         .ai-content p {
-            margin-bottom: 1rem;
+            margin-bottom: 1.25rem;
         }
 
         .ai-content ul, .ai-content ol {
-            margin-left: 1.5rem;
-            margin-bottom: 1rem;
+            margin-left: 2rem;
+            margin-bottom: 1.25rem;
         }
 
         .ai-content li {
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
         }
 
         .ai-content code {
             background: rgba(255, 255, 255, 0.1);
-            padding: 0.2rem 0.4rem;
-            border-radius: 4px;
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
             font-family: 'Fira Code', monospace;
         }
 
         .ai-content pre {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 1rem;
-            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 1.5rem;
+            border-radius: 12px;
             overflow-x: auto;
-            margin: 1rem 0;
+            margin: 1.5rem 0;
+            border: 1px solid var(--color-border);
         }
 
         .ai-content blockquote {
-            border-left: 3px solid var(--color-primary);
-            padding-left: 1rem;
-            margin: 1rem 0;
+            border-left: 4px solid var(--color-primary);
+            padding-left: 1.5rem;
+            margin: 1.5rem 0;
             font-style: italic;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+        }
+
+        .toast-notification {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            z-index: 1001;
+            transform: translateX(400px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(20px);
+        }
+
+        .toast-notification.show {
+            transform: translateX(0);
+        }
+
+        .toast-notification.success {
+            border-color: var(--color-success);
+        }
+
+        .toast-notification.error {
+            border-color: var(--color-error);
+        }
+
+        .drag-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 255, 136, 0.1);
+            border: 4px dashed var(--color-primary);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--color-primary);
+        }
+
+        .drag-overlay.show {
+            display: flex;
         }
 
         @media (max-width: 1200px) {
             .sidebar {
                 transform: translateX(-100%);
-                transition: transform 0.3s ease;
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             }
 
             .sidebar.open {
@@ -682,12 +924,69 @@
             }
 
             .welcome-title {
+                font-size: 2.5rem;
+            }
+
+            .welcome-subtitle {
+                font-size: 1.1rem;
+            }
+
+            .quick-actions {
+                grid-template-columns: 1fr;
+            }
+
+            .chat-container {
+                padding: 1rem;
+            }
+
+            .input-container {
+                padding: 1rem;
+            }
+
+            .user-message {
+                max-width: 85%;
+            }
+
+            .ai-message {
+                max-width: 95%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .welcome-title {
                 font-size: 2rem;
             }
+            
+            .modal-content {
+                padding: 1.5rem;
+                width: 95%;
+            }
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--color-primary);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body class="gradient-bg">
+    <!-- Drag & Drop Overlay -->
+    <div class="drag-overlay" id="dragOverlay">
+        <div>
+            <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+            <div>Húzd ide a fájlokat!</div>
+        </div>
+    </div>
+
     <div class="sidebar" id="sidebar">
         <!-- Sidebar Header -->
         <div class="p-4 border-b border-gray-800">
@@ -1042,13 +1341,81 @@
         const messageInput = document.getElementById('messageInput');
         const sendButton = document.getElementById('sendButton');
         const modelBadge = document.getElementById('modelBadge');
+        const dragOverlay = document.getElementById('dragOverlay');
 
         // Initialize app
         document.addEventListener('DOMContentLoaded', async () => {
             await loadAlphaServices();
             setupEventListeners();
+            setupDragAndDrop();
             messageInput.focus();
         });
+
+        // Drag and drop functionality
+        function setupDragAndDrop() {
+            let dragCounter = 0;
+
+            document.addEventListener('dragenter', (e) => {
+                e.preventDefault();
+                dragCounter++;
+                dragOverlay.classList.add('show');
+            });
+
+            document.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                dragCounter--;
+                if (dragCounter === 0) {
+                    dragOverlay.classList.remove('show');
+                }
+            });
+
+            document.addEventListener('dragover', (e) => {
+                e.preventDefault();
+            });
+
+            document.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dragCounter = 0;
+                dragOverlay.classList.remove('show');
+                
+                const files = Array.from(e.dataTransfer.files);
+                if (files.length > 0) {
+                    handleFileUpload(files);
+                }
+            });
+        }
+
+        // Handle file upload
+        function handleFileUpload(files) {
+            showToast('Fájl feltöltés funkció fejlesztés alatt...', 'info');
+            console.log('Uploaded files:', files);
+            // Itt implementálhatod a fájl feltöltési logikát
+        }
+
+        // Toast notification system
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast-notification ${type}`;
+            toast.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'times' : 'info'}-circle"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 100);
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 300);
+            }, 3000);
+        }
 
         // Load Alpha services from API
         async function loadAlphaServices() {
@@ -1059,6 +1426,7 @@
                 renderServiceCategories();
             } catch (error) {
                 console.error('Error loading services:', error);
+                showToast('Hiba a szolgáltatások betöltésekor', 'error');
             }
         }
 
@@ -1217,6 +1585,10 @@
             content.innerHTML = config.content;
 
             modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.classList.add('show');
+            }, 10);
+            
             document.getElementById('exaModalResult').style.display = 'none';
         }
 
@@ -1577,7 +1949,12 @@
             currentService = serviceName;
             document.getElementById('alphaModalTitle').textContent = serviceName;
             document.getElementById('serviceDescription').textContent = serviceDesc;
-            document.getElementById('alphaServiceModal').style.display = 'flex';
+            
+            const modal = document.getElementById('alphaServiceModal');
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.classList.add('show');
+            }, 10);
 
             // Set example data based on category
             setExampleData(category);
@@ -1654,6 +2031,14 @@
 
             // Exa search form (dynamic)
             document.addEventListener('submit', handleExaFormSubmit);
+
+            // Escape key to close modals
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    closeModal('exaSearchModal');
+                    closeModal('alphaServiceModal');
+                }
+            });
         }
 
         // Handle Exa form submission
@@ -1663,6 +2048,7 @@
                 await executeExaFunction();
             }
         }
+
         // Execute Exa function
         async function executeExaFunction() {
             const button = document.querySelector('#exaSearchForm button[type="submit"]');
@@ -1670,7 +2056,7 @@
 
             try {
                 button.disabled = true;
-                button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Futtatás...';
+                button.innerHTML = '<div class="loading-spinner"></div>Futtatás...';
 
                 let result;
                 switch (currentExaFunction) {
@@ -1692,9 +2078,10 @@
                 }
 
                 showExaResult(result);
+                showToast('Keresés sikeresen befejezve!', 'success');
 
             } catch (error) {
-                alert(`Hiba: ${error.message}`);
+                showToast(`Hiba: ${error.message}`, 'error');
             } finally {
                 button.disabled = false;
                 button.innerHTML = originalText;
@@ -1949,6 +2336,7 @@
             } catch (error) {
                 hideTypingIndicator();
                 addMessage('ai', `Hiba történt: ${error.message}`, 'Error');
+                showToast('Kommunikációs hiba', 'error');
             }
         }
 
@@ -1965,7 +2353,7 @@
                 const paramsJson = parameters ? JSON.parse(parameters) : {};
 
                 button.disabled = true;
-                button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Futtatás...';
+                button.innerHTML = '<div class="loading-spinner"></div>Futtatás...';
 
                 const response = await fetch(`/api/alpha/${currentService}`, {
                     method: 'POST',
@@ -1981,11 +2369,12 @@
 
                 if (response.ok) {
                     showAlphaResult(result);
+                    showToast('Alpha szolgáltatás sikeresen futtatva!', 'success');
                 } else {
                     throw new Error(result.detail || 'Hiba történt');
                 }
             } catch (error) {
-                alert(`Hiba: ${error.message}`);
+                showToast(`Hiba: ${error.message}`, 'error');
             } finally {
                 button.disabled = false;
                 button.innerHTML = '<i class="fas fa-play mr-2"></i>Szolgáltatás futtatása';
@@ -2046,8 +2435,13 @@
                                 <p>${model || 'AI Assistant'}</p>
                             </div>
                         </div>
-                        <div class="prose prose-invert max-w-none">
+                        <div class="ai-content">
                             ${content.replace(/\n/g, '<br>')}
+                        </div>
+                        <div class="ai-actions">
+                            <button class="deep-research-btn" onclick="startDeepResearch('${content.replace(/'/g, '\\\'').substring(0, 100)}')">
+                                <i class="fas fa-search-plus"></i> Mélyebb kutatás
+                            </button>
                         </div>
                     </div>
                 `;
@@ -2094,39 +2488,17 @@
         }
 
         function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('show');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+            
             document.getElementById('exaModalResult').style.display = 'none';
             document.getElementById('alphaModalResult').style.display = 'none';
         }
 
         // Quick actions
-        function quickExaSearch() {
-            openExaModal('neural_search');
-        }
-
-        function showRAGDemo() {
-            openExaModal('rag_pipeline');
-        }
-
-        function showSimilaritySearch() {
-            openExaModal('find_similar');
-        }
-
-        function showResearchAPI() {
-            openExaModal('research_automation');
-        }
-
-        // Close modal when clicking outside
-        document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('modal-overlay')) {
-                closeModal('exaSearchModal');
-                closeModal('alphaServiceModal');
-            }
-        });
-
-        /**
-         * Quick Exa Search function
-         */
         function quickExaSearch() {
             const query = prompt('Add meg a keresési kulcsszót:');
             if (query) {
@@ -2135,9 +2507,6 @@
             }
         }
 
-        /**
-         * Quick Alpha Service function
-         */
         function quickAlphaService() {
             const serviceName = prompt('Add meg az Alpha szolgáltatás nevét (pl: AlphaFold, AlphaClimate, AlphaAI):');
             if (serviceName) {
@@ -2148,21 +2517,77 @@
             }
         }
 
-        /**
-         * Starts a simple Alpha service
-         */
+        function quickProteinLookup() {
+            const proteinId = prompt('Add meg a fehérje azonosítót:');
+            if (proteinId) {
+                messageInput.value = `Keress fehérje struktúrát: ${proteinId}`;
+                sendMessage();
+            }
+        }
+
+        // Deep research function
+        async function startDeepResearch(query) {
+            if (isTyping) return;
+            
+            addMessage('user', `Mélyebb kutatás: ${query}`);
+            showTypingIndicator();
+
+            try {
+                const response = await fetch('/api/deep_research', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        query: query,
+                        user_id: currentUserId
+                    })
+                });
+
+                const data = await response.json();
+                hideTypingIndicator();
+
+                if (data.status === 'success') {
+                    let researchResult = `# 🎯 Mélyreható Kutatási Eredmények\n\n`;
+                    researchResult += `**Kutatott téma:** ${data.query}\n`;
+                    researchResult += `**Források száma:** ${data.total_sources}\n`;
+                    researchResult += `**Felhasznált modellek:** ${data.models_used.join(', ')}\n\n`;
+
+                    if (data.individual_analyses) {
+                        researchResult += `## 📊 Különböző AI Modellek Elemzései\n\n`;
+                        for (const [model, analysis] of Object.entries(data.individual_analyses)) {
+                            researchResult += `### ${model} Elemzése\n${analysis}\n\n`;
+                        }
+                    }
+
+                    if (data.final_synthesis) {
+                        researchResult += `## 🔬 Végső Szintézis\n\n${data.final_synthesis}\n\n`;
+                    }
+
+                    if (data.sources && data.sources.length > 0) {
+                        researchResult += `## 📚 Felhasznált Források\n\n`;
+                        data.sources.slice(0, 10).forEach((source, i) => {
+                            researchResult += `${i + 1}. [${source.title}](${source.url})\n`;
+                        });
+                    }
+
+                    addMessage('ai', researchResult, 'Deep Research Complete');
+                    showToast('Mélyreható kutatás befejezve!', 'success');
+                } else {
+                    addMessage('ai', 'Hiba történt a mélyreható kutatás során.', 'Error');
+                    showToast('Kutatási hiba', 'error');
+                }
+            } catch (error) {
+                hideTypingIndicator();
+                addMessage('ai', 'Hiba történt a mélyreható kutatás során.', 'Error');
+                showToast('Kutatási hiba', 'error');
+            }
+        }
+
+        // Simple Alpha service execution
         async function startSimpleAlphaService(serviceName, query, details = '') {
             if (isTyping) return;
 
-            isTyping = true;
-            sendButton.disabled = true;
-
-            // Hide welcome screen and show messages
-            welcomeScreen.style.display = 'none';
-            messagesContainer.style.display = 'block';
-
             addMessage('user', `${serviceName} elemzés: ${query}`);
-            addMessage('ai', `⚡ ${serviceName} szolgáltatás indítása...\n\nGemini 2.5 Pro elemzést végez a megadott kérésre.`, 'Alpha Service');
+            showTypingIndicator();
 
             try {
                 const response = await fetch(`/api/alpha/simple/${serviceName}`, {
@@ -2176,6 +2601,7 @@
                 });
 
                 const data = await response.json();
+                hideTypingIndicator();
 
                 if (data.status === 'success') {
                     let result = `# 🎯 ${data.service_name} Elemzés\n\n`;
@@ -2185,120 +2611,25 @@
                     result += `## 📊 Elemzési Eredmények\n\n${data.analysis}`;
 
                     addMessage('ai', result, data.model_used);
+                    showToast('Alpha szolgáltatás sikeresen futtatva!', 'success');
                 } else {
                     addMessage('ai', 'Hiba történt az Alpha szolgáltatás során.', 'Error');
+                    showToast('Alpha szolgáltatás hiba', 'error');
                 }
             } catch (error) {
-                console.error('Error:', error);
+                hideTypingIndicator();
                 addMessage('ai', `Hiba történt az Alpha szolgáltatás során: ${error.message}`, 'Error');
-            } finally {
-                isTyping = false;
-                sendButton.disabled = false;
+                showToast('Alpha szolgáltatás hiba', 'error');
             }
         }
 
-        /**
-         * Starts deep research for a given query
-         */
-        async function startDeepResearch(query) {
-            if (isTyping) return;
-
-            isTyping = true;
-
-            // Add a message showing research is starting
-            addMessage('ai', `🔍 Mélyreható kutatás indítása: "${query}"...\n\nEz több percet is igénybe vehet, hiszen minden AI modellt és számos forrást felhasználok a legteljesebb elemzés érdekében.`, 'Deep Research');
-
-            try {
-                const response = await fetch(`/api/deep_research`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        query: query,
-                        user_id: currentUserId
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.status === 'success') {
-                    let researchResult = `# 🎯 Mélyreható Kutatási Eredmények\n\n`;
-                    researchResult += `**Kutatott téma:** ${data.query}\n`;
-                    researchResult += `**Források száma:** ${data.total_sources}\n`;
-                    researchResult += `**Felhasznált modellek:** ${data.models_used.join(', ')}\n\n`;
-
-                    // Individual analyses
-                    if (data.individual_analyses) {
-                        researchResult += `## 📊 Különböző AI Modellek Elemzései\n\n`;
-                        for (const [model, analysis] of Object.entries(data.individual_analyses)) {
-                            researchResult += `### ${model} Elemzése\n${analysis}\n\n`;
-                        }
-                    }
-
-                    // Final synthesis
-                    if (data.final_synthesis) {
-                        researchResult += `## 🔬 Végső Szintézis (Gemini 2.5 Pro)\n\n${data.final_synthesis}\n\n`;
-                    }
-
-                    // Sources
-                    if (data.sources && data.sources.length > 0) {
-                        researchResult += `## 📚 Felhasznált Források\n\n`;
-                        data.sources.slice(0, 10).forEach((source, i) => {
-                            researchResult += `${i + 1}. [${source.title}](${source.url})\n`;
-                        });
-                    }
-
-                    addMessage('ai', researchResult, 'Deep Research Complete');
-                } else {
-                    addMessage('ai', 'Hiba történt a mélyreható kutatás során.', 'Error');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                addMessage('ai', 'Hiba történt a mélyreható kutatás során.', 'Error');
-            } finally {
-                isTyping = false;
+        // Close modal when clicking outside
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-overlay')) {
+                closeModal('exaSearchModal');
+                closeModal('alphaServiceModal');
             }
-        }
-
-        // Add message to chat
-        function addMessage(type, content, modelUsed = '') {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'message';
-
-            if (type === 'user') {
-                messageDiv.innerHTML = `
-                    <div class="flex justify-end">
-                        <div class="user-message">
-                            ${content}
-                        </div>
-                    </div>
-                `;
-            } else {
-                messageDiv.innerHTML = `
-                    <div class="ai-message">
-                        <div class="ai-header">
-                            <div class="ai-avatar">
-                                <i class="fas fa-robot"></i>
-                            </div>
-                            <div class="ai-info">
-                                <h4>Jade AI</h4>
-                                <p>${modelUsed || 'AI Assistant'}</p>
-                            </div>
-                        </div>
-                        <div class="prose prose-invert max-w-none">
-                            ${content.replace(/\n/g, '<br>')}
-                        </div>
-                        <div class="ai-actions">
-                            <button class="deep-research-btn" onclick="startDeepResearch('${content.replace(/'/g, '\\\'').substring(0, 100)}')">
-                                <i class="fas fa-search-plus"></i> Bővebben
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }
-
-            messagesContainer.appendChild(messageDiv);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
+        });
     </script>
 </body>
 </html>
