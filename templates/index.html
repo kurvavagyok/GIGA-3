@@ -1820,7 +1820,7 @@
                     Jade AI Platform
                 </h1>
                 <span id="modelBadge" class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full font-medium">
-                    Hibrid AI + Exa
+                    Deep AI + Exa
                 </span>
             </div>
         </div>
@@ -2064,8 +2064,108 @@
             const title = document.getElementById('exaModalTitle');
             const content = document.getElementById('exaModalContent');
 
-            title.textContent = 'Exa Keresés';
-            content.innerHTML = '<p class="text-gray-400">Funkció fejlesztés alatt...</p>';
+            const modalConfigs = {
+                'neural_search': {
+                    title: 'Neurális Keresés',
+                    content: `
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Keresési lekérdezés</label>
+                                <input type="text" id="neuralQuery" class="w-full p-3 bg-gray-800 border border-gray-600 rounded-lg text-white" placeholder="Írj be egy keresési lekérdezést...">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Találatok száma</label>
+                                <select id="neuralResults" class="w-full p-3 bg-gray-800 border border-gray-600 rounded-lg text-white">
+                                    <option value="5">5 találat</option>
+                                    <option value="10" selected>10 találat</option>
+                                    <option value="20">20 találat</option>
+                                </select>
+                            </div>
+                            <button onclick="executeNeuralSearch()" class="w-full bg-gradient-to-r from-green-400 to-blue-500 text-black font-semibold py-3 px-6 rounded-lg hover:opacity-90 transition-opacity">
+                                <i class="fas fa-search mr-2"></i>Keresés indítása
+                            </button>
+                        </div>
+                    `
+                },
+                'keyword_search': {
+                    title: 'Kulcsszavas Keresés',
+                    content: `
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Kulcsszavak</label>
+                                <input type="text" id="keywordQuery" class="w-full p-3 bg-gray-800 border border-gray-600 rounded-lg text-white" placeholder="Kulcsszavak vesszővel elválasztva...">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Domainok (opcionális)</label>
+                                <input type="text" id="keywordDomains" class="w-full p-3 bg-gray-800 border border-gray-600 rounded-lg text-white" placeholder="például: arxiv.org, nature.com">
+                            </div>
+                            <button onclick="executeKeywordSearch()" class="w-full bg-gradient-to-r from-blue-400 to-purple-500 text-white font-semibold py-3 px-6 rounded-lg hover:opacity-90 transition-opacity">
+                                <i class="fas fa-key mr-2"></i>Kulcsszavas keresés
+                            </button>
+                        </div>
+                    `
+                },
+                'find_similar': {
+                    title: 'Hasonló tartalmak',
+                    content: `
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Referencia URL</label>
+                                <input type="url" id="similarUrl" class="w-full p-3 bg-gray-800 border border-gray-600 rounded-lg text-white" placeholder="https://example.com/article">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Hasonló találatok száma</label>
+                                <select id="similarResults" class="w-full p-3 bg-gray-800 border border-gray-600 rounded-lg text-white">
+                                    <option value="5">5 hasonló</option>
+                                    <option value="10" selected>10 hasonló</option>
+                                    <option value="15">15 hasonló</option>
+                                </select>
+                            </div>
+                            <button onclick="executeSimilarSearch()" class="w-full bg-gradient-to-r from-purple-400 to-pink-500 text-white font-semibold py-3 px-6 rounded-lg hover:opacity-90 transition-opacity">
+                                <i class="fas fa-link mr-2"></i>Hasonló keresése
+                            </button>
+                        </div>
+                    `
+                },
+                'research_automation': {
+                    title: 'Automatizált Kutatás',
+                    content: `
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Kutatási téma</label>
+                                <textarea id="researchTopic" rows="3" class="w-full p-3 bg-gray-800 border border-gray-600 rounded-lg text-white" placeholder="Írd le a kutatási témát részletesen..."></textarea>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Források száma</label>
+                                    <select id="researchSources" class="w-full p-3 bg-gray-800 border border-gray-600 rounded-lg text-white">
+                                        <option value="10">10 forrás</option>
+                                        <option value="20" selected>20 forrás</option>
+                                        <option value="50">50 forrás</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Összefoglaló hossza</label>
+                                    <select id="researchSummary" class="w-full p-3 bg-gray-800 border border-gray-600 rounded-lg text-white">
+                                        <option value="200">Rövid (200 szó)</option>
+                                        <option value="500" selected>Közepes (500 szó)</option>
+                                        <option value="1000">Hosszú (1000 szó)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button onclick="executeResearchAutomation()" class="w-full bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 text-white font-semibold py-3 px-6 rounded-lg hover:opacity-90 transition-opacity">
+                                <i class="fas fa-robot mr-2"></i>Kutatás automatizálása
+                            </button>
+                        </div>
+                    `
+                }
+            };
+
+            const config = modalConfigs[functionType];
+            if (config) {
+                title.textContent = config.title;
+                content.innerHTML = config.content;
+            }
 
             modal.style.display = 'flex';
             setTimeout(() => {
@@ -2079,7 +2179,29 @@
             const content = document.getElementById('alphaModalContent');
 
             title.textContent = serviceName;
-            content.innerHTML = `<p class="text-gray-400">${serviceDesc}</p><p class="text-sm text-gray-500 mt-2">Funkció fejlesztés alatt...</p>`;
+            content.innerHTML = `
+                <div class="space-y-4">
+                    <div class="p-4 bg-gray-800 rounded-lg border border-gray-600">
+                        <h3 class="text-sm font-semibold text-green-400 mb-2">Szolgáltatás leírása</h3>
+                        <p class="text-gray-300 text-sm">${serviceDesc}</p>
+                        <p class="text-xs text-gray-500 mt-2">Kategória: ${category.replace(/_/g, ' ')}</p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Kérésed vagy kérdésed</label>
+                        <textarea id="alphaQuery" rows="4" class="w-full p-3 bg-gray-800 border border-gray-600 rounded-lg text-white resize-none" placeholder="Írd le részletesen, mit szeretnél elemezni vagy megtudni ezzel a szolgáltatással..."></textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">További részletek (opcionális)</label>
+                        <textarea id="alphaDetails" rows="2" class="w-full p-3 bg-gray-800 border border-gray-600 rounded-lg text-white resize-none" placeholder="További kontextus, paraméterek vagy specifikus igények..."></textarea>
+                    </div>
+                    
+                    <button onclick="executeAlphaService('${serviceName}', '${category}')" class="w-full bg-gradient-to-r from-green-400 to-blue-500 text-black font-semibold py-3 px-6 rounded-lg hover:opacity-90 transition-opacity">
+                        <i class="fas fa-cogs mr-2"></i>${serviceName} Elemzés indítása
+                    </button>
+                </div>
+            `;
 
             modal.style.display = 'flex';
             setTimeout(() => {
@@ -2190,8 +2312,8 @@
 
                 const data = await response.json();
                 hideTypingIndicator();
-                addMessage('ai', data.response, data.model_used);
-                modelBadge.textContent = data.model_used + ' + Exa';
+                addMessage('ai', data.response);
+                modelBadge.textContent = 'Deep AI + Exa';
             } catch (error) {
                 hideTypingIndicator();
                 addMessage('ai', `Hiba történt: ${error.message}`, 'Error');
@@ -2332,7 +2454,7 @@
             messagesContainer.innerHTML = '';
             welcomeScreen.style.display = 'block';
             messageInput.focus();
-            modelBadge.textContent = 'Hibrid AI + Exa';
+            modelBadge.textContent = 'Deep AI + Exa';
         }
 
         function closeModal(modalId) {
@@ -2501,6 +2623,287 @@
             document.addEventListener('touchend', () => {
                 document.body.style.overscrollBehavior = 'auto';
             }, { passive: true });
+        }
+
+        // Exa keresési funkciók
+        async function executeNeuralSearch() {
+            const query = document.getElementById('neuralQuery').value.trim();
+            const numResults = document.getElementById('neuralResults').value;
+            
+            if (!query) {
+                alert('Kérlek, add meg a keresési lekérdezést!');
+                return;
+            }
+            
+            showSearchProgress('Neurális keresés folyamatban...');
+            
+            try {
+                const response = await fetch('/api/exa/neural_search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        query: query,
+                        num_results: parseInt(numResults)
+                    })
+                });
+                
+                const data = await response.json();
+                displaySearchResults(data, 'neurális keresés');
+            } catch (error) {
+                displaySearchError('Hiba a neurális keresés során: ' + error.message);
+            }
+        }
+        
+        async function executeKeywordSearch() {
+            const query = document.getElementById('keywordQuery').value.trim();
+            const domains = document.getElementById('keywordDomains').value.trim();
+            
+            if (!query) {
+                alert('Kérlek, add meg a kulcsszavakat!');
+                return;
+            }
+            
+            showSearchProgress('Kulcsszavas keresés folyamatban...');
+            
+            try {
+                const payload = {
+                    query: query,
+                    type: 'keyword',
+                    num_results: 15
+                };
+                
+                if (domains) {
+                    payload.include_domains = domains.split(',').map(d => d.trim());
+                }
+                
+                const response = await fetch('/api/exa/advanced_search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await response.json();
+                displaySearchResults(data, 'kulcsszavas keresés');
+            } catch (error) {
+                displaySearchError('Hiba a kulcsszavas keresés során: ' + error.message);
+            }
+        }
+        
+        async function executeSimilarSearch() {
+            const url = document.getElementById('similarUrl').value.trim();
+            const numResults = document.getElementById('similarResults').value;
+            
+            if (!url) {
+                alert('Kérlek, add meg a referencia URL-t!');
+                return;
+            }
+            
+            showSearchProgress('Hasonló tartalmak keresése...');
+            
+            try {
+                const response = await fetch('/api/exa/find_similar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        url: url,
+                        num_results: parseInt(numResults)
+                    })
+                });
+                
+                const data = await response.json();
+                displaySimilarResults(data);
+            } catch (error) {
+                displaySearchError('Hiba a hasonlóság alapú keresés során: ' + error.message);
+            }
+        }
+        
+        async function executeResearchAutomation() {
+            const topic = document.getElementById('researchTopic').value.trim();
+            const sources = document.getElementById('researchSources').value;
+            const summaryLength = document.getElementById('researchSummary').value;
+            
+            if (!topic) {
+                alert('Kérlek, add meg a kutatási témát!');
+                return;
+            }
+            
+            showSearchProgress('Automatizált kutatás folyamatban...');
+            
+            try {
+                const response = await fetch('/api/deep_discovery/research_trends', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        query: topic,
+                        num_results: parseInt(sources),
+                        summary_length: parseInt(summaryLength)
+                    })
+                });
+                
+                const data = await response.json();
+                displayResearchResults(data);
+            } catch (error) {
+                displaySearchError('Hiba az automatizált kutatás során: ' + error.message);
+            }
+        }
+        
+        // Alpha szolgáltatások végrehajtása
+        async function executeAlphaService(serviceName, category) {
+            const query = document.getElementById('alphaQuery').value.trim();
+            const details = document.getElementById('alphaDetails').value.trim();
+            
+            if (!query) {
+                alert('Kérlek, írd le a kérésedet!');
+                return;
+            }
+            
+            showSearchProgress(serviceName + ' elemzés folyamatban...');
+            
+            try {
+                const response = await fetch(`/api/alpha/simple/${encodeURIComponent(serviceName)}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        service_name: serviceName,
+                        query: query,
+                        details: details
+                    })
+                });
+                
+                const data = await response.json();
+                displayAlphaResults(data);
+            } catch (error) {
+                displaySearchError('Hiba a ' + serviceName + ' szolgáltatás során: ' + error.message);
+            }
+        }
+        
+        // Eredmények megjelenítése
+        function showSearchProgress(message) {
+            const resultDiv = document.getElementById('exaModalResult') || document.getElementById('alphaModalResult');
+            if (resultDiv) {
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = `
+                    <div class="text-center py-8">
+                        <div class="loading-spinner mx-auto mb-4"></div>
+                        <p class="text-gray-400">${message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function displaySearchResults(data, searchType) {
+            const resultDiv = document.getElementById('exaModalResult');
+            if (!resultDiv) return;
+            
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `
+                <div class="mt-6 border-t border-gray-600 pt-6">
+                    <h3 class="text-lg font-semibold text-green-400 mb-4">${searchType.charAt(0).toUpperCase() + searchType.slice(1)} eredményei</h3>
+                    <p class="text-sm text-gray-400 mb-4">Összesen ${data.total_results} találat</p>
+                    <div class="space-y-4 max-h-96 overflow-y-auto">
+                        ${data.results ? data.results.map(result => `
+                            <div class="search-result">
+                                <a href="${result.url}" target="_blank" class="search-result-title">${result.title}</a>
+                                <div class="search-result-url">${result.url}</div>
+                                ${result.text_preview ? `<div class="search-result-snippet">${result.text_preview}</div>` : ''}
+                                ${result.published_date ? `<div class="text-xs text-gray-500 mt-2">Publikálva: ${result.published_date}</div>` : ''}
+                            </div>
+                        `).join('') : '<p class="text-gray-400">Nincs megjeleníthető eredmény</p>'}
+                    </div>
+                </div>
+            `;
+        }
+        
+        function displaySimilarResults(data) {
+            const resultDiv = document.getElementById('exaModalResult');
+            if (!resultDiv) return;
+            
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `
+                <div class="mt-6 border-t border-gray-600 pt-6">
+                    <h3 class="text-lg font-semibold text-purple-400 mb-4">Hasonló tartalmak</h3>
+                    <p class="text-sm text-gray-400 mb-4">Referencia: ${data.reference_url}</p>
+                    <p class="text-sm text-gray-400 mb-4">Talált hasonló tartalmak: ${data.total_found}</p>
+                    <div class="space-y-4 max-h-96 overflow-y-auto">
+                        ${data.similar_results ? data.similar_results.map(result => `
+                            <div class="search-result">
+                                <a href="${result.url}" target="_blank" class="search-result-title">${result.title}</a>
+                                <div class="search-result-url">${result.url}</div>
+                                ${result.similarity_score ? `<div class="text-xs text-green-400 mt-1">Hasonlóság: ${(result.similarity_score * 100).toFixed(1)}%</div>` : ''}
+                                ${result.text_content ? `<div class="search-result-snippet">${result.text_content.substring(0, 200)}...</div>` : ''}
+                            </div>
+                        `).join('') : '<p class="text-gray-400">Nincs hasonló tartalom</p>'}
+                    </div>
+                </div>
+            `;
+        }
+        
+        function displayResearchResults(data) {
+            const resultDiv = document.getElementById('exaModalResult');
+            if (!resultDiv) return;
+            
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `
+                <div class="mt-6 border-t border-gray-600 pt-6">
+                    <h3 class="text-lg font-semibold text-blue-400 mb-4">Kutatási eredmények</h3>
+                    <div class="bg-gray-800 p-4 rounded-lg mb-4">
+                        <h4 class="font-semibold text-gray-300 mb-2">AI Összefoglaló</h4>
+                        <div class="text-gray-300 text-sm leading-relaxed">${data.summary}</div>
+                    </div>
+                    ${data.sources && data.sources.length > 0 ? `
+                        <div>
+                            <h4 class="font-semibold text-gray-300 mb-3">Felhasznált források (${data.sources.length})</h4>
+                            <div class="space-y-2 max-h-64 overflow-y-auto">
+                                ${data.sources.map(source => `
+                                    <div class="search-result">
+                                        <a href="${source.url}" target="_blank" class="search-result-title text-sm">${source.title}</a>
+                                        <div class="search-result-url text-xs">${source.url}</div>
+                                        ${source.published_date ? `<div class="text-xs text-gray-500">Publikálva: ${source.published_date}</div>` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+        
+        function displayAlphaResults(data) {
+            const resultDiv = document.getElementById('alphaModalResult');
+            if (!resultDiv) return;
+            
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `
+                <div class="mt-6 border-t border-gray-600 pt-6">
+                    <h3 class="text-lg font-semibold text-green-400 mb-4">${data.service_name} Elemzés</h3>
+                    <div class="bg-gray-800 p-4 rounded-lg mb-4">
+                        <h4 class="font-semibold text-gray-300 mb-2">Kategória</h4>
+                        <p class="text-sm text-gray-400">${data.category} - ${data.description}</p>
+                    </div>
+                    <div class="bg-gray-800 p-4 rounded-lg">
+                        <h4 class="font-semibold text-gray-300 mb-3">Részletes elemzés</h4>
+                        <div class="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">${data.analysis}</div>
+                    </div>
+                    <div class="text-xs text-gray-500 mt-4 text-center">
+                        Státusz: ${data.status} | Időpont: ${new Date(data.timestamp).toLocaleString('hu-HU')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        function displaySearchError(errorMessage) {
+            const resultDiv = document.getElementById('exaModalResult') || document.getElementById('alphaModalResult');
+            if (resultDiv) {
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = `
+                    <div class="mt-6 border-t border-red-600 pt-6">
+                        <div class="bg-red-900/20 border border-red-600 rounded-lg p-4">
+                            <h4 class="text-red-400 font-semibold mb-2">Hiba történt</h4>
+                            <p class="text-red-300 text-sm">${errorMessage}</p>
+                        </div>
+                    </div>
+                `;
+            }
         }
 
         document.addEventListener('click', (e) => {
