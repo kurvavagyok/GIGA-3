@@ -381,7 +381,7 @@
         }
 
         .input-container {
-            padding: 2rem;
+            padding: 1.5rem;
             background: var(--color-surface);
             border-top: 1px solid var(--color-border);
             backdrop-filter: blur(20px);
@@ -400,26 +400,27 @@
 
         .input-wrapper {
             display: flex;
-            gap: 1rem;
-            align-items: end;
+            gap: 0.75rem;
+            align-items: center;
             max-width: 1200px;
             margin: 0 auto;
         }
 
         .input-field {
             flex: 1;
-            padding: 1.25rem 1.75rem;
+            padding: 0.875rem 1.25rem;
             background: var(--color-glass);
             border: 1px solid var(--color-border);
-            border-radius: 28px;
+            border-radius: 24px;
             color: var(--color-text);
-            font-size: 1rem;
+            font-size: 0.95rem;
             resize: none;
             outline: none;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            min-height: 28px;
-            max-height: 120px;
+            min-height: 22px;
+            max-height: 100px;
             backdrop-filter: blur(10px);
+            line-height: 1.4;
         }
 
         .input-field:focus {
@@ -433,13 +434,13 @@
         }
 
         .send-button {
-            width: 56px;
-            height: 56px;
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
             background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
             border: none;
             color: #000;
-            font-size: 1.2rem;
+            font-size: 1rem;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
