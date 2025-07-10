@@ -3,7 +3,7 @@
 <html lang="hu">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Jade - Deep Discovery AI Platform</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -28,17 +28,30 @@
         * { 
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
-        body {
+        input, textarea {
+            -webkit-user-select: text;
+            user-select: text;
+        }
+
+        html, body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: var(--color-bg);
             color: var(--color-text);
             margin: 0;
             padding: 0;
-            overflow-x: hidden;
+            overflow: hidden;
+            height: 100vh;
+            position: fixed;
+            width: 100%;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+            -webkit-overflow-scrolling: touch;
         }
 
         .gradient-bg::before {
@@ -76,6 +89,7 @@
             top: 0;
             z-index: 100;
             scrollbar-width: thin;
+            touch-action: pan-y;
         }
 
         .sidebar::-webkit-scrollbar { width: 6px; }
@@ -421,6 +435,12 @@
             max-height: 100px;
             backdrop-filter: blur(10px);
             line-height: 1.4;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: pre-wrap;
+            -webkit-appearance: none;
+            -webkit-user-select: text;
+            user-select: text;
         }
 
         .input-field:focus {
@@ -1202,29 +1222,18 @@
         <div class="chat-container" id="chatContainer">
             <!-- Welcome Screen -->
             <div id="welcomeScreen" class="welcome-section">
-                <h1 class="welcome-title">Üdvözöl a Jade</h1>
-                <p class="welcome-subtitle">
-                    Fejlett AI platform Exa intelligens kereséssel és 150+ Alpha szolgáltatással. 
-                    Válassz a bal menüből, vagy beszélgess velem szabadon.
-                </p>
-
-                <div class="quick-actions">
-                    <div class="quick-action" onclick="quickExaSearch()">
-                        <div class="quick-action-icon">🔍</div>
-                        <div class="quick-action-title">Gyors Exa Keresés</div>
-                        <div class="quick-action-desc">Neurális keresés a weben</div>
-                    </div>
-                    <div class="quick-action" onclick="quickAlphaService()">
-                        <div class="quick-action-icon">⚡</div>
-                        <div class="quick-action-title">Alpha Szolgáltatás</div>
-                        <div class="quick-action-desc">Egyszerű hozzáférés 150+ szolgáltatáshoz</div>
-                    </div>
-                    <div class="quick-action" onclick="quickProteinLookup()">
-                        <div class="quick-action-icon">🧬</div>
-                        <div class="quick-action-title">Fehérje Struktúra</div>
-                        <div class="quick-action-desc">AlphaFold adatbázis lekérdezés</div>
-                    </div>
+                <div class="w-12 h-12 bg-gradient-to-br from-green-400 to-blue-500 rounded-xl flex items-center justify-center mx-auto mb-4">
+                    <span class="text-black font-bold text-xl">J</span>
                 </div>
+                <h1 class="welcome-title">Jade</h1>
+                <p class="welcome-subtitle">
+                    Deep Discovery AI Platform
+                </p>
+                
+                <button onclick="showAppIntroduction()" class="form-button mt-8 max-w-md mx-auto">
+                    <i class="fas fa-compass mr-2"></i>
+                    Ismerd meg a Jade-t
+                </button>
             </div>
 
             <!-- Messages Container -->
@@ -2002,6 +2011,9 @@
                 sidebar.classList.toggle('open');
             });
 
+            // Swipe gesture support
+            setupSwipeGestures();
+
             // Close sidebar when clicking outside on mobile
             document.addEventListener('click', (e) => {
                 if (window.innerWidth <= 1200 && !sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
@@ -2433,7 +2445,6 @@
                             </div>
                             <div class="ai-info">
                                 <h4>Jade AI</h4>
-                                <p>${model || 'AI Assistant'}</p>
                             </div>
                         </div>
                         <div class="ai-content">
@@ -2623,6 +2634,118 @@
                 showToast('Alpha szolgáltatás hiba', 'error');
             }
         }
+
+        // Swipe gesture setup
+        function setupSwipeGestures() {
+            let startX, startY, currentX, currentY;
+            let isSwipeEnabled = false;
+
+            document.addEventListener('touchstart', (e) => {
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+                isSwipeEnabled = true;
+            }, { passive: true });
+
+            document.addEventListener('touchmove', (e) => {
+                if (!isSwipeEnabled) return;
+                
+                currentX = e.touches[0].clientX;
+                currentY = e.touches[0].clientY;
+                
+                const deltaX = currentX - startX;
+                const deltaY = currentY - startY;
+                
+                // Prevent scrolling during horizontal swipe
+                if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+
+            document.addEventListener('touchend', (e) => {
+                if (!isSwipeEnabled) return;
+                
+                const deltaX = currentX - startX;
+                const deltaY = currentY - startY;
+                
+                // Horizontal swipe detection
+                if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+                    if (deltaX > 0 && startX < 50) {
+                        // Swipe right from left edge - open sidebar
+                        sidebar.classList.add('open');
+                    } else if (deltaX < 0 && sidebar.classList.contains('open')) {
+                        // Swipe left - close sidebar
+                        sidebar.classList.remove('open');
+                    }
+                }
+                
+                isSwipeEnabled = false;
+            }, { passive: true });
+        }
+
+        // App introduction modal
+        function showAppIntroduction() {
+            const modal = document.getElementById('exaSearchModal');
+            const title = document.getElementById('exaModalTitle');
+            const content = document.getElementById('exaModalContent');
+            
+            title.textContent = 'Ismerd meg a Jade-t';
+            content.innerHTML = `
+                <div class="space-y-6">
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-gradient-to-br from-green-400 to-blue-500 rounded-xl flex items-center justify-center mx-auto mb-4">
+                            <span class="text-black font-bold text-2xl">J</span>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-4 bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
+                            Jade Deep Discovery AI Platform
+                        </h3>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="p-4 bg-gray-800 rounded-lg">
+                            <h4 class="font-semibold text-green-400 mb-2">🔍 Exa AI Keresés</h4>
+                            <p class="text-sm text-gray-300">Neurális és kulcsszavas keresés a weben, hasonlósági elemzés, tartalom kinyerés</p>
+                        </div>
+                        
+                        <div class="p-4 bg-gray-800 rounded-lg">
+                            <h4 class="font-semibold text-blue-400 mb-2">⚡ 150+ Alpha Szolgáltatás</h4>
+                            <p class="text-sm text-gray-300">Biológiai, kémiai, környezeti, fizikai, technológiai és gazdasági elemzések</p>
+                        </div>
+                        
+                        <div class="p-4 bg-gray-800 rounded-lg">
+                            <h4 class="font-semibold text-purple-400 mb-2">🧬 Fehérje Struktúra</h4>
+                            <p class="text-sm text-gray-300">AlphaFold adatbázis lekérdezés és strukturális elemzés</p>
+                        </div>
+                        
+                        <div class="p-4 bg-gray-800 rounded-lg">
+                            <h4 class="font-semibold text-yellow-400 mb-2">🤖 Hibrid AI</h4>
+                            <p class="text-sm text-gray-300">Cerebras Llama 4 és Google Gemini modellek kombinációja</p>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <p class="text-gray-400 mb-4">Kezdj el beszélgetni, vagy válassz a bal menüből!</p>
+                        <button onclick="closeModal('exaSearchModal')" class="form-button">
+                            <i class="fas fa-rocket mr-2"></i>
+                            Kezdjük el!
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.classList.add('show');
+            }, 10);
+            
+            document.getElementById('exaModalResult').style.display = 'none';
+        }
+
+        // Prevent zoom on input focus (iOS fix)
+        document.addEventListener('touchstart', function() {
+            if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
+                document.activeElement.blur();
+            }
+        });
 
         // Close modal when clicking outside
         document.addEventListener('click', (e) => {
