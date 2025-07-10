@@ -110,13 +110,24 @@ if EXA_API_KEY:
         logger.error(f"Error initializing Exa client: {e}")
 
 # --- FastAPI alkalmazás ---
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    logger.info("Jade alkalmazás elindult - optimalizált verzió")
+    yield
+    # Shutdown (ha szükséges)
+    logger.info("Jade alkalmazás leáll")
+
 app = FastAPI(
     title="Jade - Deep Discovery AI Platform",
     description="Fejlett AI platform 150+ tudományos és innovációs szolgáltatással",
     version="2.0.0",
     docs_url="/api/docs",
     redoc_url="/api/redoc",
-    openapi_url="/api/openapi.json"
+    openapi_url="/api/openapi.json",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -646,8 +657,7 @@ async def deep_discovery_chat(req: ChatRequest):
     user_id = req.user_id
     current_message = req.message
 
-    # Cache ellenőrzés
-    cache_key = hashlib.md5(f"{user_id}:{current_message}".encode()).hexdigest()
+    # Cache ellenőrzés    cache_key = hashlib.md5(f"{user_id}:{current_message}".encode()).hexdigest()
     current_time = time.time()
 
     if cache_key in response_cache:
@@ -1472,7 +1482,8 @@ async def simulation_optimizer(req: SimulationOptimizerRequest):
 async def alphagenome_analysis(req: AlphaGenomeRequest):
     if not gemini_model and not cerebras_client:
         raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            status_code=status.HTTP_503_SERVICE```python
+_UNAVAILABLE,
             detail="Nincs elérhető AI modell"
         )
 
@@ -1558,17 +1569,14 @@ async def cleanup_cache():
         del response_cache[key]
     logger.info(f"Cleaned up {len(expired_keys)} expired cache entries")
 
-@app.on_event("startup")
-async def startup_event():
-    """Alkalmazás indításkor futó események"""
-    logger.info("Jade alkalmazás elindult - optimalizált verzió")
-
 # Cache tisztítás endpoint
 @app.post("/api/admin/clear_cache")
 async def clear_cache():
     """Cache manuális törlése"""
     response_cache.clear()
     return {"message": "Cache törölve", "status": "success"}
+
+# Lifespan event handler
 
 if __name__ == '__main__':
     import uvicorn
