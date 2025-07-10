@@ -691,6 +691,7 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0, 255, 136, 0.3);
         }
 
         .send-button::before {
@@ -703,6 +704,7 @@
             background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
             z-index: -1;
             transition: all 0.3s ease;
+            border-radius: 50%;
         }
 
         .send-button::after {
@@ -712,15 +714,17 @@
             left: 50%;
             width: 0;
             height: 0;
-            background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, transparent 70%);
             transform: translate(-50%, -50%);
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             border-radius: 50%;
         }
 
         .send-button:hover {
-            transform: scale(1.1) rotate(5deg);
-            box-shadow: var(--glow-primary);
+            transform: scale(1.15) rotate(10deg);
+            box-shadow: 
+                0 8px 32px rgba(0, 255, 136, 0.5),
+                0 0 0 4px rgba(0, 255, 136, 0.2);
         }
 
         .send-button:hover::before {
@@ -728,21 +732,58 @@
                 var(--color-primary), 
                 var(--color-secondary), 
                 var(--color-accent));
+            transform: scale(1.1);
         }
 
         .send-button:hover::after {
-            width: 100%;
-            height: 100%;
+            width: 120%;
+            height: 120%;
         }
 
         .send-button:active {
-            transform: scale(0.95) rotate(0deg);
+            transform: scale(0.9) rotate(0deg);
+            box-shadow: 0 2px 8px rgba(0, 255, 136, 0.4);
         }
 
         .send-button:disabled {
-            opacity: 0.5;
+            opacity: 0.6;
             cursor: not-allowed;
             transform: none;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(135deg, #666, #888);
+        }
+
+        .send-button:disabled::before {
+            background: linear-gradient(135deg, #666, #888);
+        }
+
+        .send-button:disabled:hover {
+            transform: none;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .send-button.loading {
+            animation: sendButtonPulse 1.5s ease-in-out infinite;
+        }
+
+        .send-button.loading::before {
+            animation: sendButtonRotate 2s linear infinite;
+        }
+
+        @keyframes sendButtonPulse {
+            0%, 100% { 
+                transform: scale(1);
+                box-shadow: 0 4px 16px rgba(0, 255, 136, 0.3);
+            }
+            50% { 
+                transform: scale(1.05);
+                box-shadow: 0 8px 24px rgba(0, 255, 136, 0.5);
+            }
+        }
+
+        @keyframes sendButtonRotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .welcome-section {
@@ -1361,9 +1402,19 @@
             }
 
             .send-button {
-                width: 36px;
-                height: 36px;
-                font-size: 0.8rem;
+                width: 40px;
+                height: 40px;
+                font-size: 0.9rem;
+                min-width: 40px;
+                min-height: 40px;
+            }
+
+            .send-button:hover {
+                transform: scale(1.08) rotate(5deg);
+            }
+
+            .send-button:active {
+                transform: scale(0.95);
             }
 
             .service-item {
@@ -2117,6 +2168,11 @@
             const message = messageInput.value.trim();
             if (!message || isTyping) return;
 
+            // Küldés gomb loading állapotba
+            sendButton.classList.add('loading');
+            sendButton.disabled = true;
+            sendButton.innerHTML = '<i class="loading-spinner"></i>';
+
             addMessage('user', message);
             messageInput.value = '';
             messageInput.style.height = 'auto';
@@ -2137,6 +2193,12 @@
             } catch (error) {
                 hideTypingIndicator();
                 addMessage('ai', `Hiba történt: ${error.message}`, 'Error');
+            } finally {
+                // Küldés gomb visszaállítása
+                sendButton.classList.remove('loading');
+                sendButton.disabled = false;
+                sendButton.innerHTML = '<i class="fas fa-paper-plane"></i>';
+                messageInput.focus();
             }
         }
 
