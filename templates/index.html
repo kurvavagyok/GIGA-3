@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="hu">
 <head>
@@ -732,7 +733,7 @@
         .input-wrapper {
             display: flex;
             gap: 0.5rem;
-            align-items: center;
+            align-items: flex-end;
             max-width: 1000px;
             margin: 0 auto;
         }
@@ -793,7 +794,7 @@
         }
 
         .input-field:hover {
-            border-color: rgba(0,255, 136, 0.3);
+            border-color: rgba(0, 255, 136, 0.3);
             background: var(--color-glass-strong);
             transform: scale(1.005);
         }
@@ -922,6 +923,395 @@
             padding: 3rem 2rem;
             max-width: 600px;
             margin: 0 auto;
+        }
+
+        .welcome-logo {
+            width: 140px;
+            height: 140px;
+            margin: 0 auto 2rem;
+            position: relative;
+            background: transparent;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform-style: preserve-3d;
+            animation: logoFloat 8s ease-in-out infinite;
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            filter: drop-shadow(0 25px 50px rgba(0, 255, 136, 0.4));
+        }
+
+        .welcome-logo:hover {
+            transform: scale(1.2) rotateY(30deg) rotateX(15deg);
+            filter: 
+                drop-shadow(0 35px 70px rgba(0, 255, 136, 0.6))
+                drop-shadow(0 20px 40px rgba(0, 136, 255, 0.4))
+                drop-shadow(0 10px 20px rgba(139, 92, 246, 0.3));
+        }
+
+        @keyframes logoFloat {
+            0%, 100% { 
+                transform: rotateY(0deg) rotateX(0deg) translateY(0px);
+                filter: drop-shadow(0 25px 50px rgba(0, 255, 136, 0.4)) hue-rotate(0deg);
+            }
+            25% { 
+                transform: rotateY(15deg) rotateX(8deg) translateY(-10px);
+                filter: drop-shadow(0 30px 55px rgba(0, 136, 255, 0.4)) hue-rotate(45deg);
+            }
+            50% { 
+                transform: rotateY(0deg) rotateX(0deg) translateY(-15px);
+                filter: drop-shadow(0 35px 60px rgba(139, 92, 246, 0.4)) hue-rotate(90deg);
+            }
+            75% { 
+                transform: rotateY(-15deg) rotateX(-8deg) translateY(-10px);
+                filter: drop-shadow(0 30px 55px rgba(255, 107, 107, 0.4)) hue-rotate(45deg);
+            }
+        }
+
+        .brain-3d {
+            width: 110px;
+            height: 90px;
+            position: relative;
+            transform-style: preserve-3d;
+            animation: brainRotate 12s ease-in-out infinite;
+        }
+
+        @keyframes brainRotate {
+            0%, 100% { transform: rotateY(0deg) rotateX(0deg); }
+            20% { transform: rotateY(20deg) rotateX(8deg); }
+            40% { transform: rotateY(-10deg) rotateX(15deg); }
+            60% { transform: rotateY(25deg) rotateX(-5deg); }
+            80% { transform: rotateY(-20deg) rotateX(10deg); }
+        }
+
+        .brain-hemisphere {
+            position: absolute;
+            width: 50px;
+            height: 65px;
+            border-radius: 25px 25px 15px 8px;
+            background: linear-gradient(145deg, 
+                var(--color-primary) 0%,
+                var(--color-secondary) 20%,
+                var(--color-accent) 40%,
+                var(--color-tertiary) 60%,
+                var(--color-secondary) 80%,
+                var(--color-primary) 100%);
+            box-shadow: 
+                inset 4px 4px 12px rgba(255, 255, 255, 0.5),
+                inset -4px -4px 12px rgba(0, 0, 0, 0.4),
+                0 8px 25px rgba(0, 0, 0, 0.3);
+            transition: all 0.5s ease;
+            overflow: hidden;
+        }
+
+        .brain-hemisphere::before {
+            content: '';
+            position: absolute;
+            top: 12px;
+            left: 8px;
+            right: 8px;
+            height: 4px;
+            background: linear-gradient(90deg, 
+                rgba(255, 255, 255, 0.8) 0%,
+                transparent 30%,
+                rgba(255, 255, 255, 0.6) 50%,
+                transparent 70%,
+                rgba(255, 255, 255, 0.8) 100%);
+            border-radius: 3px;
+            animation: brainPulse 4s ease-in-out infinite;
+        }
+
+        .brain-hemisphere::after {
+            content: '';
+            position: absolute;
+            top: 22px;
+            left: 10px;
+            right: 10px;
+            height: 3px;
+            background: linear-gradient(90deg, 
+                rgba(255, 255, 255, 0.6) 0%,
+                transparent 40%,
+                rgba(255, 255, 255, 0.4) 60%,
+                transparent 100%);
+            border-radius: 2px;
+            animation: brainPulse 4s ease-in-out infinite 0.8s;
+        }
+
+        .brain-left {
+            left: 3px;
+            transform: rotateY(-20deg) translateZ(12px);
+            z-index: 3;
+        }
+
+        .brain-left::before {
+            box-shadow: 0 0 8px rgba(0, 255, 136, 0.5);
+        }
+
+        .brain-right {
+            right: 3px;
+            transform: rotateY(20deg) scaleX(-1) translateZ(12px);
+            z-index: 3;
+        }
+
+        .brain-right::before {
+            box-shadow: 0 0 8px rgba(0, 136, 255, 0.5);
+        }
+
+        .brain-cortex {
+            position: absolute;
+            top: 8px;
+            left: 6px;
+            right: 6px;
+            bottom: 15px;
+            background: linear-gradient(135deg,
+                rgba(255, 255, 255, 0.1) 0%,
+                transparent 50%,
+                rgba(0, 255, 136, 0.1) 100%);
+            border-radius: 20px 20px 10px 5px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .brain-left .brain-cortex {
+            animation: cortexGlow 5s ease-in-out infinite;
+        }
+
+        .brain-right .brain-cortex {
+            animation: cortexGlow 5s ease-in-out infinite 1s;
+        }
+
+        @keyframes cortexGlow {
+            0%, 100% { 
+                background: linear-gradient(135deg,
+                    rgba(255, 255, 255, 0.1) 0%,
+                    transparent 50%,
+                    rgba(0, 255, 136, 0.1) 100%);
+                box-shadow: inset 0 0 10px rgba(0, 255, 136, 0.2);
+            }
+            50% { 
+                background: linear-gradient(135deg,
+                    rgba(0, 255, 136, 0.2) 0%,
+                    rgba(0, 136, 255, 0.1) 50%,
+                    rgba(139, 92, 246, 0.15) 100%);
+                box-shadow: inset 0 0 20px rgba(0, 255, 136, 0.4);
+            }
+        }
+
+        .brain-stem {
+            position: absolute;
+            bottom: -12px;
+            left: 50%;
+            transform: translateX(-50%) translateZ(8px);
+            width: 18px;
+            height: 28px;
+            background: linear-gradient(180deg, 
+                var(--color-secondary) 0%,
+                var(--color-accent) 30%,
+                var(--color-tertiary) 60%,
+                var(--color-quaternary) 100%);
+            border-radius: 0 0 9px 9px;
+            box-shadow: 
+                inset 3px 0 6px rgba(255, 255, 255, 0.4),
+                inset -3px 0 6px rgba(0, 0, 0, 0.3),
+                0 5px 15px rgba(0, 0, 0, 0.4);
+            z-index: 2;
+            animation: stemPulse 6s ease-in-out infinite;
+        }
+
+        @keyframes stemPulse {
+            0%, 100% { 
+                transform: translateX(-50%) translateZ(8px) scale(1);
+                box-shadow: 
+                    inset 3px 0 6px rgba(255, 255, 255, 0.4),
+                    inset -3px 0 6px rgba(0, 0, 0, 0.3),
+                    0 5px 15px rgba(0, 0, 0, 0.4);
+            }
+            50% { 
+                transform: translateX(-50%) translateZ(8px) scale(1.05);
+                box-shadow: 
+                    inset 3px 0 8px rgba(255, 255, 255, 0.6),
+                    inset -3px 0 8px rgba(0, 0, 0, 0.2),
+                    0 8px 20px rgba(0, 255, 136, 0.3);
+            }
+        }
+
+        .brain-corpus-callosum {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) translateZ(-3px);
+            width: 5px;
+            height: 35px;
+            background: linear-gradient(180deg, 
+                rgba(255, 255, 255, 0.7) 0%,
+                var(--color-accent) 25%,
+                var(--color-secondary) 50%,
+                var(--color-accent) 75%,
+                rgba(255, 255, 255, 0.7) 100%);
+            border-radius: 3px;
+            animation: corpusGlow 5s ease-in-out infinite;
+        }
+
+        @keyframes corpusGlow {
+            0%, 100% { 
+                opacity: 0.7; 
+                box-shadow: 0 0 12px rgba(139, 92, 246, 0.5);
+                transform: translate(-50%, -50%) translateZ(-3px) scaleY(1);
+            }
+            50% { 
+                opacity: 1; 
+                box-shadow: 0 0 25px rgba(139, 92, 246, 0.9);
+                transform: translate(-50%, -50%) translateZ(-3px) scaleY(1.1);
+            }
+        }
+
+        .brain-ventricles {
+            position: absolute;
+            top: 30%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 8px;
+            height: 15px;
+            background: radial-gradient(circle, 
+                rgba(0, 136, 255, 0.3) 0%,
+                rgba(0, 255, 136, 0.2) 50%,
+                transparent 100%);
+            border-radius: 4px;
+            z-index: 1;
+            animation: ventricleFlow 7s ease-in-out infinite;
+        }
+
+        @keyframes ventricleFlow {
+            0%, 100% { 
+                opacity: 0.3;
+                transform: translateX(-50%) scale(1);
+            }
+            50% { 
+                opacity: 0.8;
+                transform: translateX(-50%) scale(1.2);
+            }
+        }
+
+        .neural-network {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.9;
+            pointer-events: none;
+            z-index: 4;
+        }
+
+        .neural-node {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: currentColor;
+            border-radius: 50%;
+            box-shadow: 0 0 12px currentColor;
+            animation: neuralPulse 4s ease-in-out infinite;
+        }
+
+        .neural-connection {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(90deg, 
+                transparent 0%,
+                var(--color-secondary) 15%,
+                var(--color-accent) 30%,
+                var(--color-primary) 50%,
+                var(--color-accent) 70%,
+                var(--color-secondary) 85%,
+                transparent 100%);
+            transform-origin: left center;
+            animation: connectionFlow 6s ease-in-out infinite;
+            border-radius: 1px;
+        }
+
+        @keyframes connectionFlow {
+            0%, 100% { 
+                opacity: 0.4; 
+                transform: scaleX(0.7) scaleY(0.5);
+                box-shadow: 0 0 3px rgba(0, 255, 136, 0.3);
+            }
+            50% { 
+                opacity: 1; 
+                transform: scaleX(1.3) scaleY(1.5);
+                box-shadow: 0 0 8px rgba(0, 255, 136, 0.6);
+            }
+        }
+
+        .neural-node:nth-child(1) { 
+            top: 12%; left: 18%; 
+            animation-delay: 0s; 
+            color: var(--color-primary);
+        }
+        .neural-node:nth-child(2) { 
+            top: 20%; left: 78%; 
+            animation-delay: 0.7s; 
+            color: var(--color-secondary);
+        }
+        .neural-node:nth-child(3) { 
+            top: 68%; left: 22%; 
+            animation-delay: 1.4s; 
+            color: var(--color-accent);
+        }
+        .neural-node:nth-child(4) { 
+            top: 75%; left: 72%; 
+            animation-delay: 2.1s; 
+            color: var(--color-tertiary);
+        }
+        .neural-node:nth-child(5) { 
+            top: 42%; left: 12%; 
+            animation-delay: 2.8s; 
+            color: var(--color-quaternary);
+        }
+        .neural-node:nth-child(6) { 
+            top: 58%; left: 85%; 
+            animation-delay: 3.5s; 
+            color: var(--color-primary);
+        }
+        .neural-node:nth-child(7) { 
+            top: 35%; left: 50%; 
+            animation-delay: 1s; 
+            color: var(--color-secondary);
+        }
+        .neural-node:nth-child(8) { 
+            top: 85%; left: 45%; 
+            animation-delay: 2.5s; 
+            color: var(--color-accent);
+        }
+
+        @keyframes brainPulse {
+            0%, 100% { 
+                opacity: 0.5; 
+                transform: scaleX(1); 
+            }
+            25% { 
+                opacity: 0.8; 
+                transform: scaleX(1.1); 
+            }
+            50% { 
+                opacity: 1; 
+                transform: scaleX(1.3); 
+            }
+            75% { 
+                opacity: 0.8; 
+                transform: scaleX(1.1); 
+            }
+        }
+
+        @keyframes neuralPulse {
+            0%, 100% { 
+                opacity: 0.4; 
+                transform: scale(1); 
+                box-shadow: 0 0 8px currentColor;
+            }
+            50% { 
+                opacity: 1; 
+                transform: scale(2); 
+                box-shadow: 0 0 20px currentColor;
+            }
         }
 
         .welcome-title {
@@ -2183,3 +2573,1647 @@
         </div>
 
         <div class="chat-container" id="chatContainer">
+            <div id="welcomeScreen" class="welcome-section">
+                <div class="welcome-logo">
+                    <div class="brain-3d">
+                        <div class="brain-hemisphere brain-left">
+                            <div class="brain-cortex"></div>
+                        </div>
+                        <div class="brain-hemisphere brain-right">
+                            <div class="brain-cortex"></div>
+                        </div>
+                        <div class="brain-corpus-callosum"></div>
+                        <div class="brain-stem"></div>
+                        <div class="brain-ventricles"></div>
+                        <div class="neural-network">
+                            <div class="neural-node"></div>
+                            <div class="neural-node"></div>
+                            <div class="neural-node"></div>
+                            <div class="neural-node"></div>
+                            <div class="neural-node"></div>
+                            <div class="neural-node"></div>
+                            <div class="neural-node"></div>
+                            <div class="neural-node"></div>
+                            <div class="neural-connection" style="top: 18%; left: 22%; width: 55%; transform: rotate(12deg);"></div>
+                            <div class="neural-connection" style="top: 35%; left: 15%; width: 65%; transform: rotate(-8deg);"></div>
+                            <div class="neural-connection" style="top: 52%; left: 28%; width: 45%; transform: rotate(20deg);"></div>
+                            <div class="neural-connection" style="top: 70%; left: 20%; width: 58%; transform: rotate(-15deg);"></div>
+                            <div class="neural-connection" style="top: 25%; left: 35%; width: 40%; transform: rotate(45deg);"></div>
+                            <div class="neural-connection" style="top: 60%; left: 40%; width: 35%; transform: rotate(-30deg);"></div>
+                        </div>
+                    </div>
+                </div>
+                <h1 class="welcome-title">Jade</h1>
+                <p class="welcome-subtitle">Deep Discovery AI Platform</p>
+
+                <div class="flex justify-center">
+                    <button onclick="showAppIntroduction()" class="intro-button haptic-feedback touch-feedback">
+                        <i class="fas fa-compass"></i>
+                        <span>Ismerd meg</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="messagesContainer"></div>
+        </div>
+
+        <div class="input-container">
+            <div class="input-wrapper">
+                <button id="floatingActionBtn" class="floating-action-btn haptic-feedback touch-feedback">
+                    <i class="fas fa-plus"></i>
+                </button>
+                <textarea 
+                    id="messageInput" 
+                    class="input-field" 
+                    placeholder="Kérdezz bármit..."
+                    rows="1"
+                    style="margin-left: 3rem;"
+                ></textarea>
+                <button id="sendButton" class="send-button haptic-feedback touch-feedback">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="fullscreen-overlay" id="fullscreenOverlay">
+        <div class="fullscreen-content">
+            <button class="fullscreen-close haptic-feedback touch-feedback" onclick="closeFullscreen()">
+                <i class="fas fa-times"></i>
+            </button>
+            <div id="fullscreenContent"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="exaSearchModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="exaModalTitle">Exa Keresés</h2>
+                <button class="modal-close haptic-feedback touch-feedback" onclick="closeModal('exaSearchModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="exaModalContent"></div>
+            <div id="exaModalResult" style="display: none;"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="alphaServiceModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="alphaModalTitle">Alpha Service</h2>
+                <button class="modal-close haptic-feedback touch-feedback" onclick="closeModal('alphaServiceModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="alphaModalContent"></div>
+            <div id="alphaModalResult" style="display: none;"></div>
+        </div>
+    </div>
+
+    <!-- Floating Action Menu -->
+    <div class="floating-menu-overlay" id="floatingMenuOverlay">
+        <div class="floating-menu">
+            <h3 class="text-lg font-semibold text-white mb-4 text-center">Válassz funkciót</h3>
+            <div class="floating-menu-item haptic-feedback touch-feedback" onclick="openCodeModal()">
+                <div class="floating-menu-icon">
+                    <i class="fas fa-code"></i>
+                </div>
+                <div>
+                    <div class="text-white font-semibold">Kódolás</div>
+                    <div class="text-gray-400 text-sm">AI kód generálás Qwen 3-mal</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kódolási Panel -->
+    <div class="code-panel" id="codePanel">
+        <div class="code-panel-content">
+            <div class="code-header">
+                <h2 class="text-xl font-bold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
+                    <i class="fas fa-code mr-2"></i>AI Kódolás - Qwen 3
+                </h2>
+                <button class="modal-close haptic-feedback touch-feedback" onclick="closeCodePanel()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="code-body">
+                <div class="code-input-panel">
+                    <h3 class="text-lg font-semibold text-white mb-4">Paraméterek</h3>
+                    
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Programozási nyelv</label>
+                    <select id="languageSelect" class="language-select">
+                        <option value="python">Python</option>
+                        <option value="javascript">JavaScript</option>
+                        <option value="html">HTML</option>
+                        <option value="css">CSS</option>
+                        <option value="cpp">C++</option>
+                        <option value="java">Java</option>
+                        <option value="csharp">C#</option>
+                        <option value="php">PHP</option>
+                        <option value="go">Go</option>
+                        <option value="rust">Rust</option>
+                        <option value="swift">Swift</option>
+                        <option value="kotlin">Kotlin</option>
+                        <option value="dart">Dart</option>
+                        <option value="sql">SQL</option>
+                    </select>
+
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Komplexitás</label>
+                    <select id="complexitySelect" class="complexity-select">
+                        <option value="simple">Egyszerű (20-30 sor)</option>
+                        <option value="medium" selected>Közepes</option>
+                        <option value="complex">Komplex</option>
+                        <option value="enterprise">Vállalati szint</option>
+                    </select>
+
+                    <label class="block text-sm font-medium text-gray-300 mb-2">AI Kreativitás</label>
+                    <input type="range" id="temperatureSlider" class="temperature-slider" min="0" max="1" step="0.1" value="0.3">
+                    <div class="text-center text-sm text-gray-400" id="temperatureValue">0.3</div>
+
+                    <label class="block text-sm font-medium text-gray-300 mb-2 mt-4">Mit szeretnél kódolni?</label>
+                    <textarea id="codePromptInput" class="code-prompt-input" placeholder="Írd le részletesen, milyen kódot szeretnél generálni..."></textarea>
+
+                    <button id="generateCodeBtn" class="generate-btn haptic-feedback touch-feedback">
+                        <i class="fas fa-magic mr-2"></i>Kód Generálása
+                    </button>
+                </div>
+
+                <div class="code-output-panel">
+                    <div id="codeOutputContainer" style="padding: 1.5rem; text-align: center; color: #94a3b8;">
+                        <i class="fas fa-code text-4xl mb-4"></i>
+                        <p>A generált kód itt fog megjelenni...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div></div>
+
+    <!-- Mobil optimalizáció -->
+    <div class="code-panel-mobile" id="codePanelMobile" style="display: none;">
+        <div class="code-panel-content">
+            <div class="code-header">
+                <h2 class="text-lg font-bold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
+                    <i class="fas fa-code mr-2"></i>AI Kódolás
+                </h2>
+                <button class="modal-close haptic-feedback touch-feedback" onclick="closeCodePanel()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="code-body" style="flex-direction: column; gap: 1rem;">
+                <div class="code-input-panel" style="width: 100%;">
+                    <h3 class="text-lg font-semibold text-white mb-4">Paraméterek</h3>
+                    
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Programozási nyelv</label>
+                    <select id="languageSelectMobile" class="language-select">
+                        <option value="python">Python</option>
+                        <option value="javascript">JavaScript</option>
+                        <option value="html">HTML</option>
+                        <option value="css">CSS</option>
+                        <option value="cpp">C++</option>
+                        <option value="java">Java</option>
+                        <option value="csharp">C#</option>
+                        <option value="php">PHP</option>
+                        <option value="go">Go</option>
+                        <option value="rust">Rust</option>
+                        <option value="swift">Swift</option>
+                        <option value="kotlin">Kotlin</option>
+                        <option value="dart">Dart</option>
+                        <option value="sql">SQL</option>
+                    </select>
+
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Komplexitás</label>
+                    <select id="complexitySelectMobile" class="complexity-select">
+                        <option value="simple">Egyszerű (20-30 sor)</option>
+                        <option value="medium" selected>Közepes</option>
+                        <option value="complex">Komplex</option>
+                        <option value="enterprise">Vállalati szint</option>
+                    </select>
+
+                    <label class="block text-sm font-medium text-gray-300 mb-2">AI Kreativitás</label>
+                    <input type="range" id="temperatureSliderMobile" class="temperature-slider" min="0" max="1" step="0.1" value="0.3">
+                    <div class="text-center text-sm text-gray-400" id="temperatureValueMobile">0.3</div>
+
+                    <label class="block text-sm font-medium text-gray-300 mb-2 mt-4">Mit szeretnél kódolni?</label>
+                    <textarea id="codePromptInputMobile" class="code-prompt-input" placeholder="Írd le részletesen, milyen kódot szeretnél generálni..."></textarea>
+
+                    <button id="generateCodeBtnMobile" class="generate-btn haptic-feedback touch-feedback">
+                        <i class="fas fa-magic mr-2"></i>Kód Generálása
+                    </button>
+                </div>
+
+                <div class="code-output-panel" style="width: 100%;">
+                    <div id="codeOutputContainerMobile" style="padding: 1.5rem; text-align: center; color: #94a3b8;">
+                        <i class="fas fa-code text-4xl mb-4"></i>
+                        <p>A generált kód itt fog megjelenni...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast üzenet -->
+    <div id="toast" class="toast">
+        <div class="flex items-center gap-2">
+            <i class="fas fa-check-circle text-green-400"></i>
+            <span id="toastMessage">Sikeresen másolva a vágólapra!</span>
+        </div>
+    </div>
+
+    <script>
+        let isTyping = false;
+        let currentUserId = localStorage.getItem('jadeUserId') || `user_${Math.random().toString(36).substring(2, 15)}`;
+        let alphaServices = {};
+
+        localStorage.setItem('jadeUserId', currentUserId);
+
+        const sidebar = document.getElementById('sidebar');
+        const menuToggle = document.getElementById('menuToggle');
+        const newChatBtn = document.getElementById('newChatBtn');
+        const chatContainer = document.getElementById('chatContainer');
+        const messagesContainer = document.getElementById('messagesContainer');
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const modelBadge = document.getElementById('modelBadge');
+        const fullscreenOverlay = document.getElementById('fullscreenOverlay');
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadAlphaServices();
+            setupEventListeners();
+            setupHapticFeedback();
+            setupScrollEffects();
+            messageInput.focus();
+        });
+
+        function setupHapticFeedback() {
+            document.querySelectorAll('.haptic-feedback').forEach(element => {
+                element.addEventListener('touchstart', () => {
+                    if (navigator.vibrate) {
+                        navigator.vibrate(10);
+                    }
+                }, { passive: true });
+
+                element.addEventListener('click', () => {
+                    if (navigator.vibrate) {
+                        navigator.vibrate(5);
+                    }
+                });
+            });
+        }
+
+        async function loadAlphaServices() {
+            try {
+                const response = await fetch('/api/services');
+                const data = await response.json();
+                alphaServices = data.categories;
+                renderServiceCategories();
+            } catch (error) {
+                console.error('Error loading services:', error);
+            }
+        }
+
+        function renderServiceCategories() {
+            const container = document.getElementById('categoriesContainer');
+            container.innerHTML = '';
+
+            const categoryIcons = {
+                'biologiai_orvosi': 'fas fa-dna',
+                'kemiai_anyagtudomanyi': 'fas fa-atom',
+                'kornyezeti_fenntarthato': 'fas fa-leaf',
+                'fizikai_asztrofizikai': 'fas fa-satellite',
+                'technologiai_melymu': 'fas fa-microchip',
+                'tarsadalmi_gazdasagi': 'fas fa-chart-line'
+            };
+
+            const categoryNames = {
+                'biologiai_orvosi': 'Biológiai & Orvosi',
+                'kemiai_anyagtudomanyi': 'Kémiai & Anyagtudományi',
+                'kornyezeti_fenntarthato': 'Környezeti & Fenntartható',
+                'fizikai_asztrofizikai': 'Fizikai & Asztrofizikai',
+                'technologiai_melymu': 'Technológiai & Mélyműszaki',
+                'tarsadalmi_gazdasagi': 'Társadalmi & Gazdasági'
+            };
+
+            for (const [categoryKey, services] of Object.entries(alphaServices)) {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'mb-4';
+
+                const header = document.createElement('div');
+                header.className = 'section-header haptic-feedback touch-feedback';
+                header.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <i class="${categoryIcons[categoryKey]} text-sm"></i>
+                        <span>${categoryNames[categoryKey]}</span>
+                        <span class="text-xs opacity-70">(${Object.keys(services).length})</span>
+                    </div>
+                    <i class="fas fa-chevron-down transition-transform transform text-sm" id="alpha-chevron-${categoryKey}"></i>
+                `;
+
+                const servicesDiv = document.createElement('div');
+                servicesDiv.className = 'section-content';
+                servicesDiv.id = `alpha-services-${categoryKey}`;
+
+                for (const [serviceName, serviceDesc] of Object.entries(services)) {
+                    const serviceItem = document.createElement('div');
+                    serviceItem.className = 'service-item haptic-feedback touch-feedback';
+                    serviceItem.innerHTML = `
+                        <div class="service-icon">
+                            <i class="${categoryIcons[categoryKey]}"></i>
+                        </div>
+                        <div class="service-info">
+                            <div class="service-title">${serviceName}</div>
+                            <div class="service-desc">${serviceDesc}</div>
+                        </div>
+                    `;
+
+                    serviceItem.addEventListener('click', () => {
+                        openAlphaService(serviceName, serviceDesc, categoryKey);
+                    });
+
+                    servicesDiv.appendChild(serviceItem);
+                }
+
+                header.addEventListener('click', () => {
+                    toggleAlphaCategory(categoryKey);
+                });
+
+                categoryDiv.appendChild(header);
+                categoryDiv.appendChild(servicesDiv);
+                container.appendChild(categoryDiv);
+            }
+        }
+
+        function toggleSection(sectionKey) {
+            const contentDiv = document.getElementById(`content-${sectionKey}`);
+            const chevron = document.getElementById(`chevron-${sectionKey}`);
+
+            if (contentDiv.classList.contains('expanded')) {
+                contentDiv.classList.remove('expanded');
+                chevron.style.transform = 'rotate(0deg)';
+            } else {
+                contentDiv.classList.add('expanded');
+                chevron.style.transform = 'rotate(180deg)';
+            }
+        }
+
+        function toggleAlphaCategory(categoryKey) {
+            const servicesDiv = document.getElementById(`alpha-services-${categoryKey}`);
+            const chevron = document.getElementById(`alpha-chevron-${categoryKey}`);
+
+            if (servicesDiv.classList.contains('expanded')) {
+                servicesDiv.classList.remove('expanded');
+                chevron.style.transform = 'rotate(0deg)';
+            } else {
+                servicesDiv.classList.add('expanded');
+                chevron.style.transform = 'rotate(180deg)';
+            }
+        }
+
+        function openExaModal(functionType) {
+            const modal = document.getElementById('exaSearchModal');
+            const title = document.getElementById('exaModalTitle');
+            const content = document.getElementById('exaModalContent');
+
+            const modalConfigs = {
+                'neural_search': {
+                    title: 'Neurális Keresés',
+                    content: `
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Keresési lekérdezés</label>
+                                <input type="text" id="neuralQuery" class="w-full p-3 bg-gray-800 border border-gray-600 rounded-lg text-white" placeholder="Írj be egy keresési lekérdezést...">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Találatok száma</label>
+                                <select id="neuralResults" class="w-full p-3 bg-gray-800 border border-gray-600 rounded-lg text-white">
+                                    <option value="5">5 találat</option>
+                                    <option value="10" selected>10 találat</option>
+                                    <option value="20">20 találat</option>
+                                </select>
+                            </div>
+                            <button onclick="executeNeuralSearch()" class="w-full bg-gradient-to-r from-green-400 to-blue-500 text-black font-semibold py-3 px-6 rounded-lg hover:opacity-90 transition-opacity">
+                                <i class="fas fa-search mr-2"></i>Keresés indítása
+                            </button>
+                        </div>
+                    `
+                },
+                'keyword_search': {
+                    title: 'Kulcsszavas Keresés',
+                    content: `
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Kulcsszavak</label>
+                                <input type="text" id="keywordQuery" class="w-full p-3 bg-gray-800 border border-gray-600 rounded-lg text-white" placeholder="Kulcsszavak vesszővel elválasztva...">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Domainok (opcionális)</label>
+                                <input type="text" id="keywordDomains" class="w-full p-3 bg-gray-800 border border-gray-600 rounded-lg text-white" placeholder="például: arxiv.org, nature.com">
+                            </div>
+                            <button onclick="executeKeywordSearch()" class="w-full bg-gradient-to-r from-blue-400 to-purple-500 text-white font-semibold py-3 px-6 rounded-lg hover:opacity-90 transition-opacity">
+                                <i class="fas fa-key mr-2"></i>Kulcsszavas keresés
+                            </button>
+                        </div>
+                    `
+                },
+                'find_similar': {
+                    title: 'Hasonló tartalmak',
+                    content: `
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Referencia URL</label>
+                                <input type="url" id="similarUrl" class="w-full p-3 bg-gray-800 border border-gray-600 rounded-lg text-white" placeholder="https://example.com/article">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Hasonló találatok száma</label>
+                                <select id="similarResults" class="w-full p-3 bg-gray-800 border border-gray-600 rounded-lg text-white">
+                                    <option value="5">5 hasonló</option>
+                                    <option value="10" selected>10 hasonló</option>
+                                    <option value="15">15 hasonló</option>
+                                </select>
+                            </div>
+                            <button onclick="executeSimilarSearch()" class="w-full bg-gradient-to-r from-purple-400 to-pink-500 text-white font-semibold py-3 px-6 rounded-lg hover:opacity-90 transition-opacity">
+                                <i class="fas fa-link mr-2"></i>Hasonló keresése
+                            </button>
+                        </div>
+                    `
+                },
+                'research_automation': {
+                    title: 'Automatizált Kutatás',
+                    content: `
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Kutatási téma</label>
+                                <textarea id="researchTopic" rows="3" class="w-full p-3 bg-gray-800 border border-gray-600 rounded-lg text-white" placeholder="Írd le a kutatási témát részletesen..."></textarea>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Források száma</label>
+                                    <select id="researchSources" class="w-full p-3 bg-gray-800 border border-gray-600 rounded-lg text-white">
+                                        <option value="10">10 forrás</option>
+                                        <option value="20" selected>20 forrás</option>
+                                        <option value="50">50 forrás</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Összefoglaló hossza</label>
+                                    <select id="researchSummary" class="w-full p-3 bg-gray-800 border border-gray-600 rounded-lg text-white">
+                                        <option value="200">Rövid (200 szó)</option>
+                                        <option value="500" selected>Közepes (500 szó)</option>
+                                        <option value="1000">Hosszú (1000 szó)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button onclick="executeResearchAutomation()" class="w-full bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 text-white font-semibold py-3 px-6 rounded-lg hover:opacity-90 transition-opacity">
+                                <i class="fas fa-robot mr-2"></i>Kutatás automatizálása
+                            </button>
+                        </div>
+                    `
+                }
+            };
+
+            const config = modalConfigs[functionType];
+            if (config) {
+                title.textContent = config.title;
+                content.innerHTML = config.content;
+            }
+
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.classList.add('show');
+            }, 10);
+        }
+
+        function openAlphaService(serviceName, serviceDesc, category) {
+            const modal = document.getElementById('alphaServiceModal');
+            const title = document.getElementById('alphaModalTitle');
+            const content = document.getElementById('alphaModalContent');
+
+            title.textContent = serviceName;
+            content.innerHTML = `
+                <div class="space-y-4">
+                    <div class="p-4 bg-gray-800 rounded-lg border border-gray-600">
+                        <h3 class="text-sm font-semibold text-green-400 mb-2">Szolgáltatás leírása</h3>
+                        <p class="text-gray-300 text-sm">${serviceDesc}</p>
+                        <p class="text-xs text-gray-500 mt-2">Kategória: ${category.replace(/_/g, ' ')}</p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Kérésed vagy kérdésed</label>
+                        <textarea id="alphaQuery" rows="4" class="w-full p-3 bg-gray-800 border border-gray-600 rounded-lg text-white resize-none" placeholder="Írd le részletesen, mit szeretnél elemezni vagy megtudni ezzel a szolgáltatással..."></textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">További részletek (opcionális)</label>
+                        <textarea id="alphaDetails" rows="2" class="w-full p-3 bg-gray-800 border border-gray-600 rounded-lg text-white resize-none" placeholder="További kontextus, paraméterek vagy specifikus igények..."></textarea>
+                    </div>
+                    
+                    <button onclick="executeAlphaService('${serviceName}', '${category}')" class="w-full bg-gradient-to-r from-green-400 to-blue-500 text-black font-semibold py-3 px-6 rounded-lg hover:opacity-90 transition-opacity">
+                        <i class="fas fa-cogs mr-2"></i>${serviceName} Elemzés indítása
+                    </button>
+                </div>
+            `;
+
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.classList.add('show');
+            }, 10);
+        }
+
+        function setupEventListeners() {
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+            });
+
+            setupSwipeGestures();
+
+            document.addEventListener('click', (e) => {
+                if (window.innerWidth <= 1024 && !sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+                    sidebar.classList.remove('open');
+                }
+            });
+
+            newChatBtn.addEventListener('click', startNewChat);
+
+            sendButton.addEventListener('click', sendMessage);
+            messageInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            messageInput.addEventListener('input', () => {
+                messageInput.style.height = 'auto';
+                messageInput.style.height = Math.min(messageInput.scrollHeight, 100) + 'px';
+            });
+
+            // Virtuális billentyűzet kezelése
+            if (window.visualViewport) {
+                window.visualViewport.addEventListener('resize', () => {
+                    const inputContainer = document.querySelector('.input-container');
+                    if (inputContainer) {
+                        const isKeyboardOpen = window.visualViewport.height < window.innerHeight * 0.75;
+                        if (isKeyboardOpen) {
+                            inputContainer.style.bottom = '0px';
+                            chatContainer.style.paddingBottom = inputContainer.offsetHeight + 'px';
+                        } else {
+                            inputContainer.style.bottom = '0px';
+                            chatContainer.style.paddingBottom = '6rem';
+                        }
+                    }
+                });
+            }
+
+            // Focus kezelés mobil eszközökön
+            messageInput.addEventListener('focus', () => {
+                if (window.innerWidth <= 768) {
+                    setTimeout(() => {
+                        chatContainer.scrollTop = chatContainer.scrollHeight;
+                    }, 300);
+                }
+            });
+
+            messageInput.addEventListener('blur', () => {
+                if (window.innerWidth <= 768) {
+                    setTimeout(() => {
+                        chatContainer.style.paddingBottom = '6rem';
+                    }, 100);
+                }
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    closeModal('exaSearchModal');
+                    closeModal('alphaServiceModal');
+                    closeFullscreen();
+                }
+            });
+
+            // Orientáció változás kezelése
+            window.addEventListener('orientationchange', () => {
+                setTimeout(() => {
+                    messageInput.blur();
+                    messageInput.focus();
+                }, 500);
+            });
+        }
+
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message || isTyping) return;
+
+            // Küldés gomb loading állapotba
+            sendButton.classList.add('loading');
+            sendButton.disabled = true;
+            sendButton.innerHTML = '<i class="loading-spinner"></i>';
+
+            addMessage('user', message);
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+            hideWelcomeScreen();
+            showTypingIndicator();
+
+            try {
+                const response = await fetch('/api/deep_discovery/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message, user_id: currentUserId })
+                });
+
+                const data = await response.json();
+                hideTypingIndicator();
+                addMessage('ai', data.response);
+                modelBadge.textContent = 'Deep AI + Exa';
+            } catch (error) {
+                hideTypingIndicator();
+                addMessage('ai', `Hiba történt: ${error.message}`, 'Error');
+            } finally {
+                // Küldés gomb visszaállítása
+                sendButton.classList.remove('loading');
+                sendButton.disabled = false;
+                sendButton.innerHTML = '<i class="fas fa-paper-plane"></i>';
+                messageInput.focus();
+            }
+        }
+
+        function addMessage(type, content, model = null) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+
+            if (type === 'user') {
+                messageDiv.innerHTML = `
+                    <div class="flex justify-end">
+                        <div class="user-message">
+                            ${content}
+                        </div>
+                    </div>
+                `;
+            } else {
+                const messageId = 'msg_' + Date.now();
+                messageDiv.innerHTML = `
+                    <div class="ai-message" id="${messageId}">
+                        <div class="ai-header">
+                            <div class="ai-avatar">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="ai-info">
+                                <h4>Jade AI</h4>
+                            </div>
+                        </div>
+                        <div class="ai-content">
+                            ${content.replace(/\n/g, '<br>')}
+                        </div>
+                        <div class="message-actions">
+                            <button class="action-button haptic-feedback touch-feedback" onclick="copyMessage('${messageId}')">
+                                <i class="fas fa-copy"></i>
+                                <span>Másolás</span>
+                            </button>
+                            <button class="action-button haptic-feedback touch-feedback" onclick="expandMessage('${messageId}')">
+                                <i class="fas fa-expand-alt"></i>
+                                <span>Bővebben</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            messagesContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function copyMessage(messageId) {
+            const messageElement = document.getElementById(messageId);
+            const content = messageElement.querySelector('.ai-content').textContent;
+            
+            navigator.clipboard.writeText(content).then(() => {
+                if (navigator.vibrate) {
+                    navigator.vibrate(50);
+                }
+            });
+        }
+
+        function expandMessage(messageId) {
+            const messageElement = document.getElementById(messageId);
+            const content = messageElement.querySelector('.ai-content').innerHTML;
+            
+            const fullscreenContent = document.getElementById('fullscreenContent');
+            fullscreenContent.innerHTML = `
+                <div class="max-w-4xl mx-auto">
+                    <div class="ai-message" style="max-width: 100%; border: none;">
+                        <div class="ai-header">
+                            <div class="ai-avatar">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="ai-info">
+                                <h4>Jade AI - Részletes Válasz</h4>
+                            </div>
+                        </div>
+                        <div class="ai-content" style="font-size: 1rem; line-height: 1.8;">
+                            ${content}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            showFullscreen();
+        }
+
+        function showFullscreen() {
+            fullscreenOverlay.style.display = 'flex';
+            setTimeout(() => {
+                fullscreenOverlay.classList.add('show');
+            }, 10);
+        }
+
+        function closeFullscreen() {
+            fullscreenOverlay.classList.remove('show');
+            setTimeout(() => {
+                fullscreenOverlay.style.display = 'none';
+            }, 500);
+        }
+
+        function hideWelcomeScreen() {
+            welcomeScreen.style.display = 'none';
+        }
+
+        function showTypingIndicator() {
+            isTyping = true;
+            const indicator = document.createElement('div');
+            indicator.id = 'typingIndicator';
+            indicator.className = 'message';
+            indicator.innerHTML = `
+                <div class="ai-message">
+                    <div class="typing-indicator">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                </div>
+            `;
+            messagesContainer.appendChild(indicator);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function hideTypingIndicator() {
+            isTyping = false;
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) indicator.remove();
+        }
+
+        function startNewChat() {
+            messagesContainer.innerHTML = '';
+            welcomeScreen.style.display = 'block';
+            messageInput.focus();
+            modelBadge.textContent = 'Deep AI + Exa';
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('show');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        }
+
+        function showAppIntroduction() {
+            const fullscreenContent = document.getElementById('fullscreenContent');
+            fullscreenContent.innerHTML = `
+                <div class="presentation-container">
+                    <div class="presentation-navigation">
+                        <button onclick="closeFullscreen()" class="back-button">
+                            <i class="fas fa-arrow-left"></i>
+                            <span>Vissza</span>
+                        </button>
+                        <div class="presentation-progress">
+                            <div class="progress-bar"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="presentation-content" id="presentationContent">
+                        <div class="presentation-slide active" data-slide="0">
+                            <div class="welcome-logo mb-8">
+                                <div class="brain-3d">
+                                    <div class="brain-hemisphere brain-left"></div>
+                                    <div class="brain-hemisphere brain-right"></div>
+                                    <div class="brain-corpus-callosum"></div>
+                                    <div class="brain-stem"></div>
+                                    <div class="neural-network">
+                                        <div class="neural-node"></div>
+                                        <div class="neural-node"></div>
+                                        <div class="neural-node"></div>
+                                        <div class="neural-node"></div>
+                                        <div class="neural-node"></div>
+                                        <div class="neural-node"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <h1 class="text-5xl font-bold mb-4 bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
+                                Jade
+                            </h1>
+                            <p class="text-2xl text-gray-400 mb-8">
+                                Deep Discovery AI Platform
+                            </p>
+                            <div class="text-center">
+                                <div class="scroll-indicator">
+                                    <i class="fas fa-chevron-down animate-bounce"></i>
+                                    <p class="text-sm text-gray-500 mt-2">Görgess le a folytatáshoz</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="presentation-slide" data-slide="1">
+                            <div class="slide-content">
+                                <div class="text-6xl mb-6">🔍</div>
+                                <h2 class="text-3xl font-bold mb-4 text-green-400">Exa AI Keresés</h2>
+                                <p class="text-xl text-gray-300 leading-relaxed">
+                                    Neurális és kulcsszavas keresés a weben valós időben. 
+                                    Intelligens tartalom feldolgozás és strukturált eredmények.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="presentation-slide" data-slide="2">
+                            <div class="slide-content">
+                                <div class="text-6xl mb-6">⚡</div>
+                                <h2 class="text-3xl font-bold mb-4 text-blue-400">150+ Alpha Szolgáltatás</h2>
+                                <p class="text-xl text-gray-300 leading-relaxed">
+                                    Biológiai, kémiai, környezeti és fizikai elemzések. 
+                                    Speciális AI modellek minden tudományterülethez.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="presentation-slide" data-slide="3">
+                            <div class="slide-content">
+                                <div class="text-6xl mb-6">🧬</div>
+                                <h2 class="text-3xl font-bold mb-4 text-purple-400">Fehérje Struktúra</h2>
+                                <p class="text-xl text-gray-300 leading-relaxed">
+                                    AlphaFold adatbázis közvetlen lekérdezés. 
+                                    3D struktúrák és molekuláris tulajdonságok elemzése.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="presentation-slide" data-slide="4">
+                            <div class="slide-content">
+                                <div class="text-6xl mb-6">🤖</div>
+                                <h2 class="text-3xl font-bold mb-4 text-yellow-400">Hibrid AI</h2>
+                                <p class="text-xl text-gray-300 leading-relaxed">
+                                    Cerebras Llama 4 és Google Gemini modellek. 
+                                    Párhuzamos feldolgozás és optimalizált válaszok.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="presentation-slide" data-slide="5">
+                            <div class="slide-content">
+                                <div class="text-6xl mb-6">🔬</div>
+                                <h2 class="text-3xl font-bold mb-4 text-red-400">Deep Research</h2>
+                                <p class="text-xl text-gray-300 leading-relaxed">
+                                    Többmodelles párhuzamos kutatási elemzés. 
+                                    Automatizált irodalom feldolgozás és szintézis.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="presentation-slide" data-slide="6">
+                            <div class="slide-content">
+                                <div class="text-6xl mb-6">🚀</div>
+                                <h2 class="text-3xl font-bold mb-4 text-cyan-400">Kezdjük el!</h2>
+                                <p class="text-xl text-gray-300 mb-8 leading-relaxed">
+                                    Válassz a menüből egy speciális funkciót, vagy kezdj el beszélgetni!
+                                </p>
+                                <button onclick="closeFullscreen()" class="intro-button haptic-feedback touch-feedback text-lg px-8 py-4">
+                                    <i class="fas fa-rocket mr-2"></i>
+                                    <span>Beszélgetés indítása</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            showFullscreen();
+            setupPresentationScroll();
+        }
+
+        function setupSwipeGestures() {
+            let startX, startY, currentX, currentY;
+            let isSwipeEnabled = false;
+            let swipeStartTime = 0;
+
+            document.addEventListener('touchstart', (e) => {
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+                currentX = startX;
+                currentY = startY;
+                isSwipeEnabled = true;
+                swipeStartTime = Date.now();
+            }, { passive: true });
+
+            document.addEventListener('touchmove', (e) => {
+                if (!isSwipeEnabled) return;
+
+                currentX = e.touches[0].clientX;
+                currentY = e.touches[0].clientY;
+
+                const deltaX = currentX - startX;
+                const deltaY = currentY - startY;
+
+                // Csak horizontális swipe esetén akadályozzuk meg a scrollolást
+                if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 20) {
+                    // Sidebar területen vagy ha a sidebar nyitva van
+                    if ((startX < 80 && deltaX > 0) || 
+                        (sidebar.classList.contains('open') && deltaX < 0)) {
+                        e.preventDefault();
+                    }
+                }
+            }, { passive: false });
+
+            document.addEventListener('touchend', (e) => {
+                if (!isSwipeEnabled) return;
+
+                const deltaX = currentX - startX;
+                const deltaY = currentY - startY;
+                const swipeTime = Date.now() - swipeStartTime;
+                const swipeSpeed = Math.abs(deltaX) / swipeTime;
+
+                // Gyors swipe vagy elegendő távolság
+                if ((Math.abs(deltaX) > Math.abs(deltaY) && 
+                    (Math.abs(deltaX) > 80 || swipeSpeed > 0.5)) && 
+                    swipeTime < 500) {
+                    
+                    if (navigator.vibrate) {
+                        navigator.vibrate([10]);
+                    }
+
+                    // Jobbra swipe: sidebar megnyitása (bal szélről)
+                    if (deltaX > 0 && startX < 80 && !sidebar.classList.contains('open')) {
+                        sidebar.classList.add('open');
+                    } 
+                    // Balra swipe: sidebar bezárása
+                    else if (deltaX < 0 && sidebar.classList.contains('open')) {
+                        sidebar.classList.remove('open');
+                    }
+                }
+
+                isSwipeEnabled = false;
+            }, { passive: true });
+
+            // Pull-to-refresh letiltása
+            document.addEventListener('touchstart', (e) => {
+                if (window.scrollY === 0) {
+                    document.body.style.overscrollBehavior = 'contain';
+                }
+            }, { passive: true });
+
+            document.addEventListener('touchend', () => {
+                document.body.style.overscrollBehavior = 'auto';
+            }, { passive: true });
+        }
+
+        function setupScrollEffects() {
+            const messages = document.querySelectorAll('.message');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0) scale(1)';
+                    }
+                });
+            }, {
+                threshold: 0.1,
+                rootMargin: '50px'
+            });
+
+            // Scroll parallax effect
+            chatContainer.addEventListener('scroll', () => {
+                const scrolled = chatContainer.scrollTop;
+                const rate = scrolled * -0.5;
+                
+                // Parallax effekt a háttérre
+                document.documentElement.style.setProperty('--scroll-offset', `${rate}px`);
+            });
+
+            // Lazy loading animáció
+            const lazyElements = document.querySelectorAll('.service-item, .glass-panel');
+            const lazyObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.animationDelay = Math.random() * 0.5 + 's';
+                        entry.target.classList.add('animate-in');
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            lazyElements.forEach(el => lazyObserver.observe(el));
+        }
+
+        // Exa keresési funkciók
+        async function executeNeuralSearch() {
+            const query = document.getElementById('neuralQuery').value.trim();
+            const numResults = document.getElementById('neuralResults').value;
+            
+            if (!query) {
+                alert('Kérlek, add meg a keresési lekérdezést!');
+                return;
+            }
+            
+            showSearchProgress('Neurális keresés folyamatban...');
+            
+            try {
+                const response = await fetch('/api/exa/neural_search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        query: query,
+                        num_results: parseInt(numResults)
+                    })
+                });
+                
+                const data = await response.json();
+                displaySearchResults(data, 'neurális keresés');
+            } catch (error) {
+                displaySearchError('Hiba a neurális keresés során: ' + error.message);
+            }
+        }
+        
+        async function executeKeywordSearch() {
+            const query = document.getElementById('keywordQuery').value.trim();
+            const domains = document.getElementById('keywordDomains').value.trim();
+            
+            if (!query) {
+                alert('Kérlek, add meg a kulcsszavakat!');
+                return;
+            }
+            
+            showSearchProgress('Kulcsszavas keresés folyamatban...');
+            
+            try {
+                const payload = {
+                    query: query,
+                    type: 'keyword',
+                    num_results: 15
+                };
+                
+                if (domains) {
+                    payload.include_domains = domains.split(',').map(d => d.trim());
+                }
+                
+                const response = await fetch('/api/exa/advanced_search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await response.json();
+                displaySearchResults(data, 'kulcsszavas keresés');
+            } catch (error) {
+                displaySearchError('Hiba a kulcsszavas keresés során: ' + error.message);
+            }
+        }
+        
+        async function executeSimilarSearch() {
+            const url = document.getElementById('similarUrl').value.trim();
+            const numResults = document.getElementById('similarResults').value;
+            
+            if (!url) {
+                alert('Kérlek, add meg a referencia URL-t!');
+                return;
+            }
+            
+            showSearchProgress('Hasonló tartalmak keresése...');
+            
+            try {
+                const response = await fetch('/api/exa/find_similar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        url: url,
+                        num_results: parseInt(numResults)
+                    })
+                });
+                
+                const data = await response.json();
+                displaySimilarResults(data);
+            } catch (error) {
+                displaySearchError('Hiba a hasonlóság alapú keresés során: ' + error.message);
+            }
+        }
+        
+        async function executeResearchAutomation() {
+            const topic = document.getElementById('researchTopic').value.trim();
+            const sources = document.getElementById('researchSources').value;
+            const summaryLength = document.getElementById('researchSummary').value;
+            
+            if (!topic) {
+                alert('Kérlek, add meg a kutatási témát!');
+                return;
+            }
+            
+            showSearchProgress('Automatizált kutatás folyamatban...');
+            
+            try {
+                const response = await fetch('/api/deep_discovery/research_trends', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        query: topic,
+                        num_results: parseInt(sources),
+                        summary_length: parseInt(summaryLength)
+                    })
+                });
+                
+                const data = await response.json();
+                displayResearchResults(data);
+            } catch (error) {
+                displaySearchError('Hiba az automatizált kutatás során: ' + error.message);
+            }
+        }
+        
+        // Alpha szolgáltatások végrehajtása
+        async function executeAlphaService(serviceName, category) {
+            const query = document.getElementById('alphaQuery').value.trim();
+            const details = document.getElementById('alphaDetails').value.trim();
+            
+            if (!query) {
+                alert('Kérlek, írd le a kérésedet!');
+                return;
+            }
+            
+            showSearchProgress(serviceName + ' elemzés folyamatban...');
+            
+            try {
+                const response = await fetch(`/api/alpha/simple/${encodeURIComponent(serviceName)}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        service_name: serviceName,
+                        query: query,
+                        details: details
+                    })
+                });
+                
+                const data = await response.json();
+                displayAlphaResults(data);
+            } catch (error) {
+                displaySearchError('Hiba a ' + serviceName + ' szolgáltatás során: ' + error.message);
+            }
+        }
+        
+        // Eredmények megjelenítése
+        function showSearchProgress(message) {
+            const resultDiv = document.getElementById('exaModalResult') || document.getElementById('alphaModalResult');
+            if (resultDiv) {
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = `
+                    <div class="text-center py-8">
+                        <div class="loading-spinner mx-auto mb-4"></div>
+                        <p class="text-gray-400">${message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function displaySearchResults(data, searchType) {
+            const resultDiv = document.getElementById('exaModalResult');
+            if (!resultDiv) return;
+            
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `
+                <div class="mt-6 border-t border-gray-600 pt-6">
+                    <h3 class="text-lg font-semibold text-green-400 mb-4">${searchType.charAt(0).toUpperCase() + searchType.slice(1)} eredményei</h3>
+                    <p class="text-sm text-gray-400 mb-4">Összesen ${data.total_results} találat</p>
+                    <div class="space-y-4 max-h-96 overflow-y-auto">
+                        ${data.results ? data.results.map(result => `
+                            <div class="search-result">
+                                <a href="${result.url}" target="_blank" class="search-result-title">${result.title}</a>
+                                <div class="search-result-url">${result.url}</div>
+                                ${result.text_preview ? `<div class="search-result-snippet">${result.text_preview}</div>` : ''}
+                                ${result.published_date ? `<div class="text-xs text-gray-500 mt-2">Publikálva: ${result.published_date}</div>` : ''}
+                            </div>
+                        `).join('') : '<p class="text-gray-400">Nincs megjeleníthető eredmény</p>'}
+                    </div>
+                </div>
+            `;
+        }
+        
+        function displaySimilarResults(data) {
+            const resultDiv = document.getElementById('exaModalResult');
+            if (!resultDiv) return;
+            
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `
+                <div class="mt-6 border-t border-gray-600 pt-6">
+                    <h3 class="text-lg font-semibold text-purple-400 mb-4">Hasonló tartalmak</h3>
+                    <p class="text-sm text-gray-400 mb-4">Referencia: ${data.reference_url}</p>
+                    <p class="text-sm text-gray-400 mb-4">Talált hasonló tartalmak: ${data.total_found}</p>
+                    <div class="space-y-4 max-h-96 overflow-y-auto">
+                        ${data.similar_results ? data.similar_results.map(result => `
+                            <div class="search-result">
+                                <a href="${result.url}" target="_blank" class="search-result-title">${result.title}</a>
+                                <div class="search-result-url">${result.url}</div>
+                                ${result.similarity_score ? `<div class="text-xs text-green-400 mt-1">Hasonlóság: ${(result.similarity_score * 100).toFixed(1)}%</div>` : ''}
+                                ${result.text_content ? `<div class="search-result-snippet">${result.text_content.substring(0, 200)}...</div>` : ''}
+                            </div>
+                        `).join('') : '<p class="text-gray-400">Nincs hasonló tartalom</p>'}
+                    </div>
+                </div>
+            `;
+        }
+        
+        function displayResearchResults(data) {
+            const resultDiv = document.getElementById('exaModalResult');
+            if (!resultDiv) return;
+            
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `
+                <div class="mt-6 border-t border-gray-600 pt-6">
+                    <h3 class="text-lg font-semibold text-blue-400 mb-4">Kutatási eredmények</h3>
+                    <div class="bg-gray-800 p-4 rounded-lg mb-4">
+                        <h4 class="font-semibold text-gray-300 mb-2">AI Összefoglaló</h4>
+                        <div class="text-gray-300 text-sm leading-relaxed">${data.summary}</div>
+                    </div>
+                    ${data.sources && data.sources.length > 0 ? `
+                        <div>
+                            <h4 class="font-semibold text-gray-300 mb-3">Felhasznált források (${data.sources.length})</h4>
+                            <div class="space-y-2 max-h-64 overflow-y-auto">
+                                ${data.sources.map(source => `
+                                    <div class="search-result">
+                                        <a href="${source.url}" target="_blank" class="search-result-title text-sm">${source.title}</a>
+                                        <div class="search-result-url text-xs">${source.url}</div>
+                                        ${source.published_date ? `<div class="text-xs text-gray-500">Publikálva: ${source.published_date}</div>` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+        
+        function displayAlphaResults(data) {
+            const resultDiv = document.getElementById('alphaModalResult');
+            if (!resultDiv) return;
+            
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `
+                <div class="mt-6 border-t border-gray-600 pt-6">
+                    <h3 class="text-lg font-semibold text-green-400 mb-4">${data.service_name} Elemzés</h3>
+                    <div class="bg-gray-800 p-4 rounded-lg mb-4">
+                        <h4 class="font-semibold text-gray-300 mb-2">Kategória</h4>
+                        <p class="text-sm text-gray-400">${data.category} - ${data.description}</p>
+                    </div>
+                    <div class="bg-gray-800 p-4 rounded-lg">
+                        <h4 class="font-semibold text-gray-300 mb-3">Részletes elemzés</h4>
+                        <div class="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">${data.analysis}</div>
+                    </div>
+                    <div class="text-xs text-gray-500 mt-4 text-center">
+                        Státusz: ${data.status} | Időpont: ${new Date(data.timestamp).toLocaleString('hu-HU')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        function displaySearchError(errorMessage) {
+            const resultDiv = document.getElementById('exaModalResult') || document.getElementById('alphaModalResult');
+            if (resultDiv) {
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = `
+                    <div class="mt-6 border-t border-red-600 pt-6">
+                        <div class="bg-red-900/20 border border-red-600 rounded-lg p-4">
+                            <h4 class="text-red-400 font-semibold mb-2">Hiba történt</h4>
+                            <p class="text-red-300 text-sm">${errorMessage}</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-overlay')) {
+                closeModal('exaSearchModal');
+                closeModal('alphaServiceModal');
+            }
+            
+            if (e.target.classList.contains('fullscreen-overlay')) {
+                closeFullscreen();
+            }
+
+            if (e.target.classList.contains('floating-menu-overlay')) {
+                closeFloatingMenu();
+            }
+
+            if (e.target.classList.contains('code-panel')) {
+                closeCodePanel();
+            }
+        });
+
+        // Floating Action Button
+        document.getElementById('floatingActionBtn').addEventListener('click', () => {
+            openFloatingMenu();
+        });
+
+        // Temperature slider
+        document.getElementById('temperatureSlider').addEventListener('input', (e) => {
+            document.getElementById('temperatureValue').textContent = e.target.value;
+        });
+
+        // Generate code button
+        document.getElementById('generateCodeBtn').addEventListener('click', () => {
+            generateCode();
+        });
+
+        // Floating Menu Functions
+        function openFloatingMenu() {
+            const overlay = document.getElementById('floatingMenuOverlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => {
+                overlay.classList.add('show');
+            }, 10);
+        }
+
+        function closeFloatingMenu() {
+            const overlay = document.getElementById('floatingMenuOverlay');
+            overlay.classList.remove('show');
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 300);
+        }
+
+        // Code Panel Functions
+        function openCodeModal() {
+            closeFloatingMenu();
+            if (window.innerWidth <= 768) {
+                const panel = document.getElementById('codePanelMobile');
+                panel.style.display = 'flex';
+                setTimeout(() => {
+                    panel.classList.add('show');
+                }, 10);
+            } else {
+                const panel = document.getElementById('codePanel');
+                panel.style.display = 'flex';
+                setTimeout(() => {
+                    panel.classList.add('show');
+                }, 10);
+            }
+        }
+
+        function closeCodePanel() {
+            const panel = document.getElementById('codePanel');
+            const panelMobile = document.getElementById('codePanelMobile');
+            
+            if (panel.classList.contains('show')) {
+                panel.classList.remove('show');
+                setTimeout(() => {
+                    panel.style.display = 'none';
+                }, 400);
+            }
+            
+            if (panelMobile.classList.contains('show')) {
+                panelMobile.classList.remove('show');
+                setTimeout(() => {
+                    panelMobile.style.display = 'none';
+                }, 400);
+            }
+        }
+
+        // Prezentáció scroll funkcionalitás
+        function setupPresentationScroll() {
+            const content = document.getElementById('presentationContent');
+            const slides = content.querySelectorAll('.presentation-slide');
+            const progressBar = document.querySelector('.progress-bar');
+            let currentSlide = 0;
+
+            content.addEventListener('scroll', () => {
+                const scrollTop = content.scrollTop;
+                const slideHeight = window.innerHeight;
+                const newSlide = Math.round(scrollTop / slideHeight);
+                
+                if (newSlide !== currentSlide) {
+                    currentSlide = newSlide;
+                    updateSlides();
+                }
+                
+                // Progress bar frissítése
+                const progress = (scrollTop / (content.scrollHeight - content.clientHeight)) * 100;
+                progressBar.style.width = Math.min(progress, 100) + '%';
+            });
+
+            function updateSlides() {
+                slides.forEach((slide, index) => {
+                    slide.classList.remove('active', 'passed');
+                    if (index === currentSlide) {
+                        slide.classList.add('active');
+                    } else if (index < currentSlide) {
+                        slide.classList.add('passed');
+                    }
+                });
+            }
+
+            // Kezdeti állapot beállítása
+            updateSlides();
+        }
+
+        // Code Generation
+        async function generateCode() {
+            const prompt = document.getElementById('codePromptInput').value.trim();
+            const language = document.getElementById('languageSelect').value;
+            const complexity = document.getElementById('complexitySelect').value;
+            const temperature = parseFloat(document.getElementById('temperatureSlider').value);
+
+            if (!prompt) {
+                alert('Kérlek, írd le mit szeretnél kódolni!');
+                return;
+            }
+
+            const generateBtn = document.getElementById('generateCodeBtn');
+            const outputContainer = document.getElementById('codeOutputContainer');
+
+            // Loading állapot
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = '<i class="loading-spinner mr-2"></i>Generálás folyamatban...';
+            
+            outputContainer.innerHTML = `
+                <div class="text-center py-8">
+                    <div class="loading-spinner mx-auto mb-4"></div>
+                    <p class="text-gray-400">Qwen 3 dolgozik a kódon...</p>
+                </div>
+            `;
+
+            try {
+                const response = await fetch('/api/code_generation', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prompt: prompt,
+                        language: language,
+                        complexity: complexity,
+                        temperature: temperature
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    displayGeneratedCode(data);
+                } else {
+                    throw new Error(data.detail || 'Ismeretlen hiba');
+                }
+
+            } catch (error) {
+                outputContainer.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="fas fa-exclamation-triangle text-red-400 text-4xl mb-4"></i>
+                        <p class="text-red-400">Hiba történt: ${error.message}</p>
+                    </div>
+                `;
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.innerHTML = '<i class="fas fa-magic mr-2"></i>Kód Generálása';
+            }
+        }
+
+        function displayGeneratedCode(data) {
+            const outputContainer = document.getElementById('codeOutputContainer');
+            const codeId = 'code_' + Date.now();
+            
+            outputContainer.innerHTML = `
+                <div class="code-block">
+                    <div class="code-block-header">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-file-code text-green-400"></i>
+                            <span class="text-white font-medium">${data.language.toUpperCase()} • ${data.estimated_lines} sor</span>
+                            <span class="text-gray-400 text-sm">• ${data.model_used}</span>
+                        </div>
+                        <div class="code-block-actions">
+                            <button class="code-action-btn haptic-feedback touch-feedback" onclick="copyCode('${codeId}')">
+                                <i class="fas fa-copy"></i> Másolás
+                            </button>
+                            <button class="code-action-btn haptic-feedback touch-feedback" onclick="downloadCode('${codeId}', '${data.file_extension}')">
+                                <i class="fas fa-download"></i> Letöltés
+                            </button>
+                            <button class="code-action-btn haptic-feedback touch-feedback" onclick="editCode('${codeId}')">
+                                <i class="fas fa-edit"></i> Szerkesztés
+                            </button>
+                        </div>
+                    </div>
+                    <div class="code-content">
+                        <pre><code id="${codeId}" class="language-${data.language}">${escapeHtml(data.generated_code)}</code></pre>
+                    </div>
+                </div>
+            `;
+
+            // Syntax highlighting alkalmazása
+            setTimeout(() => {
+                if (window.Prism) {
+                    Prism.highlightAll();
+                }
+            }, 100);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function copyCode(codeId) {
+            const codeElement = document.getElementById(codeId);
+            const code = codeElement.textContent;
+            
+            navigator.clipboard.writeText(code).then(() => {
+                showToast('Kód sikeresen másolva a vágólapra!');
+                if (navigator.vibrate) {
+                    navigator.vibrate(50);
+                }
+            }).catch(err => {
+                console.error('Másolás hiba:', err);
+                showToast('Hiba a másolás során!', 'error');
+            });
+        }
+
+        function downloadCode(codeId, extension) {
+            const codeElement = document.getElementById(codeId);
+            const code = codeElement.textContent;
+            const filename = `generated_code_${Date.now()}.${extension}`;
+            
+            const blob = new Blob([code], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+            
+            showToast(`Kód letöltve: ${filename}`);
+            if (navigator.vibrate) {
+                navigator.vibrate([50, 100, 50]);
+            }
+        }
+
+        function editCode(codeId) {
+            const codeElement = document.getElementById(codeId);
+            const code = codeElement.textContent;
+            
+            // Egyszerű szerkesztő megjelenítése
+            const editModal = document.createElement('div');
+            editModal.className = 'modal-overlay show';
+            editModal.innerHTML = `
+                <div class="modal-content" style="max-width: 800px;">
+                    <div class="modal-header">
+                        <h2 class="modal-title">Kód Szerkesztése</h2>
+                        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div style="padding: 1.5rem;">
+                        <textarea id="editCodeArea" style="width: 100%; height: 400px; background: #2d2d2d; color: #fff; border: 1px solid #444; border-radius: 8px; padding: 1rem; font-family: monospace;">${code}</textarea>
+                        <div style="margin-top: 1rem; text-align: right;">
+                            <button onclick="saveEditedCode('${codeId}', 'editCodeArea'); this.closest('.modal-overlay').remove();" 
+                                    style="background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); color: #000; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                                Mentés
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(editModal);
+        }
+
+        function saveEditedCode(codeId, textareaId) {
+            const newCode = document.getElementById(textareaId).value;
+            const codeElement = document.getElementById(codeId);
+            codeElement.textContent = newCode;
+            
+            // Re-highlight
+            if (window.Prism) {
+                Prism.highlightElement(codeElement);
+            }
+            
+            showToast('Kód sikeresen módosítva!');
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const messageElement = document.getElementById('toastMessage');
+            
+            messageElement.textContent = message;
+            
+            // Icon váltás típus szerint
+            const icon = toast.querySelector('i');
+            if (type === 'error') {
+                icon.className = 'fas fa-exclamation-circle text-red-400';
+            } else {
+                icon.className = 'fas fa-check-circle text-green-400';
+            }
+            
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
