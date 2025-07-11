@@ -110,7 +110,14 @@ if EXA_API_KEY:
         logger.error(f"Error initializing Exa client: {e}")
 
 # --- FastAPI alkalmazás ---
-# App inicializálás a lifespan függvény után történik
+app = FastAPI(
+    title="Jade - Deep Discovery AI Platform",
+    description="Fejlett AI platform 150+ tudományos és innovációs szolgáltatással",
+    version="2.0.0",
+    docs_url="/api/docs",
+    redoc_url="/api/redoc",
+    openapi_url="/api/openapi.json"
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -1656,24 +1663,10 @@ async def cleanup_cache():
         del response_cache[key]
     logger.info(f"Cleaned up {len(expired_keys)} expired cache entries")
 
-from contextlib import asynccontextmanager
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """Alkalmazás életciklus kezelése"""
+@app.on_event("startup")
+async def startup_event():
+    """Alkalmazás indításkor futó események"""
     logger.info("Jade alkalmazás elindult - optimalizált verzió")
-    yield
-    logger.info("Jade alkalmazás leáll")
-
-app = FastAPI(
-    title="Jade - Deep Discovery AI Platform",
-    description="Fejlett AI platform 150+ tudományos és innovációs szolgáltatással",
-    version="2.0.0",
-    docs_url="/api/docs",
-    redoc_url="/api/redoc",
-    openapi_url="/api/openapi.json",
-    lifespan=lifespan
-)
 
 # Cache tisztítás endpoint
 @app.post("/api/admin/clear_cache")

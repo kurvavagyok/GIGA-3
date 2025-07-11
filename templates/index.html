@@ -3917,36 +3917,14 @@
         });
 
         // Temperature slider
-        const tempSlider = document.getElementById('temperatureSlider');
-        const tempSliderMobile = document.getElementById('temperatureSliderMobile');
-        
-        if (tempSlider) {
-            tempSlider.addEventListener('input', (e) => {
-                document.getElementById('temperatureValue').textContent = e.target.value;
-            });
-        }
-        
-        if (tempSliderMobile) {
-            tempSliderMobile.addEventListener('input', (e) => {
-                document.getElementById('temperatureValueMobile').textContent = e.target.value;
-            });
-        }
+        document.getElementById('temperatureSlider').addEventListener('input', (e) => {
+            document.getElementById('temperatureValue').textContent = e.target.value;
+        });
 
         // Generate code button
-        const generateBtn = document.getElementById('generateCodeBtn');
-        const generateBtnMobile = document.getElementById('generateCodeBtnMobile');
-        
-        if (generateBtn) {
-            generateBtn.addEventListener('click', () => {
-                generateCode();
-            });
-        }
-        
-        if (generateBtnMobile) {
-            generateBtnMobile.addEventListener('click', () => {
-                generateCodeMobile();
-            });
-        }
+        document.getElementById('generateCodeBtn').addEventListener('click', () => {
+            generateCode();
+        });
 
         // Floating Menu Functions
         function openFloatingMenu() {
@@ -4053,28 +4031,6 @@
 
             const generateBtn = document.getElementById('generateCodeBtn');
             const outputContainer = document.getElementById('codeOutputContainer');
-            
-            await executeCodeGeneration(prompt, language, complexity, temperature, generateBtn, outputContainer);
-        }
-
-        async function generateCodeMobile() {
-            const prompt = document.getElementById('codePromptInputMobile').value.trim();
-            const language = document.getElementById('languageSelectMobile').value;
-            const complexity = document.getElementById('complexitySelectMobile').value;
-            const temperature = parseFloat(document.getElementById('temperatureSliderMobile').value);
-
-            if (!prompt) {
-                alert('Kérlek, írd le mit szeretnél kódolni!');
-                return;
-            }
-
-            const generateBtn = document.getElementById('generateCodeBtnMobile');
-            const outputContainer = document.getElementById('codeOutputContainerMobile');
-            
-            await executeCodeGeneration(prompt, language, complexity, temperature, generateBtn, outputContainer);
-        }
-
-        async function executeCodeGeneration(prompt, language, complexity, temperature, generateBtn, outputContainer) {
 
             // Loading állapot
             generateBtn.disabled = true;
@@ -4102,7 +4058,7 @@
                 const data = await response.json();
                 
                 if (data.status === 'success') {
-                    displayGeneratedCode(data, outputContainer);
+                    displayGeneratedCode(data);
                 } else {
                     throw new Error(data.detail || 'Ismeretlen hiba');
                 }
@@ -4120,10 +4076,8 @@
             }
         }
 
-        function displayGeneratedCode(data, outputContainer = null) {
-            if (!outputContainer) {
-                outputContainer = document.getElementById('codeOutputContainer');
-            }
+        function displayGeneratedCode(data) {
+            const outputContainer = document.getElementById('codeOutputContainer');
             const codeId = 'code_' + Date.now();
             
             outputContainer.innerHTML = `
@@ -4154,12 +4108,8 @@
 
             // Syntax highlighting alkalmazása
             setTimeout(() => {
-                try {
-                    if (window.Prism && window.Prism.highlightAll) {
-                        Prism.highlightAll();
-                    }
-                } catch (e) {
-                    console.warn('Prism.js highlighting failed:', e);
+                if (window.Prism) {
+                    Prism.highlightAll();
                 }
             }, 100);
         }
