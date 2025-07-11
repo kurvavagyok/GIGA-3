@@ -209,6 +209,12 @@ class AlphaGenomeRequest(BaseModel):
     analysis_type: str = Field(..., description="Elemzés típusa")
     include_predictions: bool = Field(default=False, description="Fehérje előrejelzések")
 
+class CodeGenerationRequest(BaseModel):
+    prompt: str = Field(..., description="Kód generálási kérés")
+    language: str = Field(default="python", description="Programozási nyelv")
+    complexity: str = Field(default="medium", description="Kód komplexitása")
+    temperature: float = Field(default=0.3, ge=0.0, le=1.0, description="AI kreativitás")
+
 # Beszélgetési előzmények és cache
 chat_histories: Dict[str, List[Message]] = {}
 response_cache: Dict[str, Dict[str, Any]] = {}
@@ -1544,6 +1550,105 @@ async def alphagenome_analysis(req: AlphaGenomeRequest):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Hiba az AlphaGenome elemzésben: {e}"
+        )
+
+@app.post("/api/code_generation")
+async def generate_code(req: CodeGenerationRequest):
+    """Kód generálás Qwen 3 modellel"""
+    if not cerebras_client:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Cerebras Qwen 3 modell nem elérhető"
+        )
+
+    try:
+        # Nyelv-specifikus system prompt
+        language_prompts = {
+            "python": "Python programozó szakértő vagy. Írd az kódot PEP8 szabványok szerint, kommentekkel és dokumentációval.",
+            "javascript": "JavaScript/TypeScript szakértő vagy. Modern ES6+ szintaxist használj, írj tiszta, olvasható kódot.",
+            "html": "Frontend fejlesztő vagy. Szemantikus HTML-t írj, modern CSS-sel és hozzáférhetőségi szabványokkal.",
+            "css": "CSS szakértő vagy. Modern CSS3 tulajdonságokat használj, responsive designt alkalmazz.",
+            "cpp": "C++ programozó vagy. Modern C++17/20 funkciókat használj, memóriabiztos kódot írj.",
+            "java": "Java szakértő vagy. Spring Boot és modern Java gyakorlatokat alkalmazz.",
+            "csharp": "C# .NET fejlesztő vagy. SOLID elveket kövesd, async/await mintákat használj.",
+            "php": "PHP fejlesztő vagy. Modern PHP 8+ funkciókat használj, PSR szabványokat kövesd.",
+            "go": "Go fejlesztő vagy. Idiomatikus Go kódot írj, egyszerű és hatékony megoldásokat alkalmazz.",
+            "rust": "Rust szakértő vagy. Biztonságos, performáns kódot írj ownership elvek szerint.",
+            "swift": "Swift fejlesztő vagy. iOS/macOS kifejlesztéshez optimalizált kódot írj.",
+            "kotlin": "Kotlin fejlesztő vagy. Android fejlesztéshez és backend alkalmazásokhoz.",
+            "dart": "Dart/Flutter fejlesztő vagy. Cross-platform mobilapplikációkhoz.",
+            "sql": "Adatbázis szakértő vagy. Optimalizált SQL lekérdezéseket írj."
+        }
+
+        system_prompt = language_prompts.get(req.language.lower(), 
+            f"{req.language} programozó szakértő vagy. Tiszta, jól dokumentált kódot írj.")
+
+        # Komplexitás alapú kiegészítés
+        complexity_additions = {
+            "simple": "Egy egyszerű, rövid kódrészletet írj. Maximum 20-30 sor.",
+            "medium": "Közepes komplexitású kódot írj, funkciókat és osztályokat használva.",
+            "complex": "Komplex, teljes megoldást írj, több fájllal és fejlett funkcionalitással.",
+            "enterprise": "Vállalati szintű, scalable kódot írj design pattern-ekkel és dokumentációval."
+        }
+
+        system_prompt += f" {complexity_additions.get(req.complexity, '')}"
+        system_prompt += " A kódot magyar nyelvű kommentekkel lásd el, de a változónevek és függvénynevek legyenek angolul."
+
+        # Qwen 3 modell hívása
+        response_text = ""
+        stream = cerebras_client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": req.prompt}
+            ],
+            model="qwen-3-32b",
+            stream=True,
+            max_completion_tokens=16382,
+            temperature=req.temperature,
+            top_p=0.95
+        )
+
+        for chunk in stream:
+            if chunk.choices[0].delta.content:
+                response_text += chunk.choices[0].delta.content
+
+        # Kód extrakció és formázás
+        import re
+        code_blocks = re.findall(r'```(?:\w+)?\n(.*?)\n```', response_text, re.DOTALL)
+        
+        if code_blocks:
+            generated_code = code_blocks[0]
+        else:
+            # Ha nincs kódblokk, az egész választ tekintjük kódnak
+            generated_code = response_text.strip()
+
+        # Fájlkiterjesztés meghatározása
+        extensions = {
+            "python": "py", "javascript": "js", "html": "html", "css": "css",
+            "cpp": "cpp", "java": "java", "csharp": "cs", "php": "php",
+            "go": "go", "rust": "rs", "swift": "swift", "kotlin": "kt",
+            "dart": "dart", "sql": "sql", "typescript": "ts"
+        }
+        
+        file_extension = extensions.get(req.language.lower(), "txt")
+
+        return {
+            "generated_code": generated_code,
+            "full_response": response_text,
+            "language": req.language,
+            "complexity": req.complexity,
+            "file_extension": file_extension,
+            "estimated_lines": len(generated_code.split('\n')),
+            "model_used": "Qwen 3-32B",
+            "timestamp": datetime.now().isoformat(),
+            "status": "success"
+        }
+
+    except Exception as e:
+        logger.error(f"Error in code generation: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Hiba a kód generálás során: {e}"
         )
 
 # Cache tisztítási funkció
