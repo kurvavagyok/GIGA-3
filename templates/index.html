@@ -1713,6 +1713,29 @@
                 -webkit-backface-visibility: hidden;
                 backface-visibility: hidden;
             }
+
+            .code-panel-mobile {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: var(--color-bg);
+                z-index: 3000;
+                display: flex;
+                opacity: 0;
+                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                transform: translateY(100%);
+            }
+
+            .code-panel-mobile.show {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            .code-panel {
+                left: 0;
+            }
         }
 
         /* Scroll-based animációk */
@@ -1796,61 +1819,50 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
-            border: none;
-            color: #000;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: var(--color-text);
             font-size: 1.2rem;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: var(--shadow-primary);
+            backdrop-filter: blur(10px);
         }
 
         .floating-action-btn:hover {
             transform: translateY(-50%) scale(1.1) rotate(90deg);
-            box-shadow: var(--glow-primary);
+            background: rgba(255, 255, 255, 0.2);
+            border-color: var(--color-primary);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
         }
 
-        /* Kódolási Modal */
-        .code-modal {
+        /* Kódolási Panel */
+        .code-panel {
             position: fixed;
             top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            backdrop-filter: blur(25px);
-            z-index: 3000;
+            left: 320px;
+            right: 0;
+            bottom: 0;
+            background: var(--color-bg);
+            z-index: 1000;
             display: none;
             opacity: 0;
-            transition: opacity 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateX(100%);
         }
 
-        .code-modal.show {
+        .code-panel.show {
             opacity: 1;
+            transform: translateX(0);
         }
 
-        .code-modal-content {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0.9);
-            width: 95%;
-            max-width: 1200px;
-            height: 90%;
-            background: var(--color-surface);
-            border-radius: 20px;
-            border: 1px solid var(--color-border);
-            backdrop-filter: blur(var(--blur-strength));
+        .code-panel-content {
+            width: 100%;
+            height: 100%;
             display: flex;
             flex-direction: column;
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .code-modal.show .code-modal-content {
-            transform: translate(-50%, -50%) scale(1);
         }
 
         .code-header {
@@ -2006,6 +2018,134 @@
             to {
                 opacity: 1;
                 transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Prezentáció stílusok */
+        .presentation-container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .presentation-navigation {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            right: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .back-button {
+            background: var(--color-glass);
+            border: 1px solid var(--color-border);
+            border-radius: 50px;
+            padding: 0.75rem 1.5rem;
+            color: var(--color-text);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            backdrop-filter: blur(var(--blur-strength));
+        }
+
+        .back-button:hover {
+            background: var(--color-glass-strong);
+            transform: translateY(-2px);
+        }
+
+        .presentation-progress {
+            width: 200px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .presentation-content {
+            flex: 1;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .presentation-content::-webkit-scrollbar {
+            display: none;
+        }
+
+        .presentation-slide {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .presentation-slide.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .presentation-slide.passed {
+            opacity: 0.3;
+            transform: translateY(-50px);
+        }
+
+        .slide-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .scroll-indicator {
+            position: absolute;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--color-text-muted);
+        }
+
+        @media (max-width: 768px) {
+            .presentation-navigation {
+                top: 1rem;
+                left: 1rem;
+                right: 1rem;
+            }
+
+            .presentation-progress {
+                width: 150px;
+            }
+
+            .presentation-slide {
+                padding: 1rem;
+            }
+
+            .slide-content h2 {
+                font-size: 2rem;
+            }
+
+            .slide-content p {
+                font-size: 1rem;
             }
         }
 
@@ -2272,9 +2412,6 @@
                 <h1 class="text-lg font-semibold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
                     Jade AI Platform
                 </h1>
-                <span id="modelBadge" class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full font-medium">
-                    Deep AI + Exa
-                </span>
             </div>
         </div>
 
@@ -2383,14 +2520,14 @@
         </div>
     </div>
 
-    <!-- Kódolási Modal -->
-    <div class="code-modal" id="codeModal">
-        <div class="code-modal-content">
+    <!-- Kódolási Panel -->
+    <div class="code-panel" id="codePanel">
+        <div class="code-panel-content">
             <div class="code-header">
                 <h2 class="text-xl font-bold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
                     <i class="fas fa-code mr-2"></i>AI Kódolás - Qwen 3
                 </h2>
-                <button class="modal-close haptic-feedback touch-feedback" onclick="closeCodeModal()">
+                <button class="modal-close haptic-feedback touch-feedback" onclick="closeCodePanel()">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -2438,6 +2575,69 @@
 
                 <div class="code-output-panel">
                     <div id="codeOutputContainer" style="padding: 1.5rem; text-align: center; color: #94a3b8;">
+                        <i class="fas fa-code text-4xl mb-4"></i>
+                        <p>A generált kód itt fog megjelenni...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div></div>
+
+    <!-- Mobil optimalizáció -->
+    <div class="code-panel-mobile" id="codePanelMobile" style="display: none;">
+        <div class="code-panel-content">
+            <div class="code-header">
+                <h2 class="text-lg font-bold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
+                    <i class="fas fa-code mr-2"></i>AI Kódolás
+                </h2>
+                <button class="modal-close haptic-feedback touch-feedback" onclick="closeCodePanel()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="code-body" style="flex-direction: column; gap: 1rem;">
+                <div class="code-input-panel" style="width: 100%;">
+                    <h3 class="text-lg font-semibold text-white mb-4">Paraméterek</h3>
+                    
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Programozási nyelv</label>
+                    <select id="languageSelectMobile" class="language-select">
+                        <option value="python">Python</option>
+                        <option value="javascript">JavaScript</option>
+                        <option value="html">HTML</option>
+                        <option value="css">CSS</option>
+                        <option value="cpp">C++</option>
+                        <option value="java">Java</option>
+                        <option value="csharp">C#</option>
+                        <option value="php">PHP</option>
+                        <option value="go">Go</option>
+                        <option value="rust">Rust</option>
+                        <option value="swift">Swift</option>
+                        <option value="kotlin">Kotlin</option>
+                        <option value="dart">Dart</option>
+                        <option value="sql">SQL</option>
+                    </select>
+
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Komplexitás</label>
+                    <select id="complexitySelectMobile" class="complexity-select">
+                        <option value="simple">Egyszerű (20-30 sor)</option>
+                        <option value="medium" selected>Közepes</option>
+                        <option value="complex">Komplex</option>
+                        <option value="enterprise">Vállalati szint</option>
+                    </select>
+
+                    <label class="block text-sm font-medium text-gray-300 mb-2">AI Kreativitás</label>
+                    <input type="range" id="temperatureSliderMobile" class="temperature-slider" min="0" max="1" step="0.1" value="0.3">
+                    <div class="text-center text-sm text-gray-400" id="temperatureValueMobile">0.3</div>
+
+                    <label class="block text-sm font-medium text-gray-300 mb-2 mt-4">Mit szeretnél kódolni?</label>
+                    <textarea id="codePromptInputMobile" class="code-prompt-input" placeholder="Írd le részletesen, milyen kódot szeretnél generálni..."></textarea>
+
+                    <button id="generateCodeBtnMobile" class="generate-btn haptic-feedback touch-feedback">
+                        <i class="fas fa-magic mr-2"></i>Kód Generálása
+                    </button>
+                </div>
+
+                <div class="code-output-panel" style="width: 100%;">
+                    <div id="codeOutputContainerMobile" style="padding: 1.5rem; text-align: center; color: #94a3b8;">
                         <i class="fas fa-code text-4xl mb-4"></i>
                         <p>A generált kód itt fog megjelenni...</p>
                     </div>
@@ -3013,86 +3213,123 @@
         function showAppIntroduction() {
             const fullscreenContent = document.getElementById('fullscreenContent');
             fullscreenContent.innerHTML = `
-                <div class="max-w-4xl mx-auto text-center">
-                    <div class="welcome-logo mb-8">
-                        <div class="brain-3d">
-                            <div class="brain-hemisphere brain-left"></div>
-                            <div class="brain-hemisphere brain-right"></div>
-                            <div class="brain-corpus-callosum"></div>
-                            <div class="brain-stem"></div>
-                            <div class="neural-network">
-                                <div class="neural-node"></div>
-                                <div class="neural-node"></div>
-                                <div class="neural-node"></div>
-                                <div class="neural-node"></div>
-                                <div class="neural-node"></div>
-                                <div class="neural-node"></div>
-                                <div class="neural-connection" style="top: 20%; left: 25%; width: 45%; transform: rotate(15deg);"></div>
-                                <div class="neural-connection" style="top: 40%; left: 20%; width: 55%; transform: rotate(-10deg);"></div>
-                                <div class="neural-connection" style="top: 65%; left: 30%; width: 35%; transform: rotate(25deg);"></div>
+                <div class="presentation-container">
+                    <div class="presentation-navigation">
+                        <button onclick="closeFullscreen()" class="back-button">
+                            <i class="fas fa-arrow-left"></i>
+                            <span>Vissza</span>
+                        </button>
+                        <div class="presentation-progress">
+                            <div class="progress-bar"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="presentation-content" id="presentationContent">
+                        <div class="presentation-slide active" data-slide="0">
+                            <div class="welcome-logo mb-8">
+                                <div class="brain-3d">
+                                    <div class="brain-hemisphere brain-left"></div>
+                                    <div class="brain-hemisphere brain-right"></div>
+                                    <div class="brain-corpus-callosum"></div>
+                                    <div class="brain-stem"></div>
+                                    <div class="neural-network">
+                                        <div class="neural-node"></div>
+                                        <div class="neural-node"></div>
+                                        <div class="neural-node"></div>
+                                        <div class="neural-node"></div>
+                                        <div class="neural-node"></div>
+                                        <div class="neural-node"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <h1 class="text-5xl font-bold mb-4 bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
+                                Jade
+                            </h1>
+                            <p class="text-2xl text-gray-400 mb-8">
+                                Deep Discovery AI Platform
+                            </p>
+                            <div class="text-center">
+                                <div class="scroll-indicator">
+                                    <i class="fas fa-chevron-down animate-bounce"></i>
+                                    <p class="text-sm text-gray-500 mt-2">Görgess le a folytatáshoz</p>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <h1 class="text-4xl font-bold mb-4 bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
-                        Jade Deep Discovery AI Platform
-                    </h1>
-
-                    <p class="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
-                        A következő generációs AI platform, amely egyesíti a legfejlettebb mesterséges intelligencia modelleket és tudományos kutatási eszközöket.
-                    </p>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                        <div class="glass-panel p-6">
-                            <div class="text-4xl mb-4">🔍</div>
-                            <h3 class="text-lg font-semibold mb-2 text-green-400">Exa AI Keresés</h3>
-                            <p class="text-sm text-gray-300">Neurális és kulcsszavas keresés a weben valós időben</p>
+                        <div class="presentation-slide" data-slide="1">
+                            <div class="slide-content">
+                                <div class="text-6xl mb-6">🔍</div>
+                                <h2 class="text-3xl font-bold mb-4 text-green-400">Exa AI Keresés</h2>
+                                <p class="text-xl text-gray-300 leading-relaxed">
+                                    Neurális és kulcsszavas keresés a weben valós időben. 
+                                    Intelligens tartalom feldolgozás és strukturált eredmények.
+                                </p>
+                            </div>
                         </div>
 
-                        <div class="glass-panel p-6">
-                            <div class="text-4xl mb-4">⚡</div>
-                            <h3 class="text-lg font-semibold mb-2 text-blue-400">150+ Alpha Szolgáltatás</h3>
-                            <p class="text-sm text-gray-300">Biológiai, kémiai, környezeti és fizikai elemzések</p>
+                        <div class="presentation-slide" data-slide="2">
+                            <div class="slide-content">
+                                <div class="text-6xl mb-6">⚡</div>
+                                <h2 class="text-3xl font-bold mb-4 text-blue-400">150+ Alpha Szolgáltatás</h2>
+                                <p class="text-xl text-gray-300 leading-relaxed">
+                                    Biológiai, kémiai, környezeti és fizikai elemzések. 
+                                    Speciális AI modellek minden tudományterülethez.
+                                </p>
+                            </div>
                         </div>
 
-                        <div class="glass-panel p-6">
-                            <div class="text-4xl mb-4">🧬</div>
-                            <h3 class="text-lg font-semibold mb-2 text-purple-400">Fehérje Struktúra</h3>
-                            <p class="text-sm text-gray-300">AlphaFold adatbázis közvetlen lekérdezés</p>
+                        <div class="presentation-slide" data-slide="3">
+                            <div class="slide-content">
+                                <div class="text-6xl mb-6">🧬</div>
+                                <h2 class="text-3xl font-bold mb-4 text-purple-400">Fehérje Struktúra</h2>
+                                <p class="text-xl text-gray-300 leading-relaxed">
+                                    AlphaFold adatbázis közvetlen lekérdezés. 
+                                    3D struktúrák és molekuláris tulajdonságok elemzése.
+                                </p>
+                            </div>
                         </div>
 
-                        <div class="glass-panel p-6">
-                            <div class="text-4xl mb-4">🤖</div>
-                            <h3 class="text-lg font-semibold mb-2 text-yellow-400">Hibrid AI</h3>
-                            <p class="text-sm text-gray-300">Cerebras Llama 4 és Google Gemini modellek</p>
+                        <div class="presentation-slide" data-slide="4">
+                            <div class="slide-content">
+                                <div class="text-6xl mb-6">🤖</div>
+                                <h2 class="text-3xl font-bold mb-4 text-yellow-400">Hibrid AI</h2>
+                                <p class="text-xl text-gray-300 leading-relaxed">
+                                    Cerebras Llama 4 és Google Gemini modellek. 
+                                    Párhuzamos feldolgozás és optimalizált válaszok.
+                                </p>
+                            </div>
                         </div>
 
-                        <div class="glass-panel p-6">
-                            <div class="text-4xl mb-4">🔬</div>
-                            <h3 class="text-lg font-semibold mb-2 text-red-400">Deep Research</h3>
-                            <p class="text-sm text-gray-300">Többmodelles párhuzamos kutatási elemzés</p>
+                        <div class="presentation-slide" data-slide="5">
+                            <div class="slide-content">
+                                <div class="text-6xl mb-6">🔬</div>
+                                <h2 class="text-3xl font-bold mb-4 text-red-400">Deep Research</h2>
+                                <p class="text-xl text-gray-300 leading-relaxed">
+                                    Többmodelles párhuzamos kutatási elemzés. 
+                                    Automatizált irodalom feldolgozás és szintézis.
+                                </p>
+                            </div>
                         </div>
 
-                        <div class="glass-panel p-6">
-                            <div class="text-4xl mb-4">🌊</div>
-                            <h3 class="text-lg font-semibold mb-2 text-cyan-400">Glassmorphism 3.0</h3>
-                            <p class="text-sm text-gray-300">Modern, érintésvezérelt felhasználói élmény</p>
-                        </div>
-                    </div>
-
-                    <div class="text-center">
-                        <p class="text-gray-400 mb-6 text-lg">Kezdj el beszélgetni, vagy válassz a menüből egy speciális funkciókat!</p>
-                        <div class="flex justify-center">
-                            <button onclick="closeFullscreen()" class="intro-button haptic-feedback touch-feedback text-lg px-8 py-4">
-                                <i class="fas fa-rocket"></i>
-                                <span>Kezdjük el!</span>
-                            </button>
+                        <div class="presentation-slide" data-slide="6">
+                            <div class="slide-content">
+                                <div class="text-6xl mb-6">🚀</div>
+                                <h2 class="text-3xl font-bold mb-4 text-cyan-400">Kezdjük el!</h2>
+                                <p class="text-xl text-gray-300 mb-8 leading-relaxed">
+                                    Válassz a menüből egy speciális funkciót, vagy kezdj el beszélgetni!
+                                </p>
+                                <button onclick="closeFullscreen()" class="intro-button haptic-feedback touch-feedback text-lg px-8 py-4">
+                                    <i class="fas fa-rocket mr-2"></i>
+                                    <span>Beszélgetés indítása</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             `;
 
             showFullscreen();
+            setupPresentationScroll();
         }
 
         function setupSwipeGestures() {
@@ -3502,8 +3739,8 @@
                 closeFloatingMenu();
             }
 
-            if (e.target.classList.contains('code-modal')) {
-                closeCodeModal();
+            if (e.target.classList.contains('code-panel')) {
+                closeCodePanel();
             }
         });
 
@@ -3539,22 +3776,78 @@
             }, 300);
         }
 
-        // Code Modal Functions
+        // Code Panel Functions
         function openCodeModal() {
             closeFloatingMenu();
-            const modal = document.getElementById('codeModal');
-            modal.style.display = 'flex';
-            setTimeout(() => {
-                modal.classList.add('show');
-            }, 10);
+            if (window.innerWidth <= 768) {
+                const panel = document.getElementById('codePanelMobile');
+                panel.style.display = 'flex';
+                setTimeout(() => {
+                    panel.classList.add('show');
+                }, 10);
+            } else {
+                const panel = document.getElementById('codePanel');
+                panel.style.display = 'flex';
+                setTimeout(() => {
+                    panel.classList.add('show');
+                }, 10);
+            }
         }
 
-        function closeCodeModal() {
-            const modal = document.getElementById('codeModal');
-            modal.classList.remove('show');
-            setTimeout(() => {
-                modal.style.display = 'none';
-            }, 300);
+        function closeCodePanel() {
+            const panel = document.getElementById('codePanel');
+            const panelMobile = document.getElementById('codePanelMobile');
+            
+            if (panel.classList.contains('show')) {
+                panel.classList.remove('show');
+                setTimeout(() => {
+                    panel.style.display = 'none';
+                }, 400);
+            }
+            
+            if (panelMobile.classList.contains('show')) {
+                panelMobile.classList.remove('show');
+                setTimeout(() => {
+                    panelMobile.style.display = 'none';
+                }, 400);
+            }
+        }
+
+        // Prezentáció scroll funkcionalitás
+        function setupPresentationScroll() {
+            const content = document.getElementById('presentationContent');
+            const slides = content.querySelectorAll('.presentation-slide');
+            const progressBar = document.querySelector('.progress-bar');
+            let currentSlide = 0;
+
+            content.addEventListener('scroll', () => {
+                const scrollTop = content.scrollTop;
+                const slideHeight = window.innerHeight;
+                const newSlide = Math.round(scrollTop / slideHeight);
+                
+                if (newSlide !== currentSlide) {
+                    currentSlide = newSlide;
+                    updateSlides();
+                }
+                
+                // Progress bar frissítése
+                const progress = (scrollTop / (content.scrollHeight - content.clientHeight)) * 100;
+                progressBar.style.width = Math.min(progress, 100) + '%';
+            });
+
+            function updateSlides() {
+                slides.forEach((slide, index) => {
+                    slide.classList.remove('active', 'passed');
+                    if (index === currentSlide) {
+                        slide.classList.add('active');
+                    } else if (index < currentSlide) {
+                        slide.classList.add('passed');
+                    }
+                });
+            }
+
+            // Kezdeti állapot beállítása
+            updateSlides();
         }
 
         // Code Generation
