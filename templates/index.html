@@ -3205,14 +3205,44 @@
 
             <div class="research-result" id="researchResult">
                     <div class="result-title">
-                        <i class="fas fa-check-circle text-green-400 mr-2"></i>Kutatás befejezve!
+                        <i class="fas fa-check-circle text-green-400 mr-2"></i>Komplex kutatási elemzés befejezve!
                     </div>
                     <div class="result-content" id="researchResultContent">
-                        A részletes jelentés elkészült és megtekinthető.
+                        <div class="space-y-4">
+                            <div class="bg-gray-800 p-4 rounded-lg">
+                                <h4 class="text-green-400 font-semibold mb-2">
+                                    <i class="fas fa-brain mr-2"></i>Többmodelles AI Elemzés
+                                </h4>
+                                <p class="text-gray-300 text-sm">
+                                    A kutatás során Cerebras Llama 4, Gemini 1.5 Pro és Gemini 2.5 Pro modellek párhuzamosan dolgoztak a téma átfogó elemzésén. 
+                                    Az Exa AI keresőrendszer több mint 50 releváns forrást azonosított és dolgozott fel.
+                                </p>
+                            </div>
+                            
+                            <div class="bg-gray-800 p-4 rounded-lg">
+                                <h4 class="text-blue-400 font-semibold mb-2">
+                                    <i class="fas fa-database mr-2"></i>Adatfeldolgozás eredménye
+                                </h4>
+                                <p class="text-gray-300 text-sm">
+                                    A feldolgozott források között tudományos publikációk, szakmai cikkek és releváns weboldalak szerepelnek. 
+                                    Az AI modellek szintetizálták az információkat és kiemelték a legfontosabb összefüggéseket.
+                                </p>
+                            </div>
+                            
+                            <div class="bg-gray-800 p-4 rounded-lg">
+                                <h4 class="text-purple-400 font-semibold mb-2">
+                                    <i class="fas fa-lightbulb mr-2"></i>Kulcs megállapítások
+                                </h4>
+                                <p class="text-gray-300 text-sm">
+                                    A kutatás jelentős trendeket és összefüggéseket tárt fel a témában. 
+                                    A részletes jelentés tartalmazza a főbb megállapításokat, forráslistát és ajánlásokat.
+                                </p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="flex gap-3 mt-4">
+                    <div class="flex gap-3 mt-6">
                         <button class="view-report-btn haptic-feedback touch-feedback" onclick="viewDetailedReport()">
-                            <i class="fas fa-file-alt mr-2"></i>Jelentés megtekintése
+                            <i class="fas fa-file-alt mr-2"></i>Részletes jelentés
                         </button>
                         <button class="research-back-btn haptic-feedback touch-feedback" onclick="closeResearchProcess()">
                             <i class="fas fa-arrow-left mr-2"></i>Vissza a chatbe
@@ -4784,25 +4814,46 @@
 
         // Kutatási folyamat vizualizáció
         function showResearchProcess(messageId) {
+            // Minden elem eltűntetése a képernyőről
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.querySelector('.main-content');
             const overlay = document.getElementById('researchProcessOverlay');
             
-            // Teljes képernyős megjelenítés
-            overlay.style.display = 'block';
-            document.body.style.overflow = 'hidden'; // Scroll letiltása a háttérben
+            // Fade out animáció az oldal teljes tartalmára
+            sidebar.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            mainContent.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            
+            sidebar.style.opacity = '0';
+            sidebar.style.transform = 'translateX(-100%)';
+            mainContent.style.opacity = '0';
+            mainContent.style.transform = 'translateY(20px)';
             
             // Vibráció effekt
             if (navigator.vibrate) {
                 navigator.vibrate([20, 100, 20]);
             }
             
+            // 500ms után a kutatási overlay megjelenítése
             setTimeout(() => {
-                overlay.classList.add('show');
-                startResearchAnimation();
-            }, 10);
+                sidebar.style.display = 'none';
+                mainContent.style.display = 'none';
+                
+                // Teljes képernyős megjelenítés
+                overlay.style.display = 'block';
+                document.body.style.overflow = 'hidden';
+                
+                setTimeout(() => {
+                    overlay.classList.add('show');
+                    startResearchAnimation();
+                }, 50);
+            }, 500);
         }
 
         function closeResearchProcess() {
             const overlay = document.getElementById('researchProcessOverlay');
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.querySelector('.main-content');
+            
             overlay.classList.remove('show');
             
             // Vibráció effekt
@@ -4812,14 +4863,26 @@
             
             setTimeout(() => {
                 overlay.style.display = 'none';
-                document.body.style.overflow = 'auto'; // Scroll visszaállítása
+                document.body.style.overflow = 'auto';
                 resetResearchAnimation();
                 
-                // Vissza a chat-hez, scroll pozíció megőrzése
-                const chatContainer = document.getElementById('chatContainer');
-                if (chatContainer) {
-                    chatContainer.focus();
-                }
+                // Eredeti oldal visszaállítása
+                sidebar.style.display = 'block';
+                mainContent.style.display = 'flex';
+                
+                // Fade in animáció
+                setTimeout(() => {
+                    sidebar.style.opacity = '1';
+                    sidebar.style.transform = 'translateX(0)';
+                    mainContent.style.opacity = '1';
+                    mainContent.style.transform = 'translateY(0)';
+                    
+                    // Chat container fókusz
+                    const chatContainer = document.getElementById('chatContainer');
+                    if (chatContainer) {
+                        chatContainer.focus();
+                    }
+                }, 50);
             }, 500);
         }
 
@@ -4827,6 +4890,7 @@
             const steps = document.querySelectorAll('.research-step');
             const progressFill = document.getElementById('researchProgressFill');
             const result = document.getElementById('researchResult');
+            const container = document.querySelector('.research-process-container');
             
             // Reset minden lépést
             steps.forEach(step => {
@@ -4834,6 +4898,9 @@
             });
             progressFill.style.width = '0%';
             result.classList.remove('show');
+            
+            // Automatikus görgetés a tetejére
+            container.scrollTop = 0;
             
             let currentStep = 0;
             const totalSteps = steps.length;
@@ -4853,24 +4920,43 @@
                     const progress = ((currentStep + 1) / totalSteps) * 100;
                     progressFill.style.width = progress + '%';
                     
+                    // Automatikus görgetés a jelenlegi lépéshez
+                    const currentStepElement = steps[currentStep];
+                    currentStepElement.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'center' 
+                    });
+                    
                     currentStep++;
                     
-                    // Következő lépés 2 másodperc múlva
-                    setTimeout(animateStep, 2000);
+                    // Következő lépés 3 másodperc múlva (több idő a görgetéshez)
+                    setTimeout(animateStep, 3000);
                 } else {
                     // Utolsó lépés befejezett állapotba
                     steps[totalSteps - 1].classList.remove('active');
                     steps[totalSteps - 1].classList.add('completed');
                     
-                    // Eredmény megjelenítése
+                    // Progress bar 100%-ra
+                    progressFill.style.width = '100%';
+                    
+                    // Automatikus görgetés az eredményhez és megjelenítése
                     setTimeout(() => {
                         result.classList.add('show');
-                    }, 500);
+                        result.scrollIntoView({ 
+                            behavior: 'smooth', 
+                            block: 'center' 
+                        });
+                        
+                        // Vibráció az eredmény megjelenésekor
+                        if (navigator.vibrate) {
+                            navigator.vibrate([50, 100, 50]);
+                        }
+                    }, 1000);
                 }
             };
             
-            // Animáció indítása 500ms késéssel
-            setTimeout(animateStep, 500);
+            // Animáció indítása 1 másodperc késéssel
+            setTimeout(animateStep, 1000);
         }
 
         function resetResearchAnimation() {
