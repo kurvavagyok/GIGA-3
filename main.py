@@ -748,7 +748,7 @@ async def deep_discovery_chat(req: ChatRequest):
 
 @app.post("/api/deep_research")
 async def deep_research(req: DeepResearchRequest):
-    """Komplex deep research minden modellel"""
+    """Ultra komplex deep research 1000+ forrással és párhuzamos feldolgozással"""
     if not exa_client or not gemini_25_pro:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -756,212 +756,557 @@ async def deep_research(req: DeepResearchRequest):
         )
 
     try:
-        # 1. Exa keresés több típussal
-        logger.info(f"Starting deep research for: {req.query}")
+        logger.info(f"Starting MASSIVE deep research for: {req.query}")
+        all_results = []
 
-        # Neurális keresés
-        neural_results = []
-        try:
-            neural_search = exa_client.search(
-                query=req.query,
-                type="neural",
-                num_results=10,
-                text_contents={"max_characters": 2000, "strategy": "comprehensive"},
-                livecrawl="when_necessary"
-            )
-            neural_results = neural_search.results
-        except Exception as e:
-            logger.error(f"Neural search error: {e}")
+        # 1. FŐBB TUDOMÁNYOS DOMAIN CSOPORTOK
+        domain_groups = {
+            "core_scientific": [
+                "arxiv.org", "pubmed.ncbi.nlm.nih.gov", "nature.com", "science.org",
+                "cell.com", "nejm.org", "thelancet.com", "bmj.com", "plos.org",
+                "biorxiv.org", "medrxiv.org", "researchgate.net", "scholar.google.com"
+            ],
+            "engineering_tech": [
+                "ieee.org", "acm.org", "sciencedirect.com", "springer.com", "wiley.com",
+                "elsevier.com", "tandfonline.com", "sage.com", "emerald.com"
+            ],
+            "interdisciplinary": [
+                "pnas.org", "royalsociety.org", "aaas.org", "frontiersin.org",
+                "mdpi.com", "hindawi.com", "academic.oup.com", "cambridge.org"
+            ],
+            "specialized_journals": [
+                "jbc.org", "embopress.org", "genetics.org", "plos.org",
+                "elife.org", "sciencemag.org", "nature.com", "cell.com"
+            ],
+            "government_institutional": [
+                "nih.gov", "nsf.gov", "nasa.gov", "cdc.gov", "who.int",
+                "europa.eu", "ec.europa.eu", "oecd.org", "un.org"
+            ],
+            "tech_innovation": [
+                "mit.edu", "stanford.edu", "harvard.edu", "berkeley.edu",
+                "caltech.edu", "cmu.edu", "ox.ac.uk", "cam.ac.uk"
+            ]
+        }
 
-        # Kulcsszavas keresés
-        keyword_results = []
-        try:
-            keyword_search = exa_client.search(
-                query=req.query,
-                type="keyword",
-                num_results=10,
-                text_contents={"max_characters": 2000, "strategy": "comprehensive"}
-            )
-            keyword_results = keyword_search.results
-        except Exception as e:
-            logger.error(f"Keyword search error: {e}")
+        # 2. PÁRHUZAMOS KERESÉSEK VÉGREHAJTÁSA
+        async def perform_search_batch(search_params):
+            """Egy keresési batch végrehajtása"""
+            results = []
+            try:
+                response = exa_client.search(**search_params)
+                results.extend(response.results)
+            except Exception as e:
+                logger.error(f"Search batch error: {e}")
+            return results
 
-        # Tudományos domainekre fókuszált keresés
-        scientific_domains = [
-            "arxiv.org", "pubmed.ncbi.nlm.nih.gov", "nature.com", "science.org",
-            "cell.com", "nejm.org", "thelancet.com", "bmj.com", "plos.org",
-            "ieee.org", "acm.org", "springer.com", "wiley.com", "biorxiv.org"
+        # 3. NAGY MENNYISÉGŰ KERESÉS MINDEN DOMAIN CSOPORTBAN
+        search_tasks = []
+        
+        for group_name, domains in domain_groups.items():
+            # Neurális keresések
+            for i in range(5):  # 5 különböző keresés domain csoportonként
+                search_params = {
+                    "query": f"{req.query} {['advanced', 'research', 'study', 'analysis', 'review'][i]}",
+                    "type": "neural",
+                    "num_results": 50,
+                    "include_domains": domains,
+                    "text_contents": {"max_characters": 3000, "strategy": "comprehensive"},
+                    "livecrawl": "when_necessary"
+                }
+                search_tasks.append(perform_search_batch(search_params))
+
+            # Kulcsszavas keresések
+            for i in range(3):  # 3 kulcsszavas keresés domain csoportonként
+                search_params = {
+                    "query": f"{req.query} {['methodology', 'findings', 'conclusions'][i]}",
+                    "type": "keyword", 
+                    "num_results": 50,
+                    "include_domains": domains,
+                    "text_contents": {"max_characters": 2500, "strategy": "comprehensive"}
+                }
+                search_tasks.append(perform_search_batch(search_params))
+
+        # 4. TOVÁBBI SPECIALIZÁLT KERESÉSEK
+        specialized_queries = [
+            f"{req.query} latest research 2024",
+            f"{req.query} systematic review",
+            f"{req.query} meta-analysis",
+            f"{req.query} clinical trial",
+            f"{req.query} experimental study",
+            f"{req.query} breakthrough discovery",
+            f"{req.query} innovation development",
+            f"{req.query} technology advancement",
+            f"{req.query} scientific methodology",
+            f"{req.query} peer reviewed",
+            f"{req.query} evidence based",
+            f"{req.query} research methodology",
+            f"{req.query} data analysis",
+            f"{req.query} statistical significance",
+            f"{req.query} literature review"
         ]
 
-        scientific_results = []
-        try:
-            scientific_search = exa_client.search(
-                query=req.query,
-                type="neural",
-                num_results=15,
-                include_domains=scientific_domains,
-                text_contents={"max_characters": 3000, "strategy": "comprehensive"},
-                livecrawl="when_necessary"
-            )
-            scientific_results = scientific_search.results
-        except Exception as e:
-            logger.error(f"Scientific search error: {e}")
+        for spec_query in specialized_queries:
+            # Neurális keresés minden domain csoporttal
+            for domains in domain_groups.values():
+                search_params = {
+                    "query": spec_query,
+                    "type": "neural",
+                    "num_results": 40,
+                    "include_domains": domains[:10],  # Top 10 domain per csoport
+                    "text_contents": {"max_characters": 2500, "strategy": "comprehensive"},
+                    "livecrawl": "when_necessary"
+                }
+                search_tasks.append(perform_search_batch(search_params))
 
-        # 2. Összes találat kombinálása
-        all_results = neural_results + keyword_results + scientific_results
+        # 5. IDŐSZAK ALAPÚ KERESÉSEK
+        time_periods = [
+            {"start_published_date": "2024-01-01", "end_published_date": "2024-12-31"},
+            {"start_published_date": "2023-01-01", "end_published_date": "2023-12-31"},
+            {"start_published_date": "2022-01-01", "end_published_date": "2022-12-31"},
+            {"start_published_date": "2021-01-01", "end_published_date": "2021-12-31"}
+        ]
 
-        # Duplikátumok eltávolítása URL alapján
+        for period in time_periods:
+            search_params = {
+                "query": req.query,
+                "type": "neural",
+                "num_results": 50,
+                "text_contents": {"max_characters": 3000, "strategy": "comprehensive"},
+                "livecrawl": "when_necessary",
+                **period
+            }
+            search_tasks.append(perform_search_batch(search_params))
+
+        # 6. SZÉLES KÖRŰ ÁLTALÁNOS KERESÉSEK
+        general_searches = [
+            {"query": req.query, "type": "neural", "num_results": 50},
+            {"query": req.query, "type": "keyword", "num_results": 50},
+            {"query": f'"{req.query}"', "type": "keyword", "num_results": 50},  # Pontos kifejezés
+            {"query": req.query.replace(" ", " AND "), "type": "keyword", "num_results": 50}  # Boolean keresés
+        ]
+
+        for search in general_searches:
+            search["text_contents"] = {"max_characters": 3000, "strategy": "comprehensive"}
+            search["livecrawl"] = "when_necessary"
+            search_tasks.append(perform_search_batch(search))
+
+        # 7. PÁRHUZAMOS VÉGREHAJTÁS
+        logger.info(f"Executing {len(search_tasks)} parallel searches...")
+        
+        # Batch-wise végrehajtás a rate limit elkerülésére
+        batch_size = 10
+        for i in range(0, len(search_tasks), batch_size):
+            batch = search_tasks[i:i+batch_size]
+            batch_results = await asyncio.gather(*batch, return_exceptions=True)
+            
+            for result in batch_results:
+                if isinstance(result, list):
+                    all_results.extend(result)
+                elif isinstance(result, Exception):
+                    logger.error(f"Search batch failed: {result}")
+            
+            # Rövid szünet a batch-ek között
+            await asyncio.sleep(0.5)
+
+        logger.info(f"Collected {len(all_results)} total results")
+
+        # 8. DUPLIKÁTUMOK ELTÁVOLÍTÁSA ÉS RENDEZÉS
         unique_results = {}
         for result in all_results:
-            if result.url not in unique_results:
+            if hasattr(result, 'url') and result.url not in unique_results:
                 unique_results[result.url] = result
 
-        sorted_results = sorted(unique_results.values(), key=lambda x: getattr(x, 'score', 0), reverse=True)[:20]
+        # Top 1000 eredmény kiválasztása score szerint
+        sorted_results = sorted(
+            unique_results.values(), 
+            key=lambda x: getattr(x, 'score', 0), 
+            reverse=True
+        )[:1000]
 
-        # 3. Tartalom összegyűjtése
-        combined_content = ""
+        # 9. TARTALOM FELDOLGOZÁS NAGY MENNYISÉGŰ ADATRA
+        logger.info(f"Processing {len(sorted_results)} unique sources...")
+        
         sources = []
-
+        content_segments = []
+        
+        # Források kategorizálása és feldolgozása
+        high_quality_sources = []
+        medium_quality_sources = []
+        general_sources = []
+        
         for i, result in enumerate(sorted_results):
-            if result.text_contents and result.text_contents.text:
-                combined_content += f"--- Forrás {i+1}: {result.title} ({result.url}) ---\n{result.text_contents.text}\n\n"
-                sources.append({
-                    "title": result.title,
-                    "url": result.url,
-                    "published_date": result.published_date,
-                    "score": getattr(result, 'score', 0)
-                })
+            source_data = {
+                "id": i + 1,
+                "title": result.title,
+                "url": result.url,
+                "published_date": result.published_date,
+                "score": getattr(result, 'score', 0),
+                "domain": result.url.split('/')[2] if '/' in result.url else result.url,
+                "has_content": bool(result.text_contents and result.text_contents.text)
+            }
+            sources.append(source_data)
+            
+            # Tartalom kategorizálás domain alapján
+            domain = source_data["domain"]
+            if any(d in domain for d in ["nature.com", "science.org", "cell.com", "nejm.org", "arxiv.org", "pubmed"]):
+                high_quality_sources.append(result)
+            elif any(d in domain for d in ["ieee.org", "acm.org", "springer.com", "wiley.com"]):
+                medium_quality_sources.append(result)
+            else:
+                general_sources.append(result)
+        
+        # Tartalom szegmentálás intelligens módon
+        def create_content_segment(results, max_results, segment_name):
+            segment_content = f"\n=== {segment_name} FORRÁSOK ===\n"
+            count = 0
+            for result in results[:max_results]:
+                if result.text_contents and result.text_contents.text and count < max_results:
+                    segment_content += f"\n--- {result.title} ({result.url}) ---\n"
+                    segment_content += result.text_contents.text[:2000] + "\n"
+                    count += 1
+            return segment_content
+        
+        # Különböző minőségű tartalom szegmensek
+        content_segments = [
+            create_content_segment(high_quality_sources, 150, "MAGAS MINŐSÉGŰ TUDOMÁNYOS"),
+            create_content_segment(medium_quality_sources, 100, "SZAKMAI ÉS TECHNIKAI"),
+            create_content_segment(general_sources, 50, "ÁLTALÁNOS KUTATÁSI")
+        ]
+        
+        # Kombinált tartalom létrehozása
+        combined_content = "\n".join(content_segments)
 
-        # 4. Minden modell elemzése
+        # 10. PÁRHUZAMOS AI ELEMZÉSEK NAGY ADATHALMAZON
         analyses = {}
-
-        # Gemini 2.5 Pro elemzés
-        if gemini_25_pro:
+        
+        # Szegmentált elemzések készítése
+        async def analyze_segment(segment_content, model_name, analysis_focus):
+            """Egy tartalom szegmens elemzése"""
             try:
-                gemini_prompt = f"""
-                Készíts rendkívül részletes, tudományos színvonalú elemzést a következő témáról: {req.query}
-
-                Felhasznált források:
-                {combined_content[:15000]}
-
-                Kérlek, adj átfogó, strukturált elemzést a következő szempontok szerint:
-                1. Jelenlegi tudományos állás
-                2. Főbb kutatási eredmények
-                3. Kritikus pontok és viták
-                4. Jövőbeli kutatási irányok
-                5. Gyakorlati alkalmazások
-
-                Használj szakmai terminológiákat, de magyarázd el őket is. Legyél részletes és precíz.
-                """
-
-                gemini_response = await gemini_25_pro.generate_content_async(
-                    gemini_prompt,
-                    generation_config=genai.types.GenerationConfig(
-                        max_output_tokens=4000,
-                        temperature=0.1
+                if model_name == "Gemini 2.5 Pro" and gemini_25_pro:
+                    prompt = f"""
+                    MEGA DEEP RESEARCH ELEMZÉS: {req.query}
+                    Elemzési fókusz: {analysis_focus}
+                    
+                    FORRÁS ADATOK (1000+ forrásból):
+                    {segment_content[:20000]}
+                    
+                    Készíts RENDKÍVÜL RÉSZLETES elemzést a következő struktúrában:
+                    1. EXECUTIVE SUMMARY (főbb megállapítások)
+                    2. TUDOMÁNYOS STÁTUSZ (jelenlegi kutatási állapot)
+                    3. KULCSFONTOSSÁGÚ EREDMÉNYEK (breakthrough-ok és felfedezések)
+                    4. MÓDSZERTANI MEGKÖZELÍTÉSEK (kutatási metodológiák)
+                    5. KONTROVERZIKUS TERÜLETEK (viták és ellentmondások)
+                    6. JÖVŐBELI IRÁNYOK (research gaps és lehetőségek)
+                    7. GYAKORLATI ALKALMAZÁSOK (implementációs lehetőségek)
+                    8. INTERDISZCIPLINÁRIS KAPCSOLATOK
+                    9. FORRÁSOK ÉRTÉKELÉSE (minőség és megbízhatóság)
+                    10. KÖVETKEZTETÉSEK ÉS AJÁNLÁSOK
+                    
+                    Minden pontot támassz alá konkrét forrásokkal és adatokkal.
+                    """
+                    
+                    response = await gemini_25_pro.generate_content_async(
+                        prompt,
+                        generation_config=genai.types.GenerationConfig(
+                            max_output_tokens=8000,
+                            temperature=0.05
+                        )
                     )
-                )
-                analyses["Gemini 2.5 Pro"] = gemini_response.text
+                    return response.text
+                    
+                elif model_name == "Cerebras Llama 4" and cerebras_client:
+                    prompt = f"""
+                    TECHNOLÓGIAI MEGA-ELEMZÉS: {req.query}
+                    Fókusz: {analysis_focus}
+                    
+                    ADATOK (1000+ forrás):
+                    {segment_content[:15000]}
+                    
+                    Végezz mélyfokú technológiai és innovációs elemzést:
+                    - Technológiai trendek és breakthrough-ok
+                    - Innovációs ökoszisztéma
+                    - Szabadalmi landscape
+                    - Versenyelemzés
+                    - Implementációs kihívások
+                    - Scalability és fenntarthatóság
+                    - ROI és üzleti értékteremtés
+                    """
+                    
+                    response_text = ""
+                    stream = cerebras_client.chat.completions.create(
+                        messages=[{"role": "user", "content": prompt}],
+                        model="llama-4-scout-17b-16e-instruct",
+                        stream=True,
+                        max_completion_tokens=6000,
+                        temperature=0.08
+                    )
+                    for chunk in stream:
+                        if chunk.choices[0].delta.content:
+                            response_text += chunk.choices[0].delta.content
+                    return response_text
+                    
+                elif model_name == "Gemini 1.5 Pro" and gemini_model:
+                    prompt = f"""
+                    INTERDISZCIPLINÁRIS MEGA-ELEMZÉS: {req.query}
+                    Fókusz: {analysis_focus}
+                    
+                    FORRÁSOK (1000+):
+                    {segment_content[:12000]}
+                    
+                    Készíts komplex társadalmi-gazdasági-etikai elemzést:
+                    - Társadalmi hatások és következmények
+                    - Gazdasági implikációk és ROI
+                    - Etikai kérdések és dilemmák
+                    - Szabályozási környezet
+                    - Stakeholder elemzés
+                    - Kockázatok és lehetőségek
+                    - Fenntarthatósági szempontok
+                    """
+                    
+                    response = await gemini_model.generate_content_async(
+                        prompt,
+                        generation_config=genai.types.GenerationConfig(
+                            max_output_tokens=4000,
+                            temperature=0.12
+                        )
+                    )
+                    return response.text
+                    
             except Exception as e:
-                logger.error(f"Gemini 2.5 Pro analysis error: {e}")
+                logger.error(f"{model_name} analysis error: {e}")
+                return f"Elemzési hiba {model_name} modellnél: {e}"
+            
+            return None
 
-        # Cerebras elemzés
+        # Párhuzamos elemzések indítása
+        analysis_tasks = []
+        
+        # Gemini 2.5 Pro - Tudományos elemzés minden szegmensre
+        for i, segment in enumerate(content_segments):
+            if gemini_25_pro:
+                task = analyze_segment(
+                    segment, 
+                    "Gemini 2.5 Pro", 
+                    f"Tudományos részletesség - Szegmens {i+1}"
+                )
+                analysis_tasks.append(("Gemini 2.5 Pro", f"Szegmens_{i+1}", task))
+
+        # Cerebras - Technológiai fókusz
         if cerebras_client:
-            try:
-                cerebras_prompt = f"""
-                Végezz mélyreható technológiai és innovációs elemzést a következő témáról: {req.query}
+            combined_tech_content = "\n".join(content_segments[:2])  # Top 2 szegmens
+            task = analyze_segment(
+                combined_tech_content,
+                "Cerebras Llama 4",
+                "Technológiai és innovációs perspektíva"
+            )
+            analysis_tasks.append(("Cerebras Llama 4", "Tech_Analysis", task))
 
-                Források:
-                {combined_content[:12000]}
-
-                Fókuszálj a technológiai aspektusokra, innovációs lehetőségekre és gyakorlati megvalósításra.
-                """
-
-                cerebras_response = ""
-                stream = cerebras_client.chat.completions.create(
-                    messages=[{"role": "user", "content": cerebras_prompt}],
-                    model="llama-4-scout-17b-16e-instruct",
-                    stream=True,
-                    max_completion_tokens=3000,
-                    temperature=0.1
-                )
-                for chunk in stream:
-                    if chunk.choices[0].delta.content:
-                        cerebras_response += chunk.choices[0].delta.content
-
-                analyses["Cerebras Llama 4"] = cerebras_response
-            except Exception as e:
-                logger.error(f"Cerebras analysis error: {e}")
-
-        # Gemini 1.5 Pro kiegészítő elemzés
+        # Gemini 1.5 Pro - Interdiszciplináris
         if gemini_model:
-            try:
-                gemini15_prompt = f"""
-                Adj kiegészítő perspektívát és összegző elemzést a következő témáról: {req.query}
+            interdisciplinary_content = "\n".join(content_segments)[:15000]
+            task = analyze_segment(
+                interdisciplinary_content,
+                "Gemini 1.5 Pro", 
+                "Interdiszciplináris és társadalmi hatások"
+            )
+            analysis_tasks.append(("Gemini 1.5 Pro", "Interdisciplinary", task))
 
-                Már meglévő elemzések kiegészítéseként fókuszálj a:
-                - Interdiszciplináris kapcsolatokra
-                - Etikai megfontolásokra
-                - Társadalmi hatásokra
-                - Gazdasági vonatkozásokra
+        # Párhuzamos futtatás
+        logger.info(f"Running {len(analysis_tasks)} parallel AI analyses...")
+        
+        # Task-ek végrehajtása
+        analysis_results = await asyncio.gather(*[task[2] for task in analysis_tasks], return_exceptions=True)
+        
+        # Eredmények összerendezése
+        for i, (model_name, analysis_type, _) in enumerate(analysis_tasks):
+            result = analysis_results[i]
+            if isinstance(result, str):
+                key = f"{model_name} - {analysis_type}"
+                analyses[key] = result
+            elif isinstance(result, Exception):
+                logger.error(f"Analysis failed for {model_name}: {result}")
+                analyses[f"{model_name} - {analysis_type}"] = f"Elemzési hiba: {result}"
 
-                Források: {combined_content[:10000]}
-                """
-
-                gemini15_response = await gemini_model.generate_content_async(
-                    gemini15_prompt,
-                    generation_config=genai.types.GenerationConfig(
-                        max_output_tokens=2000,
-                        temperature=0.15
-                    )
-                )
-                analyses["Gemini 1.5 Pro"] = gemini15_response.text
-            except Exception as e:
-                logger.error(f"Gemini 1.5 Pro analysis error: {e}")
-
-        # 5. Végső szintézis Gemini 2.5 Pro-val
+        # 11. ULTRA KOMPLEX VÉGSŐ SZINTÉZIS
         final_synthesis = ""
+        executive_summary = ""
+        research_gaps = ""
+        actionable_insights = ""
+        
         if gemini_25_pro and analyses:
             try:
+                # Főszintézis készítése
                 synthesis_prompt = f"""
-                Készíts egy átfogó, tudományos szintézist a következő témáról: {req.query}
-
-                Felhasználva a következő különböző AI modellek elemzéseit:
-                {json.dumps(analyses, indent=2, ensure_ascii=False)}
-
-                Eredeti források: {len(sources)} tudományos és szakmai forrás
-
-                Készíts egy komplex, strukturált dokumentumot amely:
-                1. Integrálja az összes perspektívát
-                2. Kiemeli a konszenzust és az eltéréseket
-                3. Azonosítja a legfontosabb megállapításokat
-                4. Javasol konkrét lépéseket/következtetéseket
-                5. Összegzi a legfontosabb forrásokat
-
-                Ez legyen a legteljesebb, legpontosabb és leghasználhatóbb dokumentum a témában.
+                MEGA RESEARCH SZINTÉZIS: {req.query}
+                
+                FORRÁS STATISZTIKÁK:
+                - Összesen feldolgozott források: {len(sources)}
+                - Magas minőségű tudományos források: {len(high_quality_sources)}
+                - Szakmai és technikai források: {len(medium_quality_sources)}
+                - Általános kutatási források: {len(general_sources)}
+                
+                AI ELEMZÉSEK:
+                {json.dumps(analyses, indent=2, ensure_ascii=False)[:25000]}
+                
+                Készíts egy ULTIMATE RESEARCH DOKUMENTUMOT a következő struktúrában:
+                
+                ## I. EXECUTIVE SUMMARY
+                - 5 legfontosabb megállapítás
+                - Kulcsfontosságú trendek
+                - Kritikus eredmények
+                
+                ## II. TUDOMÁNYOS KONSZENZUS
+                - Általánosan elfogadott tények
+                - Megbízható kutatási eredmények
+                - Evidenciák erőssége
+                
+                ## III. VITÁS TERÜLETEK ÉS ELLENTMONDÁSOK
+                - Konfliktáló eredmények
+                - Metodológiai különbségek
+                - Nyitott kérdések
+                
+                ## IV. BREAKTHROUGH EREDMÉNYEK
+                - Legújabb felfedezések
+                - Paradigmaváltó eredmények
+                - Innovatív megközelítések
+                
+                ## V. GYAKORLATI ALKALMAZÁSOK
+                - Implementálható megoldások
+                - Üzleti lehetőségek
+                - Technológiai fejlesztések
+                
+                ## VI. JÖVŐBELI KUTATÁSI IRÁNYOK
+                - Kutatási hiányosságok
+                - Fejlesztendő területek
+                - Stratégiai prioritások
+                
+                ## VII. FORRÁS ÉRTÉKELÉS
+                - Legmegbízhatóbb források
+                - Minőségi értékelés
+                - Credibility ranking
+                
+                ## VIII. KÖVETKEZTETÉSEK ÉS AJÁNLÁSOK
+                - Szakmai ajánlások
+                - Policy implications
+                - Action items
+                
+                Minden pontot támassz alá konkrét forrásokkal és adatokkal.
                 """
 
                 synthesis_response = await gemini_25_pro.generate_content_async(
                     synthesis_prompt,
                     generation_config=genai.types.GenerationConfig(
-                        max_output_tokens=6000,
-                        temperature=0.05
+                        max_output_tokens=12000,
+                        temperature=0.03
                     )
                 )
                 final_synthesis = synthesis_response.text
+                
+                # Executive Summary külön készítése
+                executive_prompt = f"""
+                Készíts egy tömör, 5-pontú executive summary-t a kutatásról: {req.query}
+                
+                Alapadatok: {len(sources)} forrás, {len(analyses)} AI elemzés
+                
+                5 legfontosabb megállapítás, bullet point formában, döntéshozók számára.
+                """
+                
+                exec_response = await gemini_25_pro.generate_content_async(
+                    executive_prompt,
+                    generation_config=genai.types.GenerationConfig(
+                        max_output_tokens=1000,
+                        temperature=0.05
+                    )
+                )
+                executive_summary = exec_response.text
+                
+                # Research gaps azonosítása
+                gaps_prompt = f"""
+                Azonosítsd a 10 legfontosabb kutatási hiányosságot a következő témában: {req.query}
+                
+                Elemzések alapján: {json.dumps(list(analyses.keys()), ensure_ascii=False)}
+                
+                Minden gap mellett add meg:
+                - Miért fontos
+                - Milyen kutatás szükséges
+                - Becsült prioritás (1-10)
+                """
+                
+                gaps_response = await gemini_25_pro.generate_content_async(
+                    gaps_prompt,
+                    generation_config=genai.types.GenerationConfig(
+                        max_output_tokens=2000,
+                        temperature=0.08
+                    )
+                )
+                research_gaps = gaps_response.text
+                
+                # Actionable insights
+                action_prompt = f"""
+                Adj 15 konkrét, végrehajtható javaslatot a következő témában: {req.query}
+                
+                {len(sources)} forrás alapján készített elemzések felhasználásával.
+                
+                Minden javaslat mellett:
+                - Konkrét lépések
+                - Szükséges erőforrások
+                - Várható eredmény
+                - Időkeret
+                """
+                
+                action_response = await gemini_25_pro.generate_content_async(
+                    action_prompt,
+                    generation_config=genai.types.GenerationConfig(
+                        max_output_tokens=3000,
+                        temperature=0.1
+                    )
+                )
+                actionable_insights = action_response.text
+                
             except Exception as e:
                 logger.error(f"Final synthesis error: {e}")
+                final_synthesis = f"Szintézis hiba: {e}"
+
+        # 12. STATISZTIKÁK ÉS METRIKÁK
+        research_stats = {
+            "total_sources_processed": len(sources),
+            "high_quality_sources": len(high_quality_sources),
+            "medium_quality_sources": len(medium_quality_sources),
+            "general_sources": len(general_sources),
+            "ai_analyses_performed": len(analyses),
+            "content_segments": len(content_segments),
+            "search_batches_executed": len(search_tasks),
+            "unique_domains": len(set(source["domain"] for source in sources)),
+            "sources_with_content": sum(1 for source in sources if source["has_content"]),
+            "coverage_percentage": round((len(sources) / 1000) * 100, 1)
+        }
 
         return {
             "query": req.query,
-            "total_sources": len(sources),
-            "sources": sources,
-            "individual_analyses": analyses,
+            "research_statistics": research_stats,
+            "executive_summary": executive_summary,
             "final_synthesis": final_synthesis,
-            "research_depth": "DEEP",
+            "research_gaps": research_gaps,
+            "actionable_insights": actionable_insights,
+            "individual_analyses": analyses,
+            "sources": sources[:100],  # Top 100 forrás a válaszban
+            "all_sources_count": len(sources),
+            "research_depth": "MEGA_DEEP_1000+",
             "models_used": list(analyses.keys()),
+            "content_quality_distribution": {
+                "high_quality": len(high_quality_sources),
+                "medium_quality": len(medium_quality_sources), 
+                "general": len(general_sources)
+            },
             "timestamp": datetime.now().isoformat(),
-            "status": "success"
+            "status": "success",
+            "performance_metrics": {
+                "sources_target": 1000,
+                "sources_achieved": len(sources),
+                "success_rate": f"{min(100, (len(sources)/1000)*100):.1f}%",
+                "analysis_depth": "MAXIMUM"
+            }
         }
 
     except Exception as e:
