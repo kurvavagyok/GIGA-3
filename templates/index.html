@@ -2526,20 +2526,18 @@
         .research-back-btn {
             background: var(--color-glass);
             border: 1px solid var(--color-border);
-            border-radius: 50%;
-            width: 48px;
-            height: 48px;
+            border-radius: 16px;
+            padding: 0.875rem 1.5rem;
             color: var(--color-text);
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
-            justify-content: center;
+            gap: 0.5rem;
             backdrop-filter: blur(var(--blur-strength));
             font-weight: 500;
             position: relative;
             overflow: hidden;
-            font-size: 1.2rem;
         }
 
         .research-back-btn::before {
@@ -3155,8 +3153,9 @@
     <div class="research-process-overlay" id="researchProcessOverlay">
         <div class="research-process-container">
             <div class="research-header">
-                <button class="research-back-btn haptic-feedback touch-feedback" onclick="closeResearchProcess()" title="Vissza a chatbe">
+                <button class="research-back-btn haptic-feedback touch-feedback" onclick="closeResearchProcess()">
                     <i class="fas fa-arrow-left"></i>
+                    <span>Vissza a chatbe</span>
                 </button>
                 <h2 class="research-title">
                     <i class="fas fa-microscope mr-2"></i>Kutatási folyamat
@@ -3804,7 +3803,7 @@
                                 <i class="fas fa-expand-alt"></i>
                                 <span>Teljes nézet</span>
                             </button>
-                            <button class="action-button haptic-feedback touch-feedback" onclick="startDeepResearch('${messageId}')">
+                            <button class="action-button haptic-feedback touch-feedback" onclick="showResearchProcess('${messageId}')">
                                 <i class="fas fa-search-plus"></i>
                                 <span>Bővebben</span>
                             </button>
@@ -4821,37 +4820,8 @@
             }, 3000);
         }
 
-        // Valódi deep research indítása
-        async function startDeepResearch(messageId) {
-            const messageElement = document.getElementById(messageId);
-            const messageContent = messageElement.querySelector('.ai-content').textContent;
-            
-            // Kutatás indítása a backend-en
-            showResearchProcess();
-            
-            try {
-                const response = await fetch('/api/deep_research', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        query: messageContent.substring(0, 500), // Első 500 karakter
-                        user_id: currentUserId 
-                    })
-                });
-                
-                const data = await response.json();
-                
-                // Eredmény megjelenítése a kutatási folyamat végén
-                displayDeepResearchResult(data);
-                
-            } catch (error) {
-                console.error('Deep research hiba:', error);
-                displayResearchError('Hiba a mélyebb kutatás során: ' + error.message);
-            }
-        }
-
-        // Kutatási folyamat megjelenítése
-        function showResearchProcess() {
+        // Kutatási folyamat vizualizáció
+        function showResearchProcess(messageId) {
             // Minden elem eltűntetése a képernyőről
             const sidebar = document.getElementById('sidebar');
             const mainContent = document.querySelector('.main-content');
@@ -5007,63 +4977,6 @@
             });
             progressFill.style.width = '0%';
             result.classList.remove('show');
-        }
-
-        function displayDeepResearchResult(data) {
-            const resultContent = document.getElementById('researchResultContent');
-            if (resultContent && data.final_synthesis) {
-                resultContent.innerHTML = `
-                    <div class="space-y-4">
-                        <div class="bg-gray-800 p-4 rounded-lg">
-                            <h4 class="text-green-400 font-semibold mb-2">
-                                <i class="fas fa-brain mr-2"></i>Végleges Szintézis
-                            </h4>
-                            <div class="text-gray-300 text-sm leading-relaxed">${data.final_synthesis}</div>
-                        </div>
-                        
-                        ${data.research_statistics ? `
-                        <div class="bg-gray-800 p-4 rounded-lg">
-                            <h4 class="text-blue-400 font-semibold mb-2">
-                                <i class="fas fa-chart-bar mr-2"></i>Kutatási Statisztikák
-                            </h4>
-                            <div class="grid grid-cols-2 gap-2 text-sm">
-                                <div class="text-gray-400">Feldolgozott források:</div>
-                                <div class="text-white">${data.research_statistics.total_sources_processed}</div>
-                                <div class="text-gray-400">Minőségi források:</div>
-                                <div class="text-green-400">${data.research_statistics.high_quality_sources}</div>
-                                <div class="text-gray-400">AI elemzések:</div>
-                                <div class="text-blue-400">${data.research_statistics.ai_analyses_performed}</div>
-                                <div class="text-gray-400">Egyedi domainok:</div>
-                                <div class="text-purple-400">${data.research_statistics.unique_domains}</div>
-                            </div>
-                        </div>
-                        ` : ''}
-                        
-                        ${data.executive_summary ? `
-                        <div class="bg-gray-800 p-4 rounded-lg">
-                            <h4 class="text-yellow-400 font-semibold mb-2">
-                                <i class="fas fa-lightbulb mr-2"></i>Vezetői Összefoglaló
-                            </h4>
-                            <div class="text-gray-300 text-sm leading-relaxed">${data.executive_summary}</div>
-                        </div>
-                        ` : ''}
-                    </div>
-                `;
-            }
-        }
-
-        function displayResearchError(errorMessage) {
-            const resultContent = document.getElementById('researchResultContent');
-            if (resultContent) {
-                resultContent.innerHTML = `
-                    <div class="bg-red-900/20 border border-red-600 rounded-lg p-4">
-                        <h4 class="text-red-400 font-semibold mb-2">
-                            <i class="fas fa-exclamation-triangle mr-2"></i>Kutatási Hiba
-                        </h4>
-                        <p class="text-red-300 text-sm">${errorMessage}</p>
-                    </div>
-                `;
-            }
         }
 
         function viewDetailedReport() {
