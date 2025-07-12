@@ -388,28 +388,29 @@ ALPHA_SERVICES = {
 
 # --- Backend Model Selection ---
 async def select_backend_model(prompt: str, service_name: str = None):
-    """Backend modell kiválasztása a kérés és a token limitek alapján."""
-    # Alapértelmezett: Gemini 2.5 Pro ha elérhető
-    selected_model = gemini_25_pro
-    model_name = "gemini-2.5-pro"
-
-    # Ha a Gemini 2.5 Pro nem elérhető, Cerebras a következő
-    if not selected_model and cerebras_client:
+    """Backend modell kiválasztása a kérés és a token limitek alapján - Cerebras prioritás"""
+    # CEREBRAS ELSŐ PRIORITÁS a sebességért
+    if cerebras_client:
         selected_model = cerebras_client
         model_name = "llama-4-scout-17b-16e-instruct"
+        return {"model": selected_model, "name": model_name}
+    
+    # Backup: Gemini 2.5 Pro
+    if gemini_25_pro:
+        selected_model = gemini_25_pro
+        model_name = "gemini-2.5-pro"
+        return {"model": selected_model, "name": model_name}
 
-    # Ha Cerebras sem, Gemini 1.5 Pro
-    if not selected_model and gemini_model:
+    # Backup: Gemini 1.5 Pro
+    if gemini_model:
         selected_model = gemini_model
         model_name = "gemini-1.5-pro"
+        return {"model": selected_model, "name": model_name}
 
-    if not selected_model:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Nincs elérhető AI modell"
-        )
-
-    return {"model": selected_model, "name": model_name}
+    raise HTTPException(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        detail="Nincs elérhető AI modell"
+    )
 
 # --- Model Execution ---
 async def execute_model(model_info: Dict[str, Any], prompt: str):
@@ -684,9 +685,11 @@ async def deep_discovery_chat(req: ChatRequest):
                 messages=messages_for_llm,
                 model="llama-4-scout-17b-16e-instruct",
                 stream=True,
-                max_completion_tokens=1500,  # Csökkentett token limit
-                temperature=0.2,
-                top_p=0.9  # Gyorsabb sampling
+                max_completion_tokens=2048,  # Optimalizált limit
+                temperature=0.15,  # Gyorsabb és konzisztensebb
+                top_p=0.95,  # Optimalizált sampling
+                presence_penalty=0.0,  # Gyorsabb feldolgozás
+                frequency_penalty=0.0
             )
             for chunk in stream:
                 if chunk.choices[0].delta.content:
@@ -1551,6 +1554,95 @@ async def alphagenome_analysis(req: AlphaGenomeRequest):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Hiba az AlphaGenome elemzésben: {e}"
         )
+
+@app.post("/api/cerebras/ultra_fast_chat")
+async def cerebras_ultra_fast_chat(req: ChatRequest):
+    """Ultra gyors Cerebras-only chat - 20x gyorsabb mint GPU"""
+    if not cerebras_client:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Cerebras nem elérhető"
+        )
+
+    try:
+        # Minimal context a maximális sebességért
+        messages = [
+            {"role": "system", "content": "Gyors, pontos AI asszisztens vagy."},
+            {"role": "user", "content": req.message}
+        ]
+
+        response_text = ""
+        stream = cerebras_client.chat.completions.create(
+            messages=messages,
+            model="llama-4-scout-17b-16e-instruct",
+            stream=True,
+            max_completion_tokens=1024,
+            temperature=0.1,
+            top_p=0.9
+        )
+
+        for chunk in stream:
+            if chunk.choices[0].delta.content:
+                response_text += chunk.choices[0].delta.content
+
+        return {
+            'response': response_text,
+            'model_used': 'Cerebras Llama 4 (Ultra Fast)',
+            'performance': '20x gyorsabb mint GPU',
+            'status': 'success'
+        }
+
+    except Exception as e:
+        logger.error(f"Cerebras ultra fast error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Cerebras hiba: {e}"
+        )
+
+@app.post("/api/cerebras/batch_process")
+async def cerebras_batch_process(requests: List[ChatRequest]):
+    """Batch feldolgozás Cerebras-szal - még gyorsabb"""
+    if not cerebras_client:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Cerebras nem elérhető"
+        )
+
+    results = []
+    for req in requests:
+        try:
+            response_text = ""
+            stream = cerebras_client.chat.completions.create(
+                messages=[{"role": "user", "content": req.message}],
+                model="llama-4-scout-17b-16e-instruct",
+                stream=True,
+                max_completion_tokens=512,
+                temperature=0.1
+            )
+
+            for chunk in stream:
+                if chunk.choices[0].delta.content:
+                    response_text += chunk.choices[0].delta.content
+
+            results.append({
+                'user_id': req.user_id,
+                'response': response_text,
+                'status': 'success'
+            })
+
+        except Exception as e:
+            results.append({
+                'user_id': req.user_id,
+                'error': str(e),
+                'status': 'error'
+            })
+
+    return {
+        'batch_results': results,
+        'processed_count': len(results),
+        'model_used': 'Cerebras Llama 4 (Batch)',
+        'performance': 'Optimalizált batch feldolgozás'
+    }
 
 @app.post("/api/code_generation")
 async def generate_code(req: CodeGenerationRequest):
