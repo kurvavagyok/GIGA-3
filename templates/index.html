@@ -2932,7 +2932,7 @@
         const welcomeScreen = document.getElementById('welcomeScreen');
         const messageInput = document.getElementById('messageInput');
         const sendButton = document.getElementById('sendButton');
-        const modelBadge = document.getElementById('modelBadge');
+        
         const fullscreenOverlay = document.getElementById('fullscreenOverlay');
 
         document.addEventListener('DOMContentLoaded', async () => {
@@ -3321,7 +3321,6 @@
                 const data = await response.json();
                 hideTypingIndicator();
                 addMessage('ai', data.response);
-                modelBadge.textContent = 'Deep AI + Exa';
             } catch (error) {
                 hideTypingIndicator();
                 addMessage('ai', `Hiba történt: ${error.message}`, 'Error');
@@ -3533,7 +3532,6 @@
             messagesContainer.innerHTML = '';
             welcomeScreen.style.display = 'block';
             messageInput.focus();
-            modelBadge.textContent = 'Deep AI + Exa';
         }
 
         function closeModal(modalId) {
