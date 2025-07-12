@@ -2396,6 +2396,194 @@
             transform: translateY(var(--scroll-offset, 0px));
         }
 
+        /* Kutatási folyamat vizualizáció */
+        .research-process-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(20px);
+            z-index: 4000;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .research-process-overlay.show {
+            opacity: 1;
+        }
+
+        .research-process-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--border-radius);
+            padding: 3rem;
+            max-width: 800px;
+            width: 90%;
+            backdrop-filter: blur(var(--blur-strength));
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .research-steps {
+            margin: 2rem 0;
+        }
+
+        .research-step {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+            opacity: 0.3;
+            transition: all 0.8s ease;
+            position: relative;
+        }
+
+        .research-step.active {
+            opacity: 1;
+            transform: translateX(10px);
+        }
+
+        .research-step.completed {
+            opacity: 0.8;
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--color-glass);
+            border: 2px solid var(--color-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1.5rem;
+            font-weight: 600;
+            color: var(--color-text);
+            flex-shrink: 0;
+            transition: all 0.5s ease;
+        }
+
+        .research-step.active .step-number {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            color: #000;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+            animation: stepPulse 2s ease-in-out infinite;
+        }
+
+        .research-step.completed .step-number {
+            background: var(--color-primary);
+            color: #000;
+            border-color: var(--color-primary);
+        }
+
+        @keyframes stepPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--color-text);
+            margin-bottom: 0.5rem;
+        }
+
+        .step-description {
+            font-size: 0.9rem;
+            color: var(--color-text-muted);
+            line-height: 1.5;
+        }
+
+        .research-progress-bar {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 2rem 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+            width: 0%;
+            transition: width 1s ease;
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .research-result {
+            background: var(--color-glass);
+            border: 1px solid var(--color-border);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 2rem;
+            display: none;
+        }
+
+        .research-result.show {
+            display: block;
+            animation: slideInUp 0.8s ease;
+        }
+
+        .result-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--color-primary);
+            margin-bottom: 1rem;
+        }
+
+        .result-content {
+            color: var(--color-text);
+            line-height: 1.6;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .view-report-btn {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .view-report-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-primary);
+        }
+
         /* Továbbfejlesztett hover effektek */
         .service-item:hover .service-icon {
             animation: iconBounce 0.6s cubic-bezier(0.4, 0, 0.2, 1);
@@ -2807,6 +2995,70 @@
             </div>
         </div>
     </div></div>
+
+    <!-- Kutatási folyamat modal -->
+    <div class="research-process-overlay" id="researchProcessOverlay">
+        <div class="research-process-container">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
+                    <i class="fas fa-microscope mr-2"></i>Kutatási folyamat
+                </h2>
+                <button class="modal-close haptic-feedback touch-feedback" onclick="closeResearchProcess()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="research-progress-bar">
+                <div class="progress-fill" id="researchProgressFill"></div>
+            </div>
+
+            <div class="research-steps" id="researchSteps">
+                <div class="research-step" data-step="1">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <div class="step-title">Kutatási terv kidolgozása</div>
+                        <div class="step-description">Cerebras Llama 4 a felhasználói megkeresés alapján meghatározza a kutatás fókuszát, a főbb vizsgálati irányokat és a releváns alkérdéseket.</div>
+                    </div>
+                </div>
+
+                <div class="research-step" data-step="2">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <div class="step-title">Információgyűjtés és forráskutatás</div>
+                        <div class="step-description">A meghatározott terv mentén szisztematikus adatgyűjtést végez Exa és Gemini releváns és megbízható online forrásokat azonosítva és feldolgozva.</div>
+                    </div>
+                </div>
+
+                <div class="research-step" data-step="3">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <div class="step-title">Adatfeldolgozás és szintézis</div>
+                        <div class="step-description">A begyűjtött információkat Cerebras Llama 4 rendszerezi, elemzi és értelmezi. A kulcsfontosságú összefüggések feltárásával szintetizálja a megállapításokat.</div>
+                    </div>
+                </div>
+
+                <div class="research-step" data-step="4">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <div class="step-title">Jelentéskészítés</div>
+                        <div class="step-description">A kutatás eredményeit, a levont következtetéseket és a felhasznált forrásokat egy strukturált, koherens dokumentumban összegzi Cerebras Llama 4.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="research-result" id="researchResult">
+                <div class="result-title">
+                    <i class="fas fa-check-circle text-green-400 mr-2"></i>Kutatás befejezve!
+                </div>
+                <div class="result-content" id="researchResultContent">
+                    A részletes jelentés elkészült és megtekinthető.
+                </div>
+                <button class="view-report-btn haptic-feedback touch-feedback" onclick="viewDetailedReport()">
+                    <i class="fas fa-file-alt mr-2"></i>Jelentés megtekintése
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Mobil optimalizáció -->
     <div class="code-panel-mobile" id="codePanelMobile" style="display: none;">
@@ -3329,6 +3581,10 @@
                                 <i class="fas fa-expand-alt"></i>
                                 <span>Teljes nézet</span>
                             </button>
+                            <button class="action-button haptic-feedback touch-feedback" onclick="showResearchProcess('${messageId}')">
+                                <i class="fas fa-search-plus"></i>
+                                <span>Bővebben</span>
+                            </button>
                             <button class="action-button haptic-feedback touch-feedback" onclick="regenerateResponse('${messageId}')">
                                 <i class="fas fa-redo"></i>
                                 <span>Újragenerálás</span>
@@ -3516,22 +3772,9 @@
                     
                     <div class="presentation-content" id="presentationContent">
                         <div class="presentation-slide active" data-slide="0">
-                            <div class="welcome-logo mb-8">
-                                <div class="brain-3d">
-                                    <div class="brain-hemisphere brain-left"></div>
-                                    <div class="brain-hemisphere brain-right"></div>
-                                    <div class="brain-corpus-callosum"></div>
-                                    <div class="brain-stem"></div>
-                                    <div class="neural-network">
-                                        <div class="neural-node"></div>
-                                        <div class="neural-node"></div>
-                                        <div class="neural-node"></div>
-                                        <div class="neural-node"></div>
-                                        <div class="neural-node"></div>
-                                        <div class="neural-node"></div>
-                                    </div>
-                                </div>
-                            </div>
+                            <div class="w-20 h-20 bg-gradient-to-br from-green-400 to-blue-500 rounded-2xl flex items-center justify-center mb-8 mx-auto">
+                        <span class="text-black font-bold text-3xl">J</span>
+                    </div>
                             <h1 class="text-5xl font-bold mb-4 bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
                                 Jade
                             </h1>
@@ -4349,6 +4592,103 @@
                 toast.classList.remove('show');
             }, 3000);
         }
+
+        // Kutatási folyamat vizualizáció
+        function showResearchProcess(messageId) {
+            const overlay = document.getElementById('researchProcessOverlay');
+            overlay.style.display = 'flex';
+            
+            setTimeout(() => {
+                overlay.classList.add('show');
+                startResearchAnimation();
+            }, 10);
+        }
+
+        function closeResearchProcess() {
+            const overlay = document.getElementById('researchProcessOverlay');
+            overlay.classList.remove('show');
+            
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                resetResearchAnimation();
+            }, 500);
+        }
+
+        function startResearchAnimation() {
+            const steps = document.querySelectorAll('.research-step');
+            const progressFill = document.getElementById('researchProgressFill');
+            const result = document.getElementById('researchResult');
+            
+            // Reset minden lépést
+            steps.forEach(step => {
+                step.classList.remove('active', 'completed');
+            });
+            progressFill.style.width = '0%';
+            result.classList.remove('show');
+            
+            let currentStep = 0;
+            const totalSteps = steps.length;
+            
+            const animateStep = () => {
+                if (currentStep < totalSteps) {
+                    // Előző lépés befejezett állapotba
+                    if (currentStep > 0) {
+                        steps[currentStep - 1].classList.remove('active');
+                        steps[currentStep - 1].classList.add('completed');
+                    }
+                    
+                    // Jelenlegi lépés aktív állapotba
+                    steps[currentStep].classList.add('active');
+                    
+                    // Progress bar frissítése
+                    const progress = ((currentStep + 1) / totalSteps) * 100;
+                    progressFill.style.width = progress + '%';
+                    
+                    currentStep++;
+                    
+                    // Következő lépés 2 másodperc múlva
+                    setTimeout(animateStep, 2000);
+                } else {
+                    // Utolsó lépés befejezett állapotba
+                    steps[totalSteps - 1].classList.remove('active');
+                    steps[totalSteps - 1].classList.add('completed');
+                    
+                    // Eredmény megjelenítése
+                    setTimeout(() => {
+                        result.classList.add('show');
+                    }, 500);
+                }
+            };
+            
+            // Animáció indítása 500ms késéssel
+            setTimeout(animateStep, 500);
+        }
+
+        function resetResearchAnimation() {
+            const steps = document.querySelectorAll('.research-step');
+            const progressFill = document.getElementById('researchProgressFill');
+            const result = document.getElementById('researchResult');
+            
+            steps.forEach(step => {
+                step.classList.remove('active', 'completed');
+            });
+            progressFill.style.width = '0%';
+            result.classList.remove('show');
+        }
+
+        function viewDetailedReport() {
+            closeResearchProcess();
+            
+            // Itt lehetne egy részletes jelentést megjeleníteni
+            showToast('Részletes jelentés megjelenítése fejlesztés alatt', 'info');
+        }
+
+        // Modal bezárás kattintással
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('research-process-overlay')) {
+                closeResearchProcess();
+            }
+        });
     </script>
 </body>
 </html>

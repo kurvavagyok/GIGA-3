@@ -1074,11 +1074,7 @@ async def exa_find_similar(req: ExaSimilarityRequest):
         params = {
             "url": req.url,
             "num_results": req.num_results,
-            "exclude_source_domain": req.exclude_source_domain,
-            "text_contents": {
-                "max_characters": 2000,
-                "strategy": "comprehensive"
-            }
+            "exclude_source_domain": req.exclude_source_domain
         }
 
         if req.category_weights:
@@ -1086,15 +1082,33 @@ async def exa_find_similar(req: ExaSimilarityRequest):
 
         response = exa_client.find_similar(**params)
 
+        # Text contents külön lekérése
+        if response.results:
+            ids = [result.id for result in response.results]
+            try:
+                contents_response = exa_client.get_contents(
+                    ids=ids,
+                    text_contents={
+                        "max_characters": 2000,
+                        "strategy": "comprehensive"
+                    }
+                )
+                contents_map = {content.id: content for content in contents_response.contents}
+            except:
+                contents_map = {}
+        else:
+            contents_map = {}
+
         results = []
         for result in response.results:
+            content = contents_map.get(result.id)
             processed_result = {
                 "id": result.id,
                 "title": result.title,
                 "url": result.url,
                 "similarity_score": getattr(result, 'score', None),
                 "published_date": result.published_date,
-                "text_content": result.text_contents.text if result.text_contents else None
+                "text_content": content.text_contents.text if content and content.text_contents else None
             }
             results.append(processed_result)
 
