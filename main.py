@@ -647,7 +647,7 @@ async def execute_alpha_service(service_name: str, request: UniversalAlphaReques
     """Bármely Alpha szolgáltatás végrehajtása"""
     return await handle_alpha_service(
         service_name=service_name,
-        input_data=request.input_data,
+        input_data=request.input_data,```python
         parameters=request.parameters
     )
 
@@ -780,7 +780,7 @@ async def deep_research(req: DeepResearchRequest):
         # Kibővített tudományos és akadémiai domainok listája
         scientific_domains = [
             "arxiv.org", "pubmed.ncbi.nlm.nih.gov", "nature.com", "science.org",
-            "cell.com", "nejm.org", "ieee.org", "acm.org", "springer.com", "wiley.com",
+            "cell.com", "nejm.org", "nejm.org", "ieee.org", "acm.org", "springer.com", "wiley.com",
             "sciencedirect.com", "jstor.org", "researchgate.net", "semantic-scholar.org",
             "biorxiv.org", "medrxiv.org", "plos.org", "bmj.com", "thelancet.com",
             "nih.gov", "who.int", "cdc.gov", "fda.gov", "ema.europa.eu"
@@ -1437,8 +1437,7 @@ async def alphafold3_analysis(req: AlphaFold3Request):
 
         Figyelembe véve az AlphaFold 3 és AlphaGenome képességeit, készíts egy részletes elemzést:
 
-        1.  Fehérje szerkezet előrejelzése:
-            -   Jelenlegi legjobb szerkezeti modell
+        1.  Fehérje szerkezet előrejelzése:            -   Jelenlegi legjobb szerkezeti modell
         -   Megbízhatósági pontszámok (pl. pLDDT)
         -   Potenciális funkcionális domének
         -   Hasonlóság más ismert fehérjékhez
@@ -1673,3 +1672,10 @@ async def generate_code(req: CodeGenerationRequest):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Hiba a kód generálása során: {e}"
         )
+
+# The following JavaScript code is not used in the backend and will be removed.
+
+# Adding FastAPI application execution to the end of the file.
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=5000)
