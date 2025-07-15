@@ -74,65 +74,7 @@
             -webkit-overflow-scrolling: touch;
         }
 
-        .gradient-bg::before {
-            content: '';
-            position: fixed;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: 
-                radial-gradient(circle at 25% 25%, rgba(0, 255, 136, 0.08) 0%, transparent 40%),
-                radial-gradient(circle at 75% 75%, rgba(0, 136, 255, 0.06) 0%, transparent 45%),
-                radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.05) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(255, 107, 107, 0.04) 0%, transparent 35%),
-                radial-gradient(circle at 20% 80%, rgba(255, 217, 61, 0.03) 0%, transparent 40%);
-            animation: dynamicGradient 60s ease-in-out infinite;
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        .gradient-bg::after {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                conic-gradient(from 0deg at 50% 50%, 
-                    rgba(0, 255, 136, 0.02) 0deg,
-                    rgba(0, 136, 255, 0.02) 120deg,
-                    rgba(139, 92, 246, 0.02) 240deg,
-                    rgba(0, 255, 136, 0.02) 360deg);
-            animation: conicRotate 120s linear infinite;
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        @keyframes dynamicGradient {
-            0%, 100% { 
-                transform: rotate(0deg) scale(1) translate(0, 0); 
-                filter: hue-rotate(0deg);
-            }
-            25% { 
-                transform: rotate(90deg) scale(1.1) translate(5%, 5%); 
-                filter: hue-rotate(30deg);
-            }
-            50% { 
-                transform: rotate(180deg) scale(0.9) translate(-5%, 10%); 
-                filter: hue-rotate(60deg);
-            }
-            75% { 
-                transform: rotate(270deg) scale(1.05) translate(10%, -5%); 
-                filter: hue-rotate(30deg);
-            }
-        }
-
-        @keyframes conicRotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
+        /* Egyszerű, statikus háttér - nincs animáció */
 
         .glass-panel {
             background: var(--color-glass);
@@ -1400,22 +1342,6 @@
             display: none;
         }
 
-        .modal-overlay::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(circle at 25% 25%, rgba(0, 255, 136, 0.06) 0%, transparent 40%),
-                radial-gradient(circle at 75% 75%, rgba(0, 136, 255, 0.05) 0%, transparent 45%),
-                radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.04) 0%, transparent 50%);
-            animation: dynamicGradient 60s ease-in-out infinite;
-            pointer-events: none;
-            z-index: -1;
-        }
-
         .modal-overlay.show {
             opacity: 1;
         }
@@ -1973,24 +1899,7 @@
             opacity: 1;
         }
 
-        .floating-menu-overlay::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(circle at 20% 30%, rgba(0, 255, 136, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 70%, rgba(0, 136, 255, 0.08) 0%, transparent 50%),
-                radial-gradient(circle at 40% 80%, rgba(139, 92, 246, 0.06) 0%, transparent 50%);
-            animation: overlayGradient 20s ease-in-out infinite;
-        }
-
-        @keyframes overlayGradient {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 0.7; }
-        }
+        /* Egyszerű overlay háttér */
 
         .floating-menu {
             position: absolute;
@@ -2471,10 +2380,7 @@
             }
         }
 
-        /* Parallax háttér */
-        .gradient-bg::before {
-            transform: translateY(var(--scroll-offset, 0px));
-        }
+        /* Egyszerű háttér */
 
         /* Kutatási folyamat vizualizáció - Teljes képernyős */
         .research-process-overlay {
@@ -2501,23 +2407,7 @@
             opacity: 1;
         }
 
-        .research-process-overlay::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(circle at 25% 25%, rgba(0, 255, 136, 0.08) 0%, transparent 40%),
-                radial-gradient(circle at 75% 75%, rgba(0, 136, 255, 0.06) 0%, transparent 45%),
-                radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.05) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(255, 107, 107, 0.04) 0%, transparent 35%),
-                radial-gradient(circle at 20% 80%, rgba(255, 217, 61, 0.03) 0%, transparent 40%);
-            animation: dynamicGradient 60s ease-in-out infinite;
-            pointer-events: none;
-            z-index: -1;
-        }
+        /* Nincs háttér animáció */
 
         .research-process-container {
             min-height: 100vh;
@@ -4536,6 +4426,7 @@
         }
 
         function setupScrollEffects() {
+            // Egyszerű scroll effektek - nincs parallax
             const messages = document.querySelectorAll('.message');
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
@@ -4549,21 +4440,11 @@
                 rootMargin: '50px'
             });
 
-            // Scroll parallax effect
-            chatContainer.addEventListener('scroll', () => {
-                const scrolled = chatContainer.scrollTop;
-                const rate = scrolled * -0.5;
-                
-                // Parallax effekt a háttérre
-                document.documentElement.style.setProperty('--scroll-offset', `${rate}px`);
-            });
-
             // Lazy loading animáció
             const lazyElements = document.querySelectorAll('.service-item, .glass-panel');
             const lazyObserver = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
-                        entry.target.style.animationDelay = Math.random() * 0.5 + 's';
                         entry.target.classList.add('animate-in');
                     }
                 });
@@ -4994,6 +4875,37 @@
             // Kezdeti állapot beállítása
             updateSlides();
         }
+
+        // Hiányzó függvények hozzáadása
+        function startIntroduction() {
+            showAppIntroduction();
+        }
+
+        // Mobilhoz hasonló függvények desktop verzióhoz
+        const mobileFunctions = {
+            languageSelectMobile: document.getElementById('languageSelect'),
+            complexitySelectMobile: document.getElementById('complexitySelect'),
+            temperatureSliderMobile: document.getElementById('temperatureSlider'),
+            temperatureValueMobile: document.getElementById('temperatureValue'),
+            codePromptInputMobile: document.getElementById('codePromptInput'),
+            generateCodeBtnMobile: document.getElementById('generateCodeBtn'),
+            codeOutputContainerMobile: document.getElementById('codeOutputContainer')
+        };
+
+        // Mobil függvények szinkronizálása
+        function syncMobileElements() {
+            if (mobileFunctions.languageSelectMobile) {
+                mobileFunctions.languageSelectMobile.addEventListener('change', (e) => {
+                    const desktopSelect = document.getElementById('languageSelect');
+                    if (desktopSelect) desktopSelect.value = e.target.value;
+                });
+            }
+        }
+
+        // Inicializálás után szinkronizálás
+        document.addEventListener('DOMContentLoaded', () => {
+            syncMobileElements();
+        });
 
         // Code Generation
         async function generateCode() {
