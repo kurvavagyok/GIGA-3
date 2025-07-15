@@ -1633,36 +1633,80 @@ async def alpha_genome_analysis(req: AlphaGenomeRequest):
 # --- Code Generation Végpont ---
 @app.post("/api/code/generate")
 async def generate_code(req: CodeGenerationRequest):
-    """Kód generálása"""
-    if not gemini_25_pro and not cerebras_client:
+    """Kód generálása továbbfejlesztett AI prompt-tal"""
+    if not cerebras_client and not gemini_25_pro and not gemini_model:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Nincs elérhető AI modell"
         )
 
     try:
-        # Prompt összeállítása
+        # Fejlett prompt összeállítása
+        complexity_descriptions = {
+            "simple": "Egyszerű, 20-30 soros megoldás, alapvető funkcionalitással",
+            "medium": "Közepes komplexitású, 50-100 soros kód, strukturált megközelítéssel",
+            "complex": "Komplex, 100+ soros megoldás, objektum-orientált tervezéssel",
+            "enterprise": "Vállalati szintű kód, teljes hibakezeléssel és dokumentációval"
+        }
+
         prompt = f"""
-        Kód Generálás
+Professzionális {req.language} kód generálása
 
-        Programozási nyelv: {req.language}
-        Komplexitás: {req.complexity}
+SPECIFIKÁCIÓ:
+- Programozási nyelv: {req.language}
+- Komplexitás szint: {req.complexity} ({complexity_descriptions.get(req.complexity, 'közepes')})
+- Kreativitás szint: {req.temperature}
 
-        Kérés: {req.prompt}
+FELADAT:
+{req.prompt}
 
-        Kérlek, generálj {req.language} kódot a megadott kérés alapján.
-        A kód legyen jól strukturált és kommentált.
-        """
+KÖVETELMÉNYEK:
+1. Írj tiszta, jól strukturált kódot
+2. Használj beszédes változóneveket
+3. Adj hozzá magyar nyelvű kommenteket
+4. Implementálj megfelelő hibakezelést
+5. Kövesd a nyelv best practice-eit
+6. A kód legyen futtatható és tesztelhető
+
+VÁLASZ FORMÁTUM:
+Csak a kódot add vissza, magyarázó szöveg nélkül. A kód legyen közvetlenül használható.
+"""
 
         model_info = await select_backend_model(prompt)
         result = await execute_model(model_info, prompt)
+        
+        # Kód tisztítása - csak a kód részek megtartása
         generated_code = result["response"]
+        
+        # Kód blokkok extraktálása ha van
+        if "```" in generated_code:
+            import re
+            code_blocks = re.findall(r'```[\w]*\n(.*?)\n```', generated_code, re.DOTALL)
+            if code_blocks:
+                generated_code = code_blocks[0].strip()
+        
+        # További tisztítás
+        lines = generated_code.split('\n')
+        clean_lines = []
+        in_code = True
+        
+        for line in lines:
+            # Kihagyjuk az üres magyarázó sorokat
+            if line.strip() and not line.strip().startswith('Ez a kód') and not line.strip().startswith('A fenti'):
+                clean_lines.append(line)
+                in_code = True
+            elif in_code and line.strip() == '':
+                clean_lines.append(line)
+        
+        generated_code = '\n'.join(clean_lines).strip()
 
         return {
             "language": req.language,
             "complexity": req.complexity,
             "generated_code": generated_code,
             "model_used": result["model_used"],
+            "estimated_lines": len(generated_code.split('\n')),
+            "character_count": len(generated_code),
             "status": "success"
         }
 
