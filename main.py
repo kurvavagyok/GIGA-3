@@ -110,13 +110,27 @@ if EXA_API_KEY:
         logger.error(f"Error initializing Exa client: {e}")
 
 # --- FastAPI alkalmazás ---
+
+# Lifespan event handler
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    logger.info("Jade alkalmazás elindult - optimalizált verzió")
+    yield
+    # Shutdown
+    logger.info("Jade alkalmazás leáll")
+
+# FastAPI app újradefiniálása a lifespan-nel
 app = FastAPI(
     title="Jade - Deep Discovery AI Platform",
     description="Fejlett AI platform 150+ tudományos és innovációs szolgáltatással",
     version="2.0.0",
     docs_url="/api/docs",
     redoc_url="/api/redoc",
-    openapi_url="/api/openapi.json"
+    openapi_url="/api/openapi.json",
+    lifespan=lifespan
 )
 
 app.add_middleware(
@@ -394,7 +408,7 @@ async def select_backend_model(prompt: str, service_name: str = None):
         selected_model = cerebras_client
         model_name = "llama-4-scout-17b-16e-instruct"
         return {"model": selected_model, "name": model_name}
-    
+
     # Backup: Gemini 2.5 Pro
     if gemini_25_pro:
         selected_model = gemini_25_pro
@@ -639,7 +653,7 @@ async def execute_simple_alpha_service(service_name: str, request: SimpleAlphaRe
         service_name=service_name,
         query=request.query,
         details=request.details
-    )
+        )
 
 @app.post("/api/deep_discovery/chat")
 async def deep_discovery_chat(req: ChatRequest):
@@ -757,7 +771,7 @@ async def deep_research(req: DeepResearchRequest):
 
     try:
         logger.info(f"Starting comprehensive deep research for: {req.query}")
-        
+
         # Kibővített tudományos és akadémiai domainok listája
         scientific_domains = [
             "arxiv.org", "pubmed.ncbi.nlm.nih.gov", "nature.com", "science.org",
@@ -766,10 +780,10 @@ async def deep_research(req: DeepResearchRequest):
             "biorxiv.org", "medrxiv.org", "plos.org", "bmj.com", "thelancet.com",
             "nih.gov", "who.int", "cdc.gov", "fda.gov", "ema.europa.eu"
         ]
-        
+
         # Keresési eredmények gyűjtése
         all_results = []
-        
+
         # 1. Fő neurális keresés - több batch-ben
         for batch in range(5):  # 5 batch = 250 eredmény
             try:
@@ -785,7 +799,7 @@ async def deep_research(req: DeepResearchRequest):
                 logger.info(f"Neural batch {batch+1}/5 completed: {len(neural_search.results)} results")
             except Exception as e:
                 logger.error(f"Neural search batch {batch+1} error: {e}")
-        
+
         # 2. Kulcsszavas keresések - specifikus témák
         keyword_variants = [
             f"{req.query} research",
@@ -794,7 +808,7 @@ async def deep_research(req: DeepResearchRequest):
             f"{req.query} review",
             f"{req.query} investigation"
         ]
-        
+
         for variant in keyword_variants:
             try:
                 keyword_search = exa_client.search(
@@ -808,7 +822,7 @@ async def deep_research(req: DeepResearchRequest):
                 logger.info(f"Keyword search '{variant}': {len(keyword_search.results)} results")
             except Exception as e:
                 logger.error(f"Keyword search error for '{variant}': {e}")
-            
+
         # 3. Időszakos keresések - több év
         time_periods = ["2024", "2023", "2022"]
         for year in time_periods:
@@ -852,7 +866,7 @@ async def deep_research(req: DeepResearchRequest):
         # Eredmények feldolgozása
         sources = []
         combined_content = ""
-        
+
         for i, result in enumerate(final_results[:1000]):  # Max 1000 eredmény
             source_data = {
                 "id": i + 1,
@@ -862,66 +876,66 @@ async def deep_research(req: DeepResearchRequest):
                 "domain": result.url.split('/')[2] if '/' in result.url else result.url
             }
             sources.append(source_data)
-            
+
             if result.text_contents and result.text_contents.text:
                 content_snippet = result.text_contents.text[:2000]  # Hosszabb részletek
                 combined_content += f"\n--- Forrás {i+1}: {result.title} ---\n{content_snippet}\n"
 
         # AI elemzés kibővített prompt-tal
         analysis_text = ""
-        
+
         if combined_content and len(combined_content) > 500:
             model_info = await select_backend_model(req.query)
-            
+
             analysis_prompt = f"""
             ÁTFOGÓ TUDOMÁNYOS ELEMZÉS: {req.query}
-            
+
             Feldolgozott források száma: {len(sources)} db
             Teljes tartalom hossza: {len(combined_content)} karakter
-            
+
             FORRÁS ADATOK:
             {combined_content[:50000]}  # Több tartalom feldolgozása
-            
+
             KÉRLEK, KÉSZÍTS RÉSZLETES, TUDOMÁNYOS ELEMZÉST:
-            
+
             1. EXECUTIVE SUMMARY
             - Legfontosabb megállapítások
             - Kulcs információk
-            
+
             2. TUDOMÁNYOS ÁTTEKINTÉS
             - Jelenlegi kutatási állapot
             - Főbb tanulmányok eredményei
             - Konszenzus és viták
-            
+
             3. MÓDSZERTANI MEGKÖZELÍTÉSEK
             - Alkalmazott kutatási módszerek
             - Adatgyűjtési technikák
             - Elemzési eljárások
-            
+
             4. GYAKORLATI ALKALMAZÁSOK
             - Valós életbeli implementációk
             - Ipari alkalmazások
             - Társadalmi hatások
-            
+
             5. JÖVŐBELI KUTATÁSI IRÁNYOK
             - Azonosított kutatási rések
             - Új technológiai lehetőségek
             - Várható fejlődési trendek
-            
+
             6. FORRÁSOK MINŐSÉGI ÉRTÉKELÉSE
             - Magas impakt faktorú publikációk
             - Peer-reviewed források aránya
             - Földrajzi és intézményi diverzitás
-            
+
             7. KÖVETKEZTETÉSEK ÉS AJÁNLÁSOK
             - Összegző megállapítások
             - Döntéshozóknak szóló ajánlások
             - További kutatási prioritások
-            
+
             A válasz legyen strukturált, magyar nyelvű, és használjon tudományos terminológiát.
             Hivatkozz konkrét forrásokra ahol lehetséges.
             """
-            
+
             try:
                 result = await execute_model(model_info, analysis_prompt)
                 analysis_text = result["response"]
@@ -931,7 +945,7 @@ async def deep_research(req: DeepResearchRequest):
                 analysis_text = f"Részleges elemzés készült. Hiba részletei: {e}\n\nElérhető források alapján: {len(sources)} publikáció került feldolgozásra a témában."
         else:
             analysis_text = "Nem sikerült elegendő forrást találni az elemzéshez."
-        
+
         return {
             "query": req.query,
             "final_synthesis": analysis_text,
@@ -1705,7 +1719,7 @@ async def generate_code(req: CodeGenerationRequest):
         # Kód extrakció és formázás
         import re
         code_blocks = re.findall(r'```(?:\w+)?\n(.*?)\n```', response_text, re.DOTALL)
-        
+
         if code_blocks:
             generated_code = code_blocks[0]
         else:
@@ -1719,7 +1733,7 @@ async def generate_code(req: CodeGenerationRequest):
             "go": "go", "rust": "rs", "swift": "swift", "kotlin": "kt",
             "dart": "dart", "sql": "sql", "typescript": "ts"
         }
-        
+
         file_extension = extensions.get(req.language.lower(), "txt")
 
         return {
@@ -1752,11 +1766,6 @@ async def cleanup_cache():
     for key in expired_keys:
         del response_cache[key]
     logger.info(f"Cleaned up {len(expired_keys)} expired cache entries")
-
-@app.on_event("startup")
-async def startup_event():
-    """Alkalmazás indításkor futó események"""
-    logger.info("Jade alkalmazás elindult - optimalizált verzió")
 
 # Cache tisztítás endpoint
 @app.post("/api/admin/clear_cache")
