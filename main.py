@@ -651,8 +651,6 @@ async def execute_alpha_service(service_name: str, request: UniversalAlphaReques
         parameters=request.parameters
     )
 
-A módosítás integrálja az AlphaGenome-ot és az AlphaFold 3-at, hogy kombinált elemzéseket végezzen.
-```tool_code
 @app.post("/api/alpha/simple/{service_name}")
 async def execute_simple_alpha_service(service_name: str, request: SimpleAlphaRequest):
     """Egyszerű Alpha szolgáltatás végrehajtása szöveges bemenetnél"""
@@ -893,55 +891,54 @@ async def deep_research(req: DeepResearchRequest):
 
         if combined_content and len(combined_content) > 500:
             model_info = await select_backend_model(req.query)
-
             analysis_prompt = f"""
-            ÁTFOGÓ TUDOMÁNYOS ELEMZÉS: {req.query}
+        ÁTFOGÓ TUDOMÁNYOS ELEMZÉS: {req.query}
 
-            Feldolgozott források száma: {len(sources)} db
-            Teljes tartalom hossza: {len(combined_content)} karakter
+        Feldolgozott források száma: {len(sources)} db
+        Teljes tartalom hossza: {len(combined_content)} karakter
 
-            FORRÁS ADATOK:
-            {combined_content[:50000]}  # Több tartalom feldolgozása
+        FORRÁS ADATOK:
+        {combined_content[:50000]}
 
-            KÉRLEK, KÉSZÍTS RÉSZLETES, TUDOMÁNYOS ELEMZÉST:
+        KÉRLEK, KÉSZÍTS RÉSZLETES, TUDOMÁNYOS ELEMZÉST:
 
-            1. EXECUTIVE SUMMARY
-            - Legfontosabb megállapítások
-            - Kulcs információk
+        1. EXECUTIVE SUMMARY
+        - Legfontosabb megállapítások
+        - Kulcs információk
 
-            2. TUDOMÁNYOS ÁTTEKINTÉS
-            - Jelenlegi kutatási állapot
-            - Főbb tanulmányok eredményei
-            - Konszenzus és viták
+        2. TUDOMÁNYOS ÁTTEKINTÉS
+        - Jelenlegi kutatási állapot
+        - Főbb tanulmányok eredményei
+        - Konszenzus és viták
 
-            3. MÓDSZERTANI MEGKÖZELÍTÉSEK
-            - Alkalmazott kutatási módszerek
-            - Adatgyűjtési technikák
-            - Elemzési eljárások
+        3. MÓDSZERTANI MEGKÖZELÍTÉSEK
+        - Alkalmazott kutatási módszerek
+        - Adatgyűjtési technikák
+        - Elemzési eljárások
 
-            4. GYAKORLATI ALKALMAZÁSOK
-            - Valós életbeli implementációk
-            - Ipari alkalmazások
-            - Társadalmi hatások
+        4. GYAKORLATI ALKALMAZÁSOK
+        - Valós életbeli implementációk
+        - Ipari alkalmazások
+        - Társadalmi hatások
 
-            5. JÖVŐBELI KUTATÁSI IRÁNYOK
-            - Azonosított kutatási rések
-            - Új technológiai lehetőségek
-            - Várható fejlődési trendek
+        5. JÖVŐBELI KUTATÁSI IRÁNYOK
+        - Azonosított kutatási rések
+        - Új technológiai lehetőségek
+        - Várható fejlődési trendek
 
-            6. FORRÁSOK MINŐSÉGI ÉRTÉKELÉSE
-            - Magas impakt faktorú publikációk
-            - Peer-reviewed források aránya
-            - Földrajzi és intézményi diverzitás
+        6. FORRÁSOK MINŐSÉGI ÉRTÉKELÉSE
+        - Magas impakt faktorú publikációk
+        - Peer-reviewed források aránya
+        - Földrajzi és intézményi diverzitás
 
-            7. KÖVETKEZTETÉSEK ÉS AJÁNLÁSOK
-            - Összegző megállapítások
-            - Döntéshozóknak szóló ajánlások
-            - További kutatási prioritások
+        7. KÖVETKEZTETÉSEK ÉS AJÁNLÁSOK
+        - Összegző megállapítások
+        - Döntéshozóknak szóló ajánlások
+        - További kutatási prioritások
 
-            A válasz legyen strukturált, magyar nyelvű, és használjon tudományos terminológiát.
-            Hivatkozz konkrét forrásokra ahol lehetséges.
-            """
+        A válasz legyen strukturált, magyar nyelvű, és használjon tudományos terminológiát.
+        Hivatkozz konkrét forrásokra ahol lehetséges.
+        """
 
             try:
                 result = await execute_model(model_info, analysis_prompt)
@@ -1438,4 +1435,241 @@ async def alphafold3_analysis(req: AlphaFold3Request):
         Kölcsönható partnerek: {', '.join(req.interaction_partners) if req.interaction_partners else 'Nincs'}
         Elemzés típusa: {req.analysis_type}
 
-        Figyelembe véve az AlphaFold 3 és AlphaGenome képess(?:\w+)?\n(.*?)\n
+        Figyelembe véve az AlphaFold 3 és AlphaGenome képességeit, készíts egy részletes elemzést:
+
+        1.  Fehérje szerkezet előrejelzése:
+            -   Jelenlegi legjobb szerkezeti modell
+        -   Megbízhatósági pontszámok (pl. pLDDT)
+        -   Potenciális funkcionális domének
+        -   Hasonlóság más ismert fehérjékhez
+
+        2.  Kölcsönhatások előrejelzése:
+        -   Lehetséges DNS, RNS vagy más fehérje partnerek
+        -   Kötőhelyek azonosítása
+        -   A kölcsönhatás erőssége és specificitása
+
+        3.  Funkcionális annotáció:
+        -   Gén ontológia (GO) kifejezések
+        -   Biokémiai útvonalak
+        -   Sejtszintű lokalizáció
+
+        4.  Mutációs hatások:
+        -   Potenciálisan káros mutációk azonosítása
+        -   Hatás a fehérje stabilitására és funkciójára
+        -   Gyógyszer célpontként való alkalmasság
+
+        5.  Kísérleti validáció javaslatok:
+        -   Javasolt kísérletek a szerkezet és kölcsönhatások megerősítésére
+        -   In vitro és in vivo vizsgálatok
+        -   Klinikai relevanciával bíró fehérjék
+
+        A válasz legyen strukturált, magyar nyelvű és tudományos.
+        """
+
+        model_info = await select_backend_model(analysis_prompt)
+        result = await execute_model(model_info, analysis_prompt)
+        analysis_text = result["response"]
+
+        return {
+            "protein_sequence": req.protein_sequence,
+            "analysis": analysis_text,
+            "model_used": result["model_used"],
+            "status": "success"
+        }
+
+    except Exception as e:
+        logger.error(f"Error in AlphaFold 3 analysis: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Hiba az AlphaFold 3 elemzés során: {e}"
+        )
+
+# --- Custom GCP Modell Végpont ---
+@app.post("/api/gcp/custom_model")
+async def predict_custom_gcp_model(req: CustomGCPModelRequest):
+    """Egyedi GCP Vertex AI modell futtatása"""
+    if not gcp_credentials:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="GCP Vertex AI nem elérhető"
+        )
+
+    try:
+        endpoint = aiplatform.Endpoint(
+            endpoint_name=f"projects/{req.gcp_project_id}/locations/{req.gcp_region}/endpoints/{req.gcp_endpoint_id}",
+            credentials=gcp_credentials
+        )
+
+        prediction = endpoint.predict(instances=[req.input_data])
+        return {
+            "prediction": prediction.predictions,
+            "explained_value": prediction.explanations,
+            "status": "success"
+        }
+
+    except GoogleAPIError as e:
+        logger.error(f"GCP API error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"GCP API hiba: {e}"
+        )
+    except Exception as e:
+        logger.error(f"Error during prediction: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Hiba a predikció során: {e}"
+        )
+
+# --- Simulation Optimizer Végpont ---
+@app.post("/api/simulation/optimize")
+async def optimize_simulation(req: SimulationOptimizerRequest):
+    """Szimuláció optimalizálása"""
+    # Ezt a részt ki kell egészíteni a megfelelő szimulációs és optimalizációs algoritmussal
+    # Példa: genetikus algoritmus, heurisztikus keresés, stb.
+    # Jelenleg csak egy placeholder implementáció
+
+    try:
+        if req.simulation_type == "anyagtervezes":
+            # Itt lehetne optimalizálni az anyagtervezési paramétereket
+            optimized_parameters = {
+                "homerseklet": req.input_parameters.get("homerseklet", 25) + 5,
+                "nyomas": req.input_parameters.get("nyomas", 1) * 1.1,
+                "koncentracio": req.input_parameters.get("koncentracio", 0.5)
+            }
+            optimal_result = f"Optimalizált anyagtervezési eredmény: {optimized_parameters}"
+
+        elif req.simulation_type == "gyogyszerkutatas":
+            # Itt lehetne optimalizálni a gyógyszerkutatási paramétereket
+            optimized_parameters = {
+                "receptor_affinitas": req.input_parameters.get("receptor_affinitas", 10) * 1.05,
+                "metabolizmus_sebesseg": req.input_parameters.get("metabolizmus_sebesseg", 0.1) * 0.95
+            }
+            optimal_result = f"Optimalizált gyógyszerkutatási eredmény: {optimized_parameters}"
+
+        else:
+            raise ValueError("Érvénytelen szimuláció típus")
+
+        return {
+            "simulation_type": req.simulation_type,
+            "optimization_goal": req.optimization_goal,
+            "input_parameters": req.input_parameters,
+            "optimized_parameters": optimized_parameters,
+            "optimal_result": optimal_result,
+            "status": "success"
+        }
+
+    except Exception as e:
+        logger.error(f"Error during simulation optimization: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Hiba a szimuláció optimalizálása során: {e}"
+        )
+
+# --- AlphaGenome Végpont ---
+@app.post("/api/alpha/genome")
+async def alpha_genome_analysis(req: AlphaGenomeRequest):
+    """Genom szekvencia elemzése"""
+    if not gemini_25_pro and not cerebras_client:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Nincs elérhető AI modell"
+        )
+
+    try:
+        # Szekvencia validálás
+        if len(req.genome_sequence) < 100:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="A genom szekvencia túl rövid"
+            )
+
+        # AI elemzés
+        analysis_prompt = f"""
+        Genom Szekvencia Elemzés
+
+        Organizmus: {req.organism}
+        Elemzés típusa: {req.analysis_type}
+        Szekvencia: {req.genome_sequence[:500]}... (csak részlet)
+
+        Kérlek, végezz mélyreható elemzést a megadott genom szekvencián.
+        Elemezd a potenciális géneket, szabályozó elemeket és egyéb funkcionális régiókat.
+        """
+
+        model_info = await select_backend_model(analysis_prompt)
+        result = await execute_model(model_info, analysis_prompt)
+        analysis_text = result["response"]
+
+        # Fehérje előrejelzések (opcionális)
+        if req.include_predictions:
+            protein_prompt = f"""
+            Fehérje Előrejelzés
+
+            Genom szekvencia: {req.genome_sequence[:500]}... (csak részlet)
+
+            Kérlek, azonosíts potenciális fehérjéket a megadott genom szekvenciában,
+            és adj meg információkat a funkciójukról és szerkezetükről.
+            """
+            protein_model_info = await select_backend_model(protein_prompt)
+            protein_result = await execute_model(protein_model_info, protein_prompt)
+            protein_predictions = protein_result["response"]
+        else:
+            protein_predictions = "Fehérje előrejelzések nem kértek"
+
+        return {
+            "organism": req.organism,
+            "analysis_type": req.analysis_type,
+            "analysis": analysis_text,
+            "protein_predictions": protein_predictions,
+            "model_used": result["model_used"],
+            "status": "success"
+        }
+
+    except Exception as e:
+        logger.error(f"Error in genome analysis: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Hiba a genom elemzése során: {e}"
+        )
+
+# --- Code Generation Végpont ---
+@app.post("/api/code/generate")
+async def generate_code(req: CodeGenerationRequest):
+    """Kód generálása"""
+    if not gemini_25_pro and not cerebras_client:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Nincs elérhető AI modell"
+        )
+
+    try:
+        # Prompt összeállítása
+        prompt = f"""
+        Kód Generálás
+
+        Programozási nyelv: {req.language}
+        Komplexitás: {req.complexity}
+
+        Kérés: {req.prompt}
+
+        Kérlek, generálj {req.language} kódot a megadott kérés alapján.
+        A kód legyen jól strukturált és kommentált.
+        """
+
+        model_info = await select_backend_model(prompt)
+        result = await execute_model(model_info, prompt)
+        generated_code = result["response"]
+
+        return {
+            "language": req.language,
+            "complexity": req.complexity,
+            "generated_code": generated_code,
+            "model_used": result["model_used"],
+            "status": "success"
+        }
+
+    except Exception as e:
+        logger.error(f"Error in code generation: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Hiba a kód generálása során: {e}"
+        )
