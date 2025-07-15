@@ -410,7 +410,7 @@
         .chat-container {
             flex: 1;
             overflow-y: auto;
-            padding: 0.5rem;
+            padding: 0.25rem;
             scroll-behavior: smooth;
             scrollbar-width: none;
             -ms-overflow-style: none;
@@ -457,7 +457,7 @@
         }
 
         .message {
-            margin: 0 0 0.5rem 0;
+            margin: 0 0 0.25rem 0;
             padding: 0;
             animation: slideInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -538,8 +538,8 @@
         .ai-message {
             background: transparent;
             border: none;
-            padding: 0;
-            margin: 0;
+            padding: 0.5rem 0;
+            margin: 0.25rem 0;
             border-radius: 0;
             max-width: 100%;
             backdrop-filter: none;
@@ -567,7 +567,7 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            margin: 0 0 0.1rem 0;
+            margin: 0 0 0.25rem 0;
             padding: 0;
             border-bottom: none;
         }
@@ -595,8 +595,8 @@
 
         .message-actions {
             display: flex;
-            gap: 0.4rem;
-            margin: 0.1rem 0 0 0;
+            gap: 0.3rem;
+            margin: 0.25rem 0 0 0;
             padding: 0;
             border-top: none;
         }
@@ -2900,8 +2900,8 @@
     </div>
 
     <div class="main-content">
-        <div class="flex items-center justify-between p-4 border-b border-gray-800 bg-black/50 backdrop-blur-sm">
-            <button id="menuToggle" class="lg:hidden p-2 rounded-lg hover:bg-gray-800 text-white haptic-feedback touch-feedback">
+        <div class="flex items-center justify-center p-2 border-b border-gray-800 bg-black/50 backdrop-blur-sm relative">
+            <button id="menuToggle" class="lg:hidden absolute left-2 p-2 rounded-lg hover:bg-gray-800 text-white haptic-feedback touch-feedback">
                 <i class="fas fa-bars"></i>
             </button>
             <div class="flex items-center gap-3">
@@ -2920,7 +2920,7 @@
                 <p class="welcome-subtitle">Deep Discovery AI Platform</p>
 
                 <div class="flex justify-center">
-                    <button onclick="showAppIntroduction()" class="intro-button haptic-feedback touch-feedback">
+                    <button onclick="startIntroduction()" class="intro-button haptic-feedback touch-feedback">
                         <i class="fas fa-compass"></i>
                         <span>Ismerd meg</span>
                     </button>
@@ -4879,6 +4879,47 @@
         // Hiányzó függvények hozzáadása
         function startIntroduction() {
             showAppIntroduction();
+        }
+
+        // Hiányzó függvények hozzáadása
+        function showAppIntroduction() {
+            const fullscreenContent = document.getElementById('fullscreenContent');
+            fullscreenContent.innerHTML = `
+                <div class="presentation-container">
+                    <div class="presentation-navigation">
+                        <button onclick="closeFullscreen()" class="back-button">
+                            <i class="fas fa-arrow-left"></i>
+                            <span>Vissza</span>
+                        </button>
+                        <div class="presentation-progress">
+                            <div class="progress-bar"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="presentation-content" id="presentationContent">
+                        <div class="presentation-slide active" data-slide="0">
+                            <div class="w-20 h-20 bg-gradient-to-br from-green-400 to-blue-500 rounded-2xl flex items-center justify-center mb-8 mx-auto">
+                        <span class="text-black font-bold text-3xl">J</span>
+                    </div>
+                            <h1 class="text-5xl font-bold mb-4 bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
+                                Jade
+                            </h1>
+                            <p class="text-2xl text-gray-400 mb-8">
+                                Deep Discovery AI Platform
+                            </p>
+                            <div class="text-center">
+                                <div class="scroll-indicator">
+                                    <i class="fas fa-chevron-down animate-bounce"></i>
+                                    <p class="text-sm text-gray-500 mt-2">Görgess le a folytatáshoz</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            showFullscreen();
+            setupPresentationScroll();
         }
 
         // Mobilhoz hasonló függvények desktop verzióhoz
