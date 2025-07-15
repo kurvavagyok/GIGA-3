@@ -647,7 +647,7 @@ async def execute_alpha_service(service_name: str, request: UniversalAlphaReques
     """Bármely Alpha szolgáltatás végrehajtása"""
     return await handle_alpha_service(
         service_name=service_name,
-        input_data=request.input_data,```python
+        input_data=request.input_data,
         parameters=request.parameters
     )
 
