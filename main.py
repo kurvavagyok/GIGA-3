@@ -1,5 +1,7 @@
 import os
 import json
+import subprocess
+import tempfile
 from typing import List, Dict, Any, Optional
 import asyncio
 import httpx
@@ -9,6 +11,8 @@ import hashlib
 import base64
 from functools import lru_cache
 import time
+import sys
+import pathlib
 
 # Google Cloud kliensekhez
 from google.cloud import aiplatform
@@ -30,6 +34,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
+
+# AlphaFold 3 integráció
+sys.path.append(str(pathlib.Path("alphafold3_repo/src")))
 
 # Naplózás konfigurálása
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -641,6 +648,52 @@ async def get_services_by_category(category: str):
         "category": category,
         "services": ALPHA_SERVICES[category]
     }
+
+@app.get("/api/alphafold3/info")
+async def alphafold3_info():
+    """AlphaFold 3 információk és állapot"""
+    try:
+        # AlphaFold 3 repository ellenőrzése
+        af3_path = pathlib.Path("alphafold3_repo")
+        af3_exists = af3_path.exists()
+        
+        if af3_exists:
+            version_file = af3_path / "src" / "alphafold3" / "version.py"
+            version = "Ismeretlen"
+            if version_file.exists():
+                version_content = version_file.read_text()
+                import re
+                version_match = re.search(r"__version__ = ['\"]([^'\"]+)['\"]", version_content)
+                if version_match:
+                    version = version_match.group(1)
+        
+        return {
+            "alphafold3_available": af3_exists,
+            "version": version if af3_exists else None,
+            "repository_path": str(af3_path),
+            "main_script": str(af3_path / "run_alphafold.py") if af3_exists else None,
+            "capabilities": {
+                "protein_folding": True,
+                "protein_complexes": True,
+                "dna_interactions": True,
+                "rna_interactions": True,
+                "ligand_binding": True,
+                "antibody_antigen": True
+            },
+            "requirements": {
+                "gpu_required": True,
+                "model_parameters": "Külön kérelmezendő a Google DeepMind-től",
+                "databases": "Genetikai adatbázisok szükségesek"
+            },
+            "status": "Működőképes (model paraméterek nélkül csak data pipeline)"
+        }
+        
+    except Exception as e:
+        return {
+            "alphafold3_available": False,
+            "error": str(e),
+            "status": "Hiba"
+        }
 
 @app.post("/api/alpha/{service_name}")
 async def execute_alpha_service(service_name: str, request: UniversalAlphaRequest):
@@ -1406,6 +1459,147 @@ class AlphaFold3Request(BaseModel):
     interaction_partners: List[str] = Field(default=[], description="Kölcsönható partnerek (DNS, RNS, más fehérjék)")
     analysis_type: str = Field(default="structure_prediction", description="Elemzés típusa")
     include_confidence: bool = Field(default=True, description="Megbízhatósági pontszámok")
+
+class AlphaFold3StructurePrediction(BaseModel):
+    name: str = Field(..., description="Predikció neve")
+    sequences: List[Dict[str, Any]] = Field(..., description="Protein, DNS, RNS szekvenciák")
+    model_seeds: List[int] = Field(default=[1], description="Random seed értékek")
+    num_diffusion_samples: int = Field(default=5, description="Diffúziós minták száma")
+    num_recycles: int = Field(default=10, description="Újrafeldolgozások száma")
+
+class AlphaFold3ComplexRequest(BaseModel):
+    protein_chains: List[str] = Field(..., description="Fehérje láncok aminosav szekvenciái")
+    dna_sequences: List[str] = Field(default=[], description="DNS szekvenciák")
+    rna_sequences: List[str] = Field(default=[], description="RNS szekvenciák")
+    ligands: List[str] = Field(default=[], description="Ligandumok SMILES formátumban")
+    prediction_name: str = Field(default="complex_prediction", description="Predikció neve")
+
+# AlphaFold 3 Input JSON generátor
+def generate_alphafold3_input(req: AlphaFold3ComplexRequest) -> Dict[str, Any]:
+    """AlphaFold 3 input JSON generálása"""
+    sequences = []
+    
+    # Protein láncok hozzáadása
+    for i, protein_seq in enumerate(req.protein_chains):
+        sequences.append({
+            "protein": {
+                "id": [chr(65 + i)],  # A, B, C, ... chain ID-k
+                "sequence": protein_seq
+            }
+        })
+    
+    # DNS szekvenciák hozzáadása
+    for i, dna_seq in enumerate(req.dna_sequences):
+        sequences.append({
+            "dna": {
+                "id": [f"D{i+1}"],
+                "sequence": dna_seq
+            }
+        })
+    
+    # RNS szekvenciák hozzáadása
+    for i, rna_seq in enumerate(req.rna_sequences):
+        sequences.append({
+            "rna": {
+                "id": [f"R{i+1}"],
+                "sequence": rna_seq
+            }
+        })
+    
+    # Ligandumok hozzáadása
+    for i, ligand in enumerate(req.ligands):
+        sequences.append({
+            "ligand": {
+                "id": [f"L{i+1}"],
+                "smiles": ligand
+            }
+        })
+    
+    return {
+        "name": req.prediction_name,
+        "sequences": sequences,
+        "modelSeeds": [1, 2, 3, 4, 5],  # 5 különböző seed
+        "dialect": "alphafold3",
+        "version": 1
+    }
+
+# Valódi AlphaFold 3 struktúra predikció
+@app.post("/api/alphafold3/structure_prediction")
+async def alphafold3_structure_prediction(req: AlphaFold3ComplexRequest):
+    """Valódi AlphaFold 3 struktúra predikció futtatása"""
+    try:
+        # Temporary fájlok létrehozása
+        with tempfile.TemporaryDirectory() as temp_dir:
+            input_dir = os.path.join(temp_dir, "input")
+            output_dir = os.path.join(temp_dir, "output")
+            os.makedirs(input_dir, exist_ok=True)
+            os.makedirs(output_dir, exist_ok=True)
+            
+            # Input JSON generálása
+            input_json = generate_alphafold3_input(req)
+            input_file = os.path.join(input_dir, "fold_input.json")
+            
+            with open(input_file, 'w') as f:
+                json.dump(input_json, f, indent=2)
+            
+            logger.info(f"AlphaFold 3 input created: {input_file}")
+            
+            # AlphaFold 3 futtatása (csak data pipeline most, model nélkül)
+            cmd = [
+                sys.executable,
+                "alphafold3_repo/run_alphafold.py",
+                f"--json_path={input_file}",
+                f"--output_dir={output_dir}",
+                "--run_data_pipeline=true",
+                "--run_inference=false",  # Most csak adatfeldolgozás
+                "--force_output_dir=true"
+            ]
+            
+            logger.info(f"Running AlphaFold 3 command: {' '.join(cmd)}")
+            
+            # Futtatás subprocess-szel
+            process = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                cwd=os.getcwd()
+            )
+            
+            stdout, stderr = await process.communicate()
+            
+            if process.returncode == 0:
+                # Sikeres futtatás - eredmények feldolgozása
+                result_files = []
+                for root, dirs, files in os.walk(output_dir):
+                    for file in files:
+                        if file.endswith(('.json', '.pdb', '.cif')):
+                            result_files.append(os.path.join(root, file))
+                
+                return {
+                    "status": "success",
+                    "prediction_name": req.prediction_name,
+                    "input_json": input_json,
+                    "output_files": result_files,
+                    "stdout": stdout.decode('utf-8')[-2000:],  # Utolsó 2000 karakter
+                    "message": "AlphaFold 3 data pipeline sikeresen lefutott"
+                }
+            else:
+                # Hiba esetén
+                return {
+                    "status": "error",
+                    "prediction_name": req.prediction_name,
+                    "input_json": input_json,
+                    "error": stderr.decode('utf-8')[-2000:],
+                    "stdout": stdout.decode('utf-8')[-2000:],
+                    "return_code": process.returncode
+                }
+                
+    except Exception as e:
+        logger.error(f"AlphaFold 3 prediction error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"AlphaFold 3 predikció hiba: {e}"
+        )
 
 # AlphaGenome és AlphaFold 3 integrált elemzés
 @app.post("/api/deep_discovery/alphafold3")

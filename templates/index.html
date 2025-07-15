@@ -740,6 +740,43 @@
                 padding-bottom: calc(6rem + env(safe-area-inset-bottom));
             }
         }
+
+        .sources-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                gap: 15px;
+                margin-top: 15px;
+            }
+
+            .af3-results {
+                background: rgba(255, 255, 255, 0.05);
+                padding: 20px;
+                border-radius: 10px;
+                margin-top: 15px;
+            }
+
+            .input-json, .output-files, .stdout-log {
+                margin-top: 20px;
+                background: rgba(0, 0, 0, 0.3);
+                padding: 15px;
+                border-radius: 8px;
+            }
+
+            .log-output, .error-output {
+                background: #1a1a1a;
+                color: #00ff00;
+                padding: 15px;
+                border-radius: 5px;
+                font-family: 'Courier New', monospace;
+                font-size: 12px;
+                max-height: 300px;
+                overflow-y: auto;
+                white-space: pre-wrap;
+            }
+
+            .error-output {
+                color: #ff6b6b;
+            }
     </style>
 </head>
 <body>
@@ -775,4 +812,536 @@
                 <div class="section-content" id="content-neural" role="region" aria-labelledby="neural-header">
                     <div class="service-item haptic-feedback" onclick="openExaModal('neural_search')" role="button" tabindex="0" onkeydown="handleKeyDown(event, 'neural_search')">
                         <div class="service-icon">
-                            <i class="fas fa-search" aria([^`]+)
+                            <i class="fas fa-search" aria-hidden="true"></i>
+                        </div>
+                        <div>
+                            <h4 class="service-title">Neurális Keresés</h4>
+                            <p class="service-desc">Keresés a Jade neurális hálózatában</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+                <div class="section-header haptic-feedback" onclick="toggleSection('exa')" role="button" aria-expanded="false" aria-controls="content-exa" tabindex="0" onkeydown="handleKeyDown(event, 'exa')">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-microscope" style="font-size: 0.875rem;" aria-hidden="true"></i>
+                        <span>Exa Keresés</span>
+                    </div>
+                    <i class="fas fa-chevron-down" style="transition: transform 0.3s ease; font-size: 0.875rem;" id="chevron-exa" aria-hidden="true"></i>
+                </div>
+                <div class="section-content" id="content-exa" role="region" aria-labelledby="exa-header">
+                    <div class="service-item haptic-feedback" onclick="openExaModal('exa_search')" role="button" tabindex="0" onkeydown="handleKeyDown(event, 'exa_search')">
+                        <div class="service-icon">
+                            <i class="fas fa-atom" aria-hidden="true"></i>
+                        </div>
+                        <div>
+                            <h4 class="service-title">Exa Keresés</h4>
+                            <p class="service-desc">Tudományos keresés az Exa API-val</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content" id="mainContent">
+        <div style="padding: 1.25rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+                <h2 style="font-size: 1.5rem; font-weight: bold; margin: 0;">Deep Discovery AI Platform</h2>
+                <button id="openSidebarBtn" class="btn-secondary haptic-feedback" aria-label="Oldalsáv megnyitása">
+                    <i class="fas fa-bars" aria-hidden="true"></i>
+                </button>
+            </div>
+
+            <div class="glass-panel" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                    <h3 style="font-size: 1.125rem; font-weight: bold; margin: 0;">AI Szolgáltatások</h3>
+                </div>
+
+                <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
+                    <button class="nav-btn" onclick="showPanel('chatPanel')">💬 AI Chat</button>
+                    <button class="nav-btn" onclick="showPanel('alphafold3Panel')">🧬 AlphaFold 3</button>
+                    <button class="nav-btn" onclick="showPanel('deepResearchPanel')">📊 Kutatás</button>
+                    <button class="nav-btn" onclick="showPanel('alphaServicesPanel')">⚗️ Alpha Szolgáltatások</button>
+                    <button class="nav-btn" onclick="showPanel('exaPanel')">🔍 Exa Keresés</button>
+                </div>
+            </div>
+
+            <div id="chatPanel" class="panel">
+                <div class="chat-container" id="chatContainer">
+                    <!-- Welcome Message -->
+                    <div class="message ai-message">
+                        <div class="ai-content">
+                            Üdvözöllek! Kezdj el csevegni, vagy válassz egy AI szolgáltatást a menüből.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-container">
+                    <div class="input-wrapper">
+                        <textarea id="inputField" class="input-field" placeholder="Írj egy üzenetet..." rows="1"></textarea>
+                        <button id="sendButton" class="send-button haptic-feedback" aria-label="Üzenet küldése">
+                            <i class="fas fa-paper-plane" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AlphaFold 3 Panel -->
+                <div id="alphafold3Panel" class="panel hidden">
+                    <div class="panel-header">
+                        <h3>🧬 AlphaFold 3 Struktúra Predikció</h3>
+                        <p>Fehérje szerkezetek és kölcsönhatások előrejelzése</p>
+                    </div>
+
+                    <div class="panel-content">
+                        <div class="input-group">
+                            <label for="af3PredictionName">Predikció neve:</label>
+                            <input type="text" id="af3PredictionName" placeholder="pl. my_protein_complex" value="protein_complex_1">
+                        </div>
+
+                        <div class="input-group">
+                            <label for="af3ProteinChains">Fehérje láncok (egy szekvencia soronként):</label>
+                            <textarea id="af3ProteinChains" rows="4" placeholder="MKTAYIAKQRQISFVKSHFSRQLEERLGLIEVQAPILSRVGDGTQDNLSGAEKAVQVKVKALPDAQFEVVHSLAKWKRQTLGQHDFSAGEGLYTHMKALRPDEDRLSPLHSVYVDQWDWERVMGDGERQFSTLKSTVEAIWAGIKATEAAVSEEFGLAPFLPDQIHFVHSQELLSRYPDLDAKGRERAIAKDLGAVFLVGIGGKLSDGHRHDVRAPDYDDWUQTPIGQFQPKMCSFMLCTSADMGTGPGSEFDPFKMEERELLLGP">
+                        </div>
+
+                        <div class="input-group">
+                            <label for="af3DnaSequences">DNS szekvenciák (opcionális):</label>
+                            <textarea id="af3DnaSequences" rows="2" placeholder="ATCGATCGATCGATCG"></textarea>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="af3RnaSequences">RNS szekvenciák (opcionális):</label>
+                            <textarea id="af3RnaSequences" rows="2" placeholder="AUCGAUCGAUCGAUCG"></textarea>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="af3Ligands">Ligandumok SMILES formátumban (opcionális):</label>
+                            <input type="text" id="af3Ligands" placeholder="CC(C)CC1=CC=C(C=C1)C(C)C(=O)O">
+                        </div>
+
+                        <button id="runAlphaFold3" class="action-btn">
+                            🧬 AlphaFold 3 Futtatása
+                        </button>
+
+                        <div id="alphafold3Status" class="status-display"></div>
+                        <div id="alphafold3Results" class="results-display"></div>
+                    </div>
+                </div>
+
+                <!-- Deep Research Panel -->
+                <div id="deepResearchPanel" class="panel hidden">
+                    <div class="panel-header">
+                        <h3>📊 Mélyreható Kutatás</h3>
+                        <p>1000+ tudományos forrás elemzése valós időben</p>
+                    </div>
+
+                    <div class="panel-content">
+                        <div class="input-group">
+                            <label for="researchQuery">Kutatási kérdés:</label>
+                            <textarea id="researchQuery" rows="4" placeholder="pl. Parkinson-kór új terápiás célpontjai"></textarea>
+                        </div>
+
+                        <button id="runDeepResearch" class="action-btn">
+                            🔬 Kutatás indítása
+                        </button>
+
+                        <div id="researchStatus" class="status-display"></div>
+                        <div id="researchResults" class="results-display"></div>
+                    </div>
+                </div>
+
+                <!-- Alpha Services Panel -->
+                <div id="alphaServicesPanel" class="panel hidden">
+                    <div class="panel-header">
+                        <h3>⚗️ Alpha Szolgáltatások</h3>
+                        <p>Kísérleti AI szolgáltatások</p>
+                    </div>
+
+                    <div class="panel-content">
+                        <p>Hamarosan...</p>
+                    </div>
+                </div>
+
+                <!-- Exa Search Panel -->
+                <div id="exaPanel" class="panel hidden">
+                    <div class="panel-header">
+                        <h3>🔍 Exa Keresés</h3>
+                        <p>Tudományos keresés az Exa API-val</p>
+                    </div>
+
+                    <div class="panel-content">
+                        <div class="input-group">
+                            <label for="exaQuery">Keresési kifejezés:</label>
+                            <input type="text" id="exaQuery" placeholder="pl. Rák gyógyítása">
+                        </div>
+
+                        <button id="runExaSearch" class="action-btn">
+                            🔍 Keresés indítása
+                        </button>
+
+                        <div id="exaStatus" class="status-display"></div>
+                        <div id="exaResults" class="results-display"></div>
+                    </div>
+                </div>
+        </div>
+    </div>
+
+    <!-- Modal Overlay -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-content" id="modalContent">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Modal Title</h2>
+                <div class="modal-close" id="modalClose">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </div>
+            </div>
+            <div class="modal-body" id="modalBody">
+                Modal body content here
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <p id="toastMessage">Toast message here.</p>
+    </div>
+
+    <script>
+        // --- DOM betöltése ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            const openSidebarBtn = document.getElementById('openSidebarBtn');
+            const inputField = document.getElementById('inputField');
+            const sendButton = document.getElementById('sendButton');
+            const chatContainer = document.getElementById('chatContainer');
+            const newChatBtn = document.getElementById('newChatBtn');
+
+            // --- UI állapot ---
+            let isSidebarOpen = false;
+
+            // --- Funkciók ---
+            function toggleSidebar() {
+                isSidebarOpen = !isSidebarOpen;
+                sidebar.classList.toggle('open', isSidebarOpen);
+            }
+
+            function generateUserId() {
+                return 'user_' + Math.random().toString(36).substring(2, 15);
+            }
+
+            function showPanel(panelId) {
+                const panels = document.querySelectorAll('.panel');
+                panels.forEach(panel => panel.classList.add('hidden'));
+
+                const selectedPanel = document.getElementById(panelId);
+                if (selectedPanel) {
+                    selectedPanel.classList.remove('hidden');
+                }
+
+                if (isSidebarOpen && window.innerWidth <= 1024) {
+                    toggleSidebar(); // Sidebar bezárása
+                }
+            }
+
+            function sendMessage(messageText) {
+                if (!messageText.trim()) return;
+
+                // Felhasználói üzenet hozzáadása
+                const userMessageDiv = document.createElement('div');
+                userMessageDiv.classList.add('message', 'user-message');
+                userMessageDiv.textContent = messageText;
+                chatContainer.appendChild(userMessageDiv);
+
+                // AI válasz generálása (késleltetéssel)
+                setTimeout(() => {
+                    const aiMessageDiv = document.createElement('div');
+                    aiMessageDiv.classList.add('message', 'ai-message');
+                    aiMessageDiv.innerHTML = `<div class="ai-content"><span class="loading-spinner"></span></div>`;
+                    chatContainer.appendChild(aiMessageDiv);
+
+                    // Gördítés az aljára
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+
+                    // AI válasz kérése
+                    getAiResponse(messageText, aiMessageDiv);
+                }, 250);
+
+                // Input mező ürítése
+                inputField.value = '';
+                inputField.style.height = '24px';
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+
+            async function getAiResponse(messageText, aiMessageDiv) {
+                const userId = generateUserId();
+
+                try {
+                    const response = await fetch('/api/chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            message: messageText,
+                            user_id: userId
+                        })
+                    });
+
+                    const data = await response.json();
+                    aiMessageDiv.innerHTML = `<div class="ai-content">${data.response}</div>`;
+                    Prism.highlightAllUnder(aiMessageDiv); // Code highlighting
+
+                } catch (error) {
+                    aiMessageDiv.innerHTML = `<div class="ai-content error">Hiba történt a válasz generálása közben.</div>`;
+                } finally {
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                }
+            }
+
+            function adjustTextareaHeight() {
+                inputField.style.height = 'auto';
+                inputField.style.height = Math.min(100, inputField.scrollHeight) + 'px';
+            }
+
+            function openExaModal(searchType) {
+                const modalOverlay = document.getElementById('modalOverlay');
+                const modalContent = document.getElementById('modalContent');
+                const modalTitle = document.getElementById('modalTitle');
+                const modalBody = document.getElementById('modalBody');
+
+                modalTitle.textContent = searchType === 'exa_search' ? 'Exa Keresés' : 'Neurális Keresés';
+                modalBody.innerHTML = `
+                    <p>Itt lesz a ${searchType === 'exa_search' ? 'Exa' : 'Neurális'} keresés eredménye.</p>
+                    <p>Ez a funkció még fejlesztés alatt áll.</p>
+                `;
+
+                modalOverlay.classList.add('show');
+            }
+
+            function closeModal() {
+                document.getElementById('modalOverlay').classList.remove('show');
+            }
+
+            function showToast(message, duration = 3000) {
+                const toast = document.getElementById('toast');
+                const toastMessage = document.getElementById('toastMessage');
+                toastMessage.textContent = message;
+                toast.classList.add('show');
+
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, duration);
+            }
+
+            function toggleSection(sectionId) {
+                const sectionHeader = document.querySelector(`.section-header[aria-controls="content-${sectionId}"]`);
+                const sectionContent = document.getElementById(`content-${sectionId}`);
+                const chevronIcon = document.getElementById(`chevron-${sectionId}`);
+                const isExpanded = sectionHeader.getAttribute('aria-expanded') === 'true';
+
+                sectionHeader.setAttribute('aria-expanded', !isExpanded);
+                chevronIcon.classList.toggle('rotate', !isExpanded);
+                sectionContent.classList.toggle('expanded', !isExpanded);
+            }
+
+            function handleKeyDown(event, action) {
+                if (event.key === 'Enter' || event.keyCode === 13) {
+                    event.preventDefault(); // Megakadályozza az új sor beszúrását
+                    if (action === 'neural') {
+                        toggleSection('neural');
+                    } else if (action === 'exa') {
+                        toggleSection('exa');
+                    } else if (action === 'neural_search') {
+                        openExaModal('neural_search');
+                    } else if (action === 'exa_search') {
+                        openExaModal('exa_search');
+                    }
+                }
+            }
+
+            // --- Eseménykezelők ---
+            openSidebarBtn.addEventListener('click', toggleSidebar);
+
+            sendButton.addEventListener('click', () => {
+                sendMessage(inputField.value);
+            });
+
+            inputField.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault();
+                    sendMessage(inputField.value);
+                }
+            });
+
+            inputField.addEventListener('input', adjustTextareaHeight);
+
+            document.getElementById('modalClose').addEventListener('click', closeModal);
+
+            newChatBtn.addEventListener('click', () => {
+                chatContainer.innerHTML = `
+                    <div class="message ai-message">
+                        <div class="ai-content">
+                            Új beszélgetés indítva. Kezdj el csevegni!
+                        </div>
+                    </div>
+                `;
+                showToast('Új beszélgetés indítva', 2000);
+            });
+
+            // AlphaFold 3 funkcionalitás
+            document.getElementById('runAlphaFold3').addEventListener('click', async () => {
+                const predictionName = document.getElementById('af3PredictionName').value;
+                const proteinChains = document.getElementById('af3ProteinChains').value.split('\n').filter(s => s.trim());
+                const dnaSequences = document.getElementById('af3DnaSequences').value.split('\n').filter(s => s.trim());
+                const rnaSequences = document.getElementById('af3RnaSequences').value.split('\n').filter(s => s.trim());
+                const ligands = document.getElementById('af3Ligands').value.split(',').map(s => s.trim()).filter(s => s);
+
+                if (!predictionName.trim() || proteinChains.length === 0) {
+                    alert('Kérlek, adj meg egy predikció nevet és legalább egy fehérje szekvenciát!');
+                    return;
+                }
+
+                const statusDiv = document.getElementById('alphafold3Status');
+                const resultsDiv = document.getElementById('alphafold3Results');
+
+                statusDiv.innerHTML = '<div class="loading">🧬 AlphaFold 3 feldolgozás folyamatban...</div>';
+                resultsDiv.innerHTML = '';
+
+                try {
+                    const response = await fetch('/api/alphafold3/structure_prediction', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            prediction_name: predictionName,
+                            protein_chains: proteinChains,
+                            dna_sequences: dnaSequences,
+                            rna_sequences: rnaSequences,
+                            ligands: ligands
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.status === 'success') {
+                        statusDiv.innerHTML = '<div class="success">✅ AlphaFold 3 sikeresen lefutott</div>';
+
+                        resultsDiv.innerHTML = `
+                            <div class="af3-results">
+                                <h4>🎯 Predikció Eredmények</h4>
+                                <p><strong>Predikció neve:</strong> ${data.prediction_name}</p>
+                                <p><strong>Fehérje láncok:</strong> ${proteinChains.length} db</p>
+                                <p><strong>DNS szekvenciák:</strong> ${dnaSequences.length} db</p>
+                                <p><strong>RNS szekvenciák:</strong> ${rnaSequences.length} db</p>
+                                <p><strong>Ligandumok:</strong> ${ligands.length} db</p>
+
+                                <div class="input-json">
+                                    <h5>📝 Generált Input JSON:</h5>
+                                    <pre>${JSON.stringify(data.input_json, null, 2)}</pre>
+                                </div>
+
+                                <div class="output-files">
+                                    <h5>📁 Kimeneti fájlok:</h5>
+                                    <ul>
+                                        ${data.output_files.map(file => `<li>${file}</li>`).join('')}
+                                    </ul>
+                                </div>
+
+                                <div class="stdout-log">
+                                    <h5>📋 Futtatási napló:</h5>
+                                    <pre class="log-output">${data.stdout}</pre>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        statusDiv.innerHTML = '<div class="error">❌ AlphaFold 3 hiba</div>';
+                        resultsDiv.innerHTML = `
+                            <div class="error-details">
+                                <h4>Hiba részletei:</h4>
+                                <pre class="error-output">${data.error}</pre>
+                                <h5>Stdout:</h5>
+                                <pre class="log-output">${data.stdout}</pre>
+                            </div>
+                        `;
+                    }
+
+                } catch (error) {
+                    statusDiv.innerHTML = '<div class="error">❌ Hiba az AlphaFold 3 futtatása során: ' + error.message + '</div>';
+                }
+            });
+
+            // Deep Research funkcionalitás
+            document.getElementById('runDeepResearch').addEventListener('click', async () => {
+                const query = document.getElementById('researchQuery').value;
+                const userId = generateUserId();
+
+                if (!query.trim()) {
+                    alert('Kérlek, adj meg egy kutatási kérdést!');
+                    return;
+                }
+
+                const statusDiv = document.getElementById('researchStatus');
+                const resultsDiv = document.getElementById('researchResults');
+
+                statusDiv.innerHTML = '<div class="loading">🔬 Kutatás folyamatban... (1000+ forrás feldolgozása)</div>';
+                resultsDiv.innerHTML = '';
+
+                try {
+                    const response = await fetch('/api/deep_research', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            query: query,
+                            user_id: userId
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    statusDiv.innerHTML = `<div class="success">✅ Kutatás befejezve: ${data.total_sources} forrás feldolgozva</div>`;
+
+                    resultsDiv.innerHTML = `
+                        <div class="research-summary">
+                            <h4>📋 Összefoglaló Elemzés</h4>
+                            <div class="analysis-text">${data.final_synthesis}</div>
+                        </div>
+
+                        <div class="sources-section">
+                            <h4>📚 Források (${data.sources.length} db)</h4>
+                            <div class="sources-grid">
+                                ${data.sources.slice(0, 20).map(source => `
+                                    <div class="source-card">
+                                        <h5><a href="${source.url}" target="_blank">${source.title}</a></h5>
+                                        <p class="source-domain">${source.domain}</p>
+                                        ${source.published_date ? `<p class="source-date">${source.published_date}</p>` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                            ${data.sources.length > 20 ? `<p class="more-sources">... és még ${data.sources.length - 20} forrás</p>` : ''}
+                        </div>
+
+                        <div class="stats-section">
+                            <h4>📊 Statisztikák</h4>
+                            <p>Összes forrás: ${data.total_sources}</p>
+                            <p>Egyedi domainok: ${data.unique_domains}</p>
+                            <p>Feldolgozott tartalom: ${Math.round(data.processing_stats.content_length / 1000)}k karakter</p>
+                        </div>
+                    `;
+
+                } catch (error) {
+                    statusDiv.innerHTML = '<div class="error">❌ Hiba a kutatás során: ' + error.message + '</div>';
+                }
+            });
+
+            // Kezdeti UI állapot beállítása
+            showPanel('chatPanel');
+        });
+    </script>
+</body>
+</html>
