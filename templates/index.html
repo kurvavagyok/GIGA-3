@@ -468,7 +468,7 @@
         .chat-container {
             flex: 1;
             overflow-y: auto;
-            padding: 1.5rem;
+            padding: 1rem;
             scroll-behavior: smooth;
             scrollbar-width: none;
             -ms-overflow-style: none;
@@ -515,7 +515,7 @@
         }
 
         .message {
-            margin: 0;
+            margin: 0 0 1rem 0;
             padding: 0;
             animation: slideInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -536,13 +536,13 @@
         .user-message {
             background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
             color: #000;
-            padding: 1rem 1.5rem;
-            border-radius: 24px 24px 8px 24px;
+            padding: 0.75rem 1.25rem;
+            border-radius: 20px 20px 6px 20px;
             margin-left: auto;
             max-width: 70%;
             font-weight: 500;
-            font-size: 0.95rem;
-            line-height: 1.5;
+            font-size: 0.9rem;
+            line-height: 1.4;
             box-shadow: 
                 var(--shadow-primary),
                 0 4px 20px rgba(0, 255, 136, 0.15);
@@ -552,7 +552,7 @@
             position: relative;
             overflow: hidden;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            min-height: 2.5rem;
+            min-height: 2rem;
             display: flex;
             align-items: center;
         }
@@ -597,7 +597,7 @@
             background: transparent;
             border: none;
             padding: 0;
-            margin: 0;
+            margin: 0 0 0.5rem 0;
             border-radius: 0;
             max-width: 100%;
             backdrop-filter: none;
@@ -625,7 +625,7 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            margin: 0 0 0.5rem 0;
+            margin: 0 0 0.25rem 0;
             padding: 0;
             border-bottom: none;
         }
@@ -654,7 +654,7 @@
         .message-actions {
             display: flex;
             gap: 0.4rem;
-            margin: 0;
+            margin: 0.25rem 0 0 0;
             padding: 0;
             border-top: none;
         }
@@ -1669,7 +1669,7 @@
             }
 
             .chat-container {
-                padding: 0.75rem;
+                padding: 0.5rem;
             }
 
             .input-container {
@@ -4148,7 +4148,7 @@
 
             if (type === 'user') {
                 messageDiv.innerHTML = `
-                    <div class="flex justify-end mb-4">
+                    <div class="flex justify-end mb-2">
                         <div class="user-message">
                             <span>${escapeHtml(content)}</span>
                         </div>
