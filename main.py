@@ -906,11 +906,11 @@ async def deep_research(req: DeepResearchRequest):
         for batch in range(5):  # 5 batch = 250 eredmény
             try:
                 neural_search = exa_client.search(
-                    query=f"{req.query} scientific research study",
+                    f"{req.query} scientific research study",
                     type="neural",
                     num_results=50,
                     include_domains=scientific_domains,
-                    text_contents={"max_characters": 3000, "strategy": "comprehensive"},
+                    text={"max_characters": 3000, "include_html_tags": False},
                     livecrawl="when_necessary"
                 )
                 all_results.extend(neural_search.results)
@@ -930,11 +930,11 @@ async def deep_research(req: DeepResearchRequest):
         for variant in keyword_variants:
             try:
                 keyword_search = exa_client.search(
-                    query=variant,
+                    variant,
                     type="keyword",
                     num_results=40,
                     include_domains=scientific_domains,
-                    text_contents={"max_characters": 3000, "strategy": "comprehensive"}
+                    text={"max_characters": 3000, "include_html_tags": False}
                 )
                 all_results.extend(keyword_search.results)
                 logger.info(f"Keyword search '{variant}': {len(keyword_search.results)} results")
@@ -946,11 +946,11 @@ async def deep_research(req: DeepResearchRequest):
         for year in time_periods:
             try:
                 recent_search = exa_client.search(
-                    query=f"{req.query} {year}",
+                    f"{req.query} {year}",
                     type="neural",
                     num_results=30,
                     start_published_date=f"{year}-01-01",
-                    text_contents={"max_characters": 3000, "strategy": "comprehensive"}
+                    text={"max_characters": 3000, "include_html_tags": False}
                 )
                 all_results.extend(recent_search.results)
                 logger.info(f"Time period {year}: {len(recent_search.results)} results")
@@ -961,11 +961,11 @@ async def deep_research(req: DeepResearchRequest):
         for domain in scientific_domains[:10]:  # Top 10 domain
             try:
                 domain_search = exa_client.search(
-                    query=req.query,
+                    req.query,
                     type="neural",
                     num_results=20,
                     include_domains=[domain],
-                    text_contents={"max_characters": 3000, "strategy": "comprehensive"}
+                    text={"max_characters": 3000, "include_html_tags": False}
                 )
                 all_results.extend(domain_search.results)
                 logger.info(f"Domain {domain}: {len(domain_search.results)} results")
@@ -1099,9 +1099,8 @@ async def exa_advanced_search(req: AdvancedExaRequest):
     try:
         # Keresési paraméterek összeállítása
         search_params = {
-            "query": req.query,
             "num_results": req.num_results,
-            "text_contents": req.text_contents_options,
+            "text": req.text_contents_options,
             "livecrawl": req.livecrawl
         }
 
@@ -1143,7 +1142,7 @@ async def exa_advanced_search(req: AdvancedExaRequest):
             search_params["subcategory"] = req.subcategory
 
         logger.info(f"Advanced Exa search with params: {search_params}")
-        response = exa_client.search(**search_params)
+        response = exa_client.search(req.query, **search_params)
 
         # Eredmények feldolgozása
         results = []
@@ -1350,14 +1349,14 @@ async def exa_neural_search(query: str, domains: List[str] = [], exclude_domains
 
     try:
         response = exa_client.search(
-            query=query,
+            query,
             type="neural",
             num_results=num_results,
             include_domains=domains,
             exclude_domains=exclude_domains,
-            text_contents={
+            text={
                 "max_characters": 3000,
-                "strategy": "comprehensive"
+                "include_html_tags": False
             },
             livecrawl="when_necessary"
         )
@@ -1413,13 +1412,12 @@ async def get_research_trends(req: ScientificInsightRequest):
         ]
 
         search_response = exa_client.search(
-            query=req.query,
+            req.query,
             type="neural",
             num_results=req.num_results,
             include_domains=scientific_domains,
-            text_contents={
-                "max_characters": 2000, 
-                "strategy": "comprehensive",
+            text={
+                "max_characters": 2000,
                 "include_html_tags": False
             },
             livecrawl="when_necessary",
