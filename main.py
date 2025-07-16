@@ -758,7 +758,7 @@ async def execute_simple_alpha_service(service_name: str, request: SimpleAlphaRe
 
 @app.post("/api/deep_discovery/chat")
 async def deep_discovery_chat(req: ChatRequest):
-    """Optimalizált chat funkcionalitás cache-eléssel"""
+    """Optimalizált chat funkcionalitás cache-eléssel és valós idejű tudással"""
     if not cerebras_client:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -780,10 +780,35 @@ async def deep_discovery_chat(req: ChatRequest):
 
     history = chat_histories.get(user_id, [])
 
-    # Optimalizált system message
+    # Valós idejű tudás megszerzése Exa AI-val
+    real_time_context = ""
+    if exa_client and EXA_AVAILABLE:
+        try:
+            # Aktuális információk keresése
+            current_search = exa_client.search(
+                query=f"{current_message} 2024 2025 latest recent",
+                type="neural",
+                num_results=5,
+                text_contents={"max_characters": 1000, "strategy": "comprehensive"},
+                livecrawl="always",
+                start_published_date="2024-01-01"
+            )
+            
+            if current_search.results:
+                real_time_info = []
+                for result in current_search.results:
+                    if result.text_contents and result.text_contents.text:
+                        real_time_info.append(f"- {result.title}: {result.text_contents.text[:300]}...")
+                
+                real_time_context = f"\n\nVALÓS IDEJŰ INFORMÁCIÓK (2024-2025):\n" + "\n".join(real_time_info[:3])
+                logger.info(f"Real-time context added: {len(real_time_context)} characters")
+        except Exception as e:
+            logger.error(f"Real-time search error: {e}")
+
+    # Optimalizált system message valós idejű kontextussal
     system_message = {
         "role": "system",
-        "content": f"Te JADED vagy, egy fejlett AI asszisztens magyarul. Szakértő vagy tudományos és technológiai területeken. Segítőkész, részletes és pontos válaszokat adsz. {CREATOR_INFO} Ha kérdezik a készítőről, mindig említsd meg, hogy Kollár Sándor készítette ezt az alkalmazást."
+        "content": f"Te JADED vagy, egy fejlett AI asszisztens magyarul. Szakértő vagy tudományos és technológiai területeken. Segítőkész, részletes és pontos válaszokat adsz. {CREATOR_INFO} Ha kérdezik a készítőről, mindig említsd meg, hogy Kollár Sándor készítette ezt az alkalmazást. Ha valós idejű információk állnak rendelkezésre, használd azokat a válaszadáshoz.{real_time_context}"
     }
 
     # Csak az utolsó 10 üzenetet használjuk a kontextushoz
@@ -822,6 +847,7 @@ async def deep_discovery_chat(req: ChatRequest):
         result = {
             'response': response_text,
             'model_used': model_used,
+            'real_time_info_used': bool(real_time_context),
             'status': 'success'
         }
 
@@ -1471,6 +1497,165 @@ async def protein_structure_lookup(req: ProteinLookupRequest):
 
     except Exception as e:
         logger.error(f"Error in protein lookup: {e}")
+
+
+# --- Valós idejű tudás endpoint ---
+@app.post("/api/real_time_knowledge")
+async def real_time_knowledge(query: str):
+    """Valós idejű tudás lekérése Exa AI-val"""
+    if not exa_client or not EXA_AVAILABLE:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Exa AI nem elérhető"
+        )
+
+    try:
+        # Aktuális információk keresése
+        current_search = exa_client.search(
+            query=f"{query} 2024 2025 latest breaking news recent",
+            type="neural",
+            num_results=10,
+            text_contents={"max_characters": 2000, "strategy": "comprehensive"},
+            livecrawl="always",
+            start_published_date="2024-01-01",
+            include_domains=[
+                "reuters.com", "bbc.com", "cnn.com", "techcrunch.com",
+                "nature.com", "science.org", "arxiv.org", "pubmed.ncbi.nlm.nih.gov"
+            ]
+        )
+        
+        if not current_search.results:
+            return {
+                "query": query,
+                "real_time_info": "Nem található aktuális információ",
+                "sources": [],
+                "timestamp": datetime.now().isoformat()
+            }
+
+        # Információk feldolgozása
+        real_time_sources = []
+        combined_info = ""
+        
+        for result in current_search.results:
+            source_info = {
+                "title": result.title,
+                "url": result.url,
+                "published_date": result.published_date,
+                "domain": result.url.split('/')[2] if '/' in result.url else result.url
+            }
+            real_time_sources.append(source_info)
+            
+            if result.text_contents and result.text_contents.text:
+                combined_info += f"\n{result.title}: {result.text_contents.text[:500]}...\n"
+
+        # AI összegzés a valós idejű információkból
+        if combined_info and cerebras_client:
+            summary_prompt = f"""
+            Készíts rövid, informatív összefoglalót a következő valós idejű információkból:
+            
+            Kérdés: {query}
+            
+            Aktuális információk:
+            {combined_info[:8000]}
+            
+            Az összefoglaló legyen tömör, lényegre törő és tartalmazza a legfontosabb aktuális fejleményeket.
+            """
+            
+            try:
+                summary_stream = cerebras_client.chat.completions.create(
+                    messages=[{"role": "user", "content": summary_prompt}],
+                    model="llama-4-scout-17b-16e-instruct",
+                    stream=True,
+                    max_completion_tokens=1000,
+                    temperature=0.1
+                )
+                
+                summary_text = ""
+                for chunk in summary_stream:
+                    if chunk.choices[0].delta.content:
+                        summary_text += chunk.choices[0].delta.content
+                        
+            except Exception as e:
+                logger.error(f"Summary generation error: {e}")
+                summary_text = "Hiba az összefoglaló generálása során"
+        else:
+            summary_text = "Nincs elegendő információ az összefoglaláshoz"
+
+        return {
+            "query": query,
+            "real_time_summary": summary_text,
+            "sources": real_time_sources,
+            "total_sources": len(real_time_sources),
+            "timestamp": datetime.now().isoformat(),
+            "status": "success"
+        }
+
+    except Exception as e:
+        logger.error(f"Real-time knowledge error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Hiba a valós idejű tudás lekérése során: {e}"
+        )
+
+# --- Trendek követése endpoint ---
+@app.get("/api/trending_topics")
+async def get_trending_topics():
+    """Aktuális trendek és hírek lekérése"""
+    if not exa_client or not EXA_AVAILABLE:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Exa AI nem elérhető"
+        )
+
+    try:
+        trending_queries = [
+            "breaking news today",
+            "latest technology 2024",
+            "artificial intelligence breakthrough",
+            "climate change news",
+            "space exploration recent"
+        ]
+        
+        all_trends = []
+        
+        for query in trending_queries:
+            try:
+                trend_search = exa_client.search(
+                    query=query,
+                    type="neural",
+                    num_results=5,
+                    text_contents={"max_characters": 500, "strategy": "comprehensive"},
+                    livecrawl="always",
+                    start_published_date="2024-01-01"
+                )
+                
+                for result in trend_search.results:
+                    all_trends.append({
+                        "category": query,
+                        "title": result.title,
+                        "url": result.url,
+                        "published_date": result.published_date,
+                        "preview": result.text_contents.text[:200] + "..." if result.text_contents else None
+                    })
+                    
+            except Exception as e:
+                logger.error(f"Trend search error for '{query}': {e}")
+                continue
+
+        return {
+            "trending_topics": all_trends,
+            "total_trends": len(all_trends),
+            "timestamp": datetime.now().isoformat(),
+            "status": "success"
+        }
+
+    except Exception as e:
+        logger.error(f"Trending topics error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Hiba a trendek lekérése során: {e}"
+        )
+
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Hiba a fehérje lekérdezése során: {e}"
