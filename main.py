@@ -13,7 +13,6 @@ from functools import lru_cache
 import time
 import sys
 import pathlib
-import uvicorn
 
 # Google Cloud kliensekhez
 from google.cloud import aiplatform
@@ -37,9 +36,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 # AlphaFold 3 integráció
-alphafold3_path = pathlib.Path("alphafold3_repo/src")
-if alphafold3_path.exists():
-    sys.path.append(str(alphafold3_path))
+sys.path.append(str(pathlib.Path("alphafold3_repo/src")))
 
 # Naplózás konfigurálása
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -98,7 +95,6 @@ if CEREBRAS_API_KEY:
         logger.info("Cerebras client initialized successfully.")
     except Exception as e:
         logger.error(f"Error initializing Cerebras client: {e}")
-        cerebras_client = None
 
 # Gemini 2.5 Pro inicializálása
 gemini_model = None
@@ -387,7 +383,7 @@ ALPHA_SERVICES = {
         "AlphaModeling": "Matematikai modellezés",
         "AlphaControl": "Irányítástechnika",
         "AlphaSignal": "Jelfeldolgozás",
-        "AlphaData": "Adatstruktúra optimalizálás és adatelemzés, big data",
+        "AlphaData": "Adatelemzés és big data",
         "AlphaNetwork": "Hálózati rendszerek",
         "AlphaSecurity": "Kiberbiztonsági elemzés",
         "AlphaCrypto": "Kriptográfiai protokollok",
@@ -434,19 +430,19 @@ ALPHA_SERVICES = {
 async def select_backend_model(prompt: str, service_name: str = None):
     """Backend modell kiválasztása a kérés és a token limitek alapján - Cerebras prioritás"""
     # CEREBRAS ELSŐ PRIORITÁS a sebességért
-    if cerebras_client is not None:
+    if cerebras_client:
         selected_model = cerebras_client
         model_name = "llama-4-scout-17b-16e-instruct"
         return {"model": selected_model, "name": model_name}
 
     # Backup: Gemini 2.5 Pro
-    if gemini_25_pro is not None:
+    if gemini_25_pro:
         selected_model = gemini_25_pro
         model_name = "gemini-2.5-pro"
         return {"model": selected_model, "name": model_name}
 
     # Backup: Gemini 1.5 Pro
-    if gemini_model is not None:
+    if gemini_model:
         selected_model = gemini_model
         model_name = "gemini-1.5-pro"
         return {"model": selected_model, "name": model_name}
@@ -476,25 +472,18 @@ async def execute_model(model_info: Dict[str, Any], prompt: str):
             response_text = response.text
             return {"response": response_text, "model_used": model_name, "selected_backend": model_name}
 
-        elif model == cerebras_client and cerebras_client is not None:
-            try:
-                stream = cerebras_client.chat.completions.create(
-                    messages=[{"role": "user", "content": prompt}],
-                    model="llama-4-scout-17b-16e-instruct",
-                    stream=True,
-                    max_completion_tokens=2048,
-                    temperature=0.1
-                )
-                for chunk in stream:
-                    if chunk.choices and chunk.choices[0].delta and chunk.choices[0].delta.content:
-                        response_text += chunk.choices[0].delta.content
-                return {"response": response_text, "model_used": "Cerebras Llama 4", "selected_backend": "Cerebras Llama 4"}
-            except Exception as e:
-                logger.error(f"Cerebras API hiba: {e}")
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail=f"Cerebras API hiba: {e}"
-                )
+        elif model == cerebras_client:
+            stream = cerebras_client.chat.completions.create(
+                messages=[{"role": "user", "content": prompt}],
+                model="llama-4-scout-17b-16e-instruct",
+                stream=True,
+                max_completion_tokens=2048,
+                temperature=0.1
+            )
+            for chunk in stream:
+                if chunk.choices[0].delta.content:
+                    response_text += chunk.choices[0].delta.content
+            return {"response": response_text, "model_used": "Cerebras Llama 4", "selected_backend": "Cerebras Llama 4"}
 
         else:
             raise ValueError("Érvénytelen modell")
@@ -823,26 +812,21 @@ async def deep_discovery_chat(req: ChatRequest):
         model_used = ""
 
         # Cerebras elsőként a gyorsaság miatt
-        if cerebras_client is not None:
-            try:
-                stream = cerebras_client.chat.completions.create(
-                    messages=messages_for_llm,
-                    model="llama-4-scout-17b-16e-instruct",
-                    stream=True,
-                    max_completion_tokens=2048,  # Optimalizált limit
-                    temperature=0.15,  # Gyorsabb és konzisztensebb
-                    top_p=0.95,  # Optimalizált sampling
-                    presence_penalty=0.0,  # Gyorsabb feldolgozás
-                    frequency_penalty=0.0
-                )
-                for chunk in stream:
-                    if chunk.choices and chunk.choices[0].delta and chunk.choices[0].delta.content:
-                        response_text += chunk.choices[0].delta.content
-                model_used = "Cerebras Llama 4"
-            except Exception as e:
-                logger.error(f"Cerebras chat hiba: {e}")
-                # Fallback to Gemini
-                cerebras_client = None
+        if cerebras_client:
+            stream = cerebras_client.chat.completions.create(
+                messages=messages_for_llm,
+                model="llama-4-scout-17b-16e-instruct",
+                stream=True,
+                max_completion_tokens=2048,  # Optimalizált limit
+                temperature=0.15,  # Gyorsabb és konzisztensebb
+                top_p=0.95,  # Optimalizált sampling
+                presence_penalty=0.0,  # Gyorsabb feldolgozás
+                frequency_penalty=0.0
+            )
+            for chunk in stream:
+                if chunk.choices[0].delta.content:
+                    response_text += chunk.choices[0].delta.content
+            model_used = "Cerebras Llama 4"
         elif gemini_25_pro:
             response = await gemini_25_pro.generate_content_async(
                 '\n'.join([msg['content'] for msg in messages_for_llm]),
@@ -2157,4 +2141,5 @@ Csak a kódot add vissza, magyarázó szöveg nélkül. A kód legyen közvetlen
 
 # Adding FastAPI application execution to the end of the file.
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=5000, log_level="info")
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=5000)

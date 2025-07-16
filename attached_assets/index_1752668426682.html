@@ -5,12 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jade - Deep Discovery AI Platform</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- highlight.js a kód színezéséhez -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <!-- marked.js a Markdown rendereléshez -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
@@ -40,27 +34,25 @@
             color: var(--text);
             min-height: 100vh;
             overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
         }
 
         .background-gradient {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100vw;
-            height: 100vh;
-            pointer-events: none;
-            background: linear-gradient(270deg, rgba(153,12,88,0.2), rgba(229,18,132,0.2), rgba(0,33,243,0.2), rgba(5,1,74,0.2));
-            background-size: 800% 800%;
-            animation: gradientShift 300s ease infinite;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 25% 25%, rgba(0, 255, 136, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 75% 75%, rgba(0, 136, 255, 0.06) 0%, transparent 45%),
+                radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
+            animation: gradientShift 30s ease-in-out infinite;
             z-index: -1;
         }
 
         @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 10% 50%; }
-            100% { background-position: 0% 50%; }
+            0%, 100% { filter: hue-rotate(0deg); }
+            50% { filter: hue-rotate(30deg); }
         }
 
         .container {
@@ -79,21 +71,6 @@
             z-index: 100;
             transform: translateX(-100%);
             transition: transform 0.3s ease;
-        }
-
-        @media (min-width: 768px) {
-            .sidebar {
-                position: relative;
-                transform: translateX(0);
-            }
-
-            .main-content {
-                margin-left: 320px;
-            }
-
-            .menu-toggle {
-                display: none;
-            }
         }
 
         .sidebar.open {
@@ -260,9 +237,6 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            position: sticky;
-            top: 0;
-            z-index: 50;
         }
 
         .menu-toggle {
@@ -308,11 +282,6 @@
             max-width: 600px;
             margin: 0 auto;
             padding: 4rem 2rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
         }
 
         .welcome-logo {
@@ -434,36 +403,6 @@
             padding: 1.5rem;
             line-height: 1.6;
             backdrop-filter: blur(20px);
-        }
-        .ai-content pre {
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            background: rgba(0,0,0,0.3);
-            border-radius: 8px;
-            padding: 1rem;
-            margin: 1rem 0;
-        }
-        .ai-content code {
-            font-family: 'Courier New', Courier, monospace;
-        }
-        .ai-content .source-list {
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid var(--border);
-        }
-        .ai-content .source-list h4 {
-            margin-bottom: 0.5rem;
-        }
-        .ai-content .source-item {
-            font-size: 0.8rem;
-            margin-bottom: 0.25rem;
-        }
-        .ai-content .source-item a {
-            color: var(--primary);
-            text-decoration: none;
-        }
-        .ai-content .source-item a:hover {
-            text-decoration: underline;
         }
 
         .message-actions {
@@ -595,7 +534,6 @@
 
         .modal.show {
             opacity: 1;
-            display: flex;
         }
 
         .modal-content {
@@ -608,12 +546,6 @@
             max-height: 80vh;
             overflow-y: auto;
             backdrop-filter: blur(20px);
-            transform: scale(0.95);
-            transition: transform 0.3s ease;
-        }
-
-        .modal.show .modal-content {
-            transform: scale(1);
         }
 
         .modal-header {
@@ -629,54 +561,6 @@
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-        }
-
-        .modal-body {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .modal-body label {
-            font-weight: 500;
-            color: var(--text-muted);
-        }
-
-        .modal-body input, .modal-body textarea {
-            background: var(--glass);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 0.75rem 1rem;
-            color: var(--text);
-            font-size: 0.9rem;
-            outline: none;
-            transition: all 0.3s ease;
-        }
-
-        .modal-body input:focus, .modal-body textarea:focus {
-            border-color: var(--primary);
-            background: var(--glass-strong);
-        }
-
-        .modal-footer {
-            margin-top: 1.5rem;
-            display: flex;
-            justify-content: flex-end;
-        }
-
-        .modal-submit-btn {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: #000;
-            border: none;
-            border-radius: 12px;
-            padding: 0.75rem 1.5rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s ease;
-        }
-
-        .modal-submit-btn:hover {
-            transform: translateY(-2px);
         }
 
         .close-btn {
@@ -699,23 +583,51 @@
         }
 
         /* Responsive Design */
-        @media (max-width: 767px) {
+        @media (min-width: 768px) {
             .sidebar {
-                width: 280px;
+                position: relative;
+                transform: translateX(0);
             }
+
+            .main-content {
+                margin-left: 320px;
+            }
+
+            .menu-toggle {
+                display: none;
+            }
+        }
+
+        @media (max-width: 767px) {
             .welcome-title {
                 font-size: 2rem;
             }
+
             .welcome-logo {
                 width: 80px;
                 height: 80px;
                 font-size: 2rem;
             }
-            .header { padding: 1rem; }
-            .messages-container { padding: 1rem; }
-            .input-area { padding: 1rem; }
-            .user-bubble { max-width: 85%; }
-            .ai-message { max-width: 95%; }
+
+            .header {
+                padding: 1rem;
+            }
+
+            .messages-container {
+                padding: 1rem;
+            }
+
+            .input-area {
+                padding: 1rem;
+            }
+
+            .user-bubble {
+                max-width: 85%;
+            }
+
+            .ai-message {
+                max-width: 95%;
+            }
         }
     </style>
 </head>
@@ -739,13 +651,96 @@
                 </button>
             </div>
 
-            <div class="sidebar-content" id="sidebarContent">
-                <!-- A szolgáltatások dinamikusan töltődnek be ide -->
+            <div class="sidebar-content">
+                <div class="service-category">
+                    <div class="category-header" onclick="toggleCategory('biological')">
+                        <div class="category-title">
+                            <i class="fas fa-dna"></i>
+                            <span>Biológiai & Orvosi</span>
+                        </div>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="category-services" id="biological-services">
+                        <div class="service-item" onclick="selectService('AlphaFold3', 'Fehérje szerkezet előrejelzés')">
+                            <div class="service-icon"><i class="fas fa-cube"></i></div>
+                            <div class="service-info">
+                                <h4>AlphaFold 3</h4>
+                                <p>Fehérje szerkezet előrejelzés</p>
+                            </div>
+                        </div>
+                        <div class="service-item" onclick="selectService('AlphaMissense', 'Mutációs patogenitás elemzés')">
+                            <div class="service-icon"><i class="fas fa-exchange-alt"></i></div>
+                            <div class="service-info">
+                                <h4>AlphaMissense</h4>
+                                <p>Mutációs patogenitás elemzés</p>
+                            </div>
+                        </div>
+                        <div class="service-item" onclick="selectService('AlphaGenome', 'Genom szekvencia elemzés')">
+                            <div class="service-icon"><i class="fas fa-code-branch"></i></div>
+                            <div class="service-info">
+                                <h4>AlphaGenome</h4>
+                                <p>Genom szekvencia elemzés</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="service-category">
+                    <div class="category-header" onclick="toggleCategory('chemical')">
+                        <div class="category-title">
+                            <i class="fas fa-atom"></i>
+                            <span>Kémiai & Anyagtudományi</span>
+                        </div>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="category-services" id="chemical-services">
+                        <div class="service-item" onclick="selectService('AlphaCatalyst', 'Katalizátor tervezés')">
+                            <div class="service-icon"><i class="fas fa-flask"></i></div>
+                            <div class="service-info">
+                                <h4>AlphaCatalyst</h4>
+                                <p>Katalizátor tervezés</p>
+                            </div>
+                        </div>
+                        <div class="service-item" onclick="selectService('AlphaPolymer', 'Polimer tulajdonságok')">
+                            <div class="service-icon"><i class="fas fa-link"></i></div>
+                            <div class="service-info">
+                                <h4>AlphaPolymer</h4>
+                                <p>Polimer tulajdonságok</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="service-category">
+                    <div class="category-header" onclick="toggleCategory('research')">
+                        <div class="category-title">
+                            <i class="fas fa-search"></i>
+                            <span>Kutatási Funkciók</span>
+                        </div>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="category-services" id="research-services">
+                        <div class="service-item" onclick="startDeepResearch()">
+                            <div class="service-icon"><i class="fas fa-microscope"></i></div>
+                            <div class="service-info">
+                                <h4>Deep Research</h4>
+                                <p>Mélyreható kutatási elemzés</p>
+                            </div>
+                        </div>
+                        <div class="service-item" onclick="openCodeGenerator()">
+                            <div class="service-icon"><i class="fas fa-code"></i></div>
+                            <div class="service-info">
+                                <h4>Kód Generátor</h4>
+                                <p>AI-powered kódolás</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </aside>
 
         <!-- Main Content -->
-        <main class="main-content" id="mainContent">
+        <main class="main-content">
             <header class="header">
                 <button class="menu-toggle" onclick="toggleSidebar()">
                     <i class="fas fa-bars"></i>
@@ -790,290 +785,199 @@
     <div class="modal" id="serviceModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title" id="modalTitle">Szolgáltatás</h2>
+                <h2 class="modal-title" id="modalTitle">Alpha Szolgáltatás</h2>
                 <button class="close-btn" onclick="closeModal()">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <div class="modal-body" id="modalBody">
-                <!-- A modális ablak tartalma dinamikusan generálódik -->
-            </div>
-            <div class="modal-footer" id="modalFooter">
-                 <!-- A modális ablak lábléce dinamikusan generálódik -->
+            <div id="modalContent">
+                <!-- Modal content will be populated here -->
             </div>
         </div>
     </div>
 
     <script>
-        // --- Globális Változók és Konfiguráció ---
+        // Globális változók
+        let currentUser = 'user_' + Math.random().toString(36).substr(2, 9);
         let isTyping = false;
-        let userId = 'user_' + Math.random().toString(36).substr(2, 9);
-        const API_BASE_URL = '/api'; // Feltételezzük, hogy a frontend és a backend ugyanazon a domainen fut
 
-        // --- DOM Elemek ---
+        // DOM elemek
         const sidebar = document.getElementById('sidebar');
-        const sidebarContent = document.getElementById('sidebarContent');
-        const mainContent = document.getElementById('mainContent');
         const messagesContainer = document.getElementById('messagesContainer');
         const messageInput = document.getElementById('messageInput');
         const sendBtn = document.getElementById('sendBtn');
-        let welcomeScreen = document.getElementById('welcomeScreen');
+        const welcomeScreen = document.getElementById('welcomeScreen');
         const serviceModal = document.getElementById('serviceModal');
-        const modalTitle = document.getElementById('modalTitle');
-        const modalBody = document.getElementById('modalBody');
-        const modalFooter = document.getElementById('modalFooter');
 
-        // --- Inicializálás ---
-        document.addEventListener('DOMContentLoaded', () => {
+        // Inicializálás
+        document.addEventListener('DOMContentLoaded', function() {
             setupEventListeners();
-            loadServices();
             messageInput.focus();
         });
 
         function setupEventListeners() {
-            messageInput.addEventListener('keydown', (e) => {
+            // Enter küldés
+            messageInput.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
-                    if (!sendBtn.disabled) sendMessage();
+                    sendMessage();
                 }
             });
 
+            // Auto-resize textarea
             messageInput.addEventListener('input', function() {
                 this.style.height = 'auto';
                 this.style.height = Math.min(this.scrollHeight, 120) + 'px';
             });
 
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') closeModal();
+            // Escape modal bezárás
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeModal();
+                }
             });
 
-            serviceModal.addEventListener('click', (e) => {
-                if (e.target === serviceModal) closeModal();
+            // Modal overlay click bezárás
+            serviceModal.addEventListener('click', function(e) {
+                if (e.target === serviceModal) {
+                    closeModal();
+                }
             });
         }
 
-        // --- API Hívások ---
-        async function fetchAPI(endpoint, options = {}) {
-            try {
-                const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-                }
-                return await response.json();
-            } catch (error) {
-                console.error('API Error:', error);
-                addAiMessage(`Hiba történt a szerverrel való kommunikáció során: ${error.message}`, 'Hiba');
-                hideTypingIndicator();
-                throw error;
-            }
-        }
-
-        // --- Szolgáltatások Betöltése ---
-        async function loadServices() {
-            try {
-                const { categories } = await fetchAPI('/services');
-                sidebarContent.innerHTML = ''; // Törli a meglévő tartalmat
-
-                const categoryIcons = {
-                    biologiai_orvosi: 'fa-dna',
-                    kemiai_anyagtudomanyi: 'fa-atom',
-                    kornyezeti_fenntarthato: 'fa-leaf',
-                    fizikai_asztrofizikai: 'fa-satellite-dish',
-                    technologiai_melymu: 'fa-microchip',
-                    tarsadalmi_gazdasagi: 'fa-chart-line'
-                };
-
-                const categoryNames = {
-                    biologiai_orvosi: 'Biológiai & Orvosi',
-                    kemiai_anyagtudomanyi: 'Kémiai & Anyagtudományi',
-                    kornyezeti_fenntarthato: 'Környezeti & Fenntartható',
-                    fizikai_asztrofizikai: 'Fizikai & Asztrofizikai',
-                    technologiai_melymu: 'Technológiai & Mélyműszaki',
-                    tarsadalmi_gazdasagi: 'Társadalmi & Gazdasági'
-                };
-
-                for (const categoryId in categories) {
-                    const category = categories[categoryId];
-                    const categoryDiv = document.createElement('div');
-                    categoryDiv.className = 'service-category';
-
-                    let servicesHTML = '';
-                    for (const serviceName in category) {
-                        const serviceDescription = category[serviceName];
-                        servicesHTML += `
-                            <div class="service-item" onclick="selectService('${serviceName}', '${serviceDescription}')">
-                                <div class="service-icon"><i class="fas fa-flask"></i></div>
-                                <div class="service-info">
-                                    <h4>${serviceName}</h4>
-                                    <p>${serviceDescription}</p>
-                                </div>
-                            </div>
-                        `;
-                    }
-
-                    categoryDiv.innerHTML = `
-                        <div class="category-header" onclick="toggleCategory(this)">
-                            <div class="category-title">
-                                <i class="fas ${categoryIcons[categoryId] || 'fa-star'}"></i>
-                                <span>${categoryNames[categoryId] || categoryId}</span>
-                            </div>
-                            <i class="fas fa-chevron-down"></i>
-                        </div>
-                        <div class="category-services">${servicesHTML}</div>
-                    `;
-                    sidebarContent.appendChild(categoryDiv);
-                }
-
-                // Deep Research & Code Generator hozzáadása
-                const researchCategory = document.createElement('div');
-                researchCategory.className = 'service-category';
-                researchCategory.innerHTML = `
-                    <div class="category-header" onclick="toggleCategory(this)">
-                        <div class="category-title"><i class="fas fa-search"></i><span>Kutatási Funkciók</span></div>
-                        <i class="fas fa-chevron-down"></i>
-                    </div>
-                    <div class="category-services">
-                        <div class="service-item" onclick="startDeepResearch()">
-                            <div class="service-icon"><i class="fas fa-microscope"></i></div>
-                            <div class="service-info"><h4>Deep Research</h4><p>Mélyreható kutatási elemzés</p></div>
-                        </div>
-                        <div class="service-item" onclick="openCodeGenerator()">
-                            <div class="service-icon"><i class="fas fa-code"></i></div>
-                            <div class="service-info"><h4>Kód Generátor</h4><p>AI-powered kódolás</p></div>
-                        </div>
-                    </div>
-                `;
-                sidebarContent.appendChild(researchCategory);
-
-            } catch (error) {
-                sidebarContent.innerHTML = '<p style="padding: 1rem; color: var(--text-muted);">Szolgáltatások betöltése sikertelen.</p>';
-            }
-        }
-
-        // --- UI Kezelés ---
         function toggleSidebar() {
             sidebar.classList.toggle('open');
         }
 
-        function toggleCategory(headerElement) {
-            const services = headerElement.nextElementSibling;
-            const chevron = headerElement.querySelector('.fas.fa-chevron-down');
+        function toggleCategory(categoryId) {
+            const services = document.getElementById(categoryId + '-services');
+            const header = services.previousElementSibling;
+            const chevron = header.querySelector('.fas.fa-chevron-down');
+
             services.classList.toggle('open');
             chevron.style.transform = services.classList.contains('open') ? 'rotate(180deg)' : 'rotate(0deg)';
         }
 
         function hideWelcome() {
-            if (welcomeScreen) {
-                welcomeScreen.style.display = 'none';
-                welcomeScreen = null; // Csak egyszer tűnjön el
-            }
+            welcomeScreen.style.display = 'none';
+            messageInput.focus();
         }
 
         function newChat() {
-            messagesContainer.innerHTML = '';
-            const newWelcomeScreen = document.createElement('div');
-            newWelcomeScreen.className = 'welcome-screen';
-            newWelcomeScreen.id = 'welcomeScreen';
-            newWelcomeScreen.innerHTML = `
-                <div class="welcome-logo">J</div>
-                <h1 class="welcome-title">Jade</h1>
-                <p class="welcome-subtitle">Deep Discovery AI Platform</p>
-                <button class="start-btn" onclick="hideWelcome()"><i class="fas fa-rocket"></i> Kezdjük el!</button>
+            messagesContainer.innerHTML = `
+                <div class="welcome-screen" id="welcomeScreen">
+                    <div class="welcome-logo">J</div>
+                    <h1 class="welcome-title">Jade</h1>
+                    <p class="welcome-subtitle">
+                        Deep Discovery AI Platform - 150+ Alpha szolgáltatás, neurális keresés és fejlett AI elemzés
+                    </p>
+                    <button class="start-btn" onclick="hideWelcome()">
+                        <i class="fas fa-rocket"></i>
+                        Kezdjük el!
+                    </button>
+                </div>
             `;
-            messagesContainer.appendChild(newWelcomeScreen);
-            welcomeScreen = document.getElementById('welcomeScreen');
             messageInput.value = '';
             messageInput.focus();
         }
 
-        function openModal() {
-            serviceModal.style.display = 'flex';
-            setTimeout(() => serviceModal.classList.add('show'), 10);
-        }
-
-        function closeModal() {
-            serviceModal.classList.remove('show');
-            setTimeout(() => serviceModal.style.display = 'none', 300);
-        }
-
-        // --- Üzenetküldés és Feldolgozás ---
         async function sendMessage() {
             const message = messageInput.value.trim();
             if (!message || isTyping) return;
 
-            hideWelcome();
+            // UI frissítés
             addUserMessage(message);
             messageInput.value = '';
             messageInput.style.height = 'auto';
+            hideWelcome();
             showTypingIndicator();
 
             try {
-                const data = await fetchAPI('/deep_discovery/chat', {
+                const response = await fetch('/api/deep_discovery/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: message, user_id: userId })
+                    body: JSON.stringify({ 
+                        message: message, 
+                        user_id: currentUser 
+                    })
                 });
+
+                const data = await response.json();
                 hideTypingIndicator();
-                addAiMessage(data.response, data.model_used);
+
+                if (data.status === 'success') {
+                    addAiMessage(data.response, data.model_used);
+                } else {
+                    addAiMessage('Hiba történt a válasz feldolgozása során.', 'Error');
+                }
             } catch (error) {
-                // A hibaüzenetet már az fetchAPI-ban megjelenítettük
                 hideTypingIndicator();
+                addAiMessage(`Hiba történt: ${error.message}`, 'Error');
             }
+
+            messageInput.focus();
         }
 
         function addUserMessage(message) {
             const messageDiv = document.createElement('div');
             messageDiv.className = 'message user-message';
-            messageDiv.innerHTML = `<div class="user-bubble">${escapeHtml(message)}</div>`;
+            messageDiv.innerHTML = `
+                <div class="user-bubble">${escapeHtml(message)}</div>
+            `;
+
             messagesContainer.appendChild(messageDiv);
             scrollToBottom();
         }
 
-        function addAiMessage(content, model = 'Jade AI', sources = []) {
+        function addAiMessage(message, model = 'Jade AI') {
             const messageId = 'msg_' + Date.now();
             const messageDiv = document.createElement('div');
             messageDiv.className = 'message ai-message';
-
-            let formattedContent = marked.parse(content);
-
-            if (sources.length > 0) {
-                let sourcesHtml = '<div class="source-list"><h4>Források:</h4>';
-                sources.forEach(source => {
-                    sourcesHtml += `<div class="source-item"><a href="${source.url}" target="_blank" rel="noopener noreferrer">${source.title || source.url}</a></div>`;
-                });
-                sourcesHtml += '</div>';
-                formattedContent += sourcesHtml;
-            }
-
             messageDiv.innerHTML = `
                 <div class="ai-header">
-                    <div class="ai-avatar"><i class="fas fa-robot"></i></div>
+                    <div class="ai-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
                     <div class="ai-name">${model}</div>
                 </div>
-                <div class="ai-content" id="${messageId}">${formattedContent}</div>
+                <div class="ai-content" id="${messageId}">
+                    ${formatMessage(message)}
+                </div>
                 <div class="message-actions">
-                    <button class="action-btn" onclick="copyMessage('${messageId}')"><i class="fas fa-copy"></i> Másolás</button>
+                    <button class="action-btn" onclick="copyMessage('${messageId}')">
+                        <i class="fas fa-copy"></i> Másolás
+                    </button>
+                    <button class="action-btn" onclick="regenerateMessage('${messageId}')">
+                        <i class="fas fa-redo"></i> Újragenerálás
+                    </button>
                 </div>
             `;
+
             messagesContainer.appendChild(messageDiv);
-            // Kódblokkok színezése
-            messageDiv.querySelectorAll('pre code').forEach((block) => {
-                hljs.highlightElement(block);
-            });
             scrollToBottom();
         }
 
         function showTypingIndicator() {
             isTyping = true;
             sendBtn.disabled = true;
+
             const indicator = document.createElement('div');
             indicator.id = 'typingIndicator';
             indicator.className = 'message ai-message';
             indicator.innerHTML = `
-                <div class="ai-header"><div class="ai-avatar"><i class="fas fa-robot"></i></div><div class="ai-name">Jade AI</div></div>
-                <div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>
+                <div class="ai-header">
+                    <div class="ai-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="ai-name">Jade AI</div>
+                </div>
+                <div class="typing-indicator">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
             `;
+
             messagesContainer.appendChild(indicator);
             scrollToBottom();
         }
@@ -1081,149 +985,6 @@
         function hideTypingIndicator() {
             isTyping = false;
             sendBtn.disabled = false;
+
             const indicator = document.getElementById('typingIndicator');
-            if (indicator) indicator.remove();
-        }
-
-        // --- Speciális Funkciók ---
-        function selectService(serviceName, description) {
-            modalTitle.innerText = serviceName;
-            modalBody.innerHTML = `
-                <p style="color: var(--text-muted); line-height: 1.6;">${description}</p>
-                <label for="serviceQuery">Kérdés vagy feladat:</label>
-                <textarea id="serviceQuery" rows="4" placeholder="Adja meg a ${serviceName} szolgáltatáshoz kapcsolódó kérését..."></textarea>
-            `;
-            modalFooter.innerHTML = `<button class="modal-submit-btn" onclick="submitSimpleService('${serviceName}')">Elemzés indítása</button>`;
-            openModal();
-        }
-
-        async function submitSimpleService(serviceName) {
-            const query = document.getElementById('serviceQuery').value;
-            if (!query) return;
-
-            closeModal();
-            hideWelcome();
-            addUserMessage(`Kérés a(z) ${serviceName} szolgáltatáshoz: ${query}`);
-            showTypingIndicator();
-
-            try {
-                const data = await fetchAPI(`/alpha/simple/${serviceName}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query: query, details: "" })
-                });
-                hideTypingIndicator();
-                addAiMessage(data.analysis, data.model_used);
-            } catch (error) {
-                hideTypingIndicator();
-            }
-        }
-
-        function startDeepResearch() {
-            modalTitle.innerText = 'Deep Research';
-            modalBody.innerHTML = `
-                <label for="researchQuery">Kutatási téma:</label>
-                <input type="text" id="researchQuery" placeholder="Adja meg a kutatási témát...">
-            `;
-            modalFooter.innerHTML = `<button class="modal-submit-btn" onclick="submitDeepResearch()">Kutatás indítása</button>`;
-            openModal();
-        }
-
-        async function submitDeepResearch() {
-            const query = document.getElementById('researchQuery').value;
-            if (!query) return;
-
-            closeModal();
-            hideWelcome();
-            addUserMessage(`Deep Research indítva: ${query}`);
-            showTypingIndicator();
-
-            try {
-                const data = await fetchAPI('/deep_research', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query, user_id: userId })
-                });
-                hideTypingIndicator();
-                addAiMessage(data.final_synthesis, 'Deep Research AI', data.sources);
-            } catch (error) {
-                hideTypingIndicator();
-            }
-        }
-
-        function openCodeGenerator() {
-            modalTitle.innerText = 'Kód Generátor';
-            modalBody.innerHTML = `
-                <label for="codePrompt">Leírás:</label>
-                <textarea id="codePrompt" rows="4" placeholder="Írja le, milyen kódot szeretne generálni..."></textarea>
-                <label for="codeLang">Nyelv:</label>
-                <input type="text" id="codeLang" value="python">
-            `;
-            modalFooter.innerHTML = `<button class="modal-submit-btn" onclick="submitCodeGeneration()">Kód generálása</button>`;
-            openModal();
-        }
-
-        async function submitCodeGeneration() {
-            const prompt = document.getElementById('codePrompt').value;
-            const language = document.getElementById('codeLang').value;
-            if (!prompt) return;
-
-            closeModal();
-            hideWelcome();
-            addUserMessage(`Kód generálási kérés (${language}): ${prompt}`);
-            showTypingIndicator();
-
-            try {
-                const data = await fetchAPI('/code/generate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt, language })
-                });
-                hideTypingIndicator();
-                const codeMessage = "```" + language + "\n" + data.generated_code + "\n```";
-                addAiMessage(codeMessage, data.model_used);
-            } catch(error) {
-                hideTypingIndicator();
-            }
-        }
-
-        // --- Segédfüggvények ---
-        function scrollToBottom() {
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
-
-        function escapeHtml(unsafe) {
-            return unsafe
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
-        }
-
-        function copyMessage(messageId) {
-            const messageElement = document.getElementById(messageId);
-            if (messageElement) {
-                // A formázott HTML helyett a nyers szöveget másoljuk
-                const codeContent = messageElement.querySelector('pre code');
-                const textToCopy = codeContent ? codeContent.innerText : messageElement.innerText;
-
-                navigator.clipboard.writeText(textToCopy).then(() => {
-                    console.log('Az üzenet a vágólapra másolva!');
-                    // Ideiglenes vizuális visszajelzés
-                    const copyBtn = event.target.closest('.action-btn');
-                    if(copyBtn) {
-                        const originalText = copyBtn.innerHTML;
-                        copyBtn.innerHTML = '<i class="fas fa-check"></i> Másolva';
-                        setTimeout(() => {
-                            copyBtn.innerHTML = originalText;
-                        }, 2000);
-                    }
-                }).catch(err => {
-                    console.error('A szöveg másolása sikertelen: ', err);
-                });
-            }
-        }
-    </script>
-</body>
-</html>
+            if (indicator) {([^`]+)
