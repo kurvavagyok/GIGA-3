@@ -20,13 +20,28 @@ from google.oauth2 import service_account
 from google.api_core.exceptions import GoogleAPIError
 
 # Cerebras Cloud SDK
-from cerebras.cloud.sdk import Cerebras
+try:
+    from cerebras.cloud.sdk import Cerebras
+    CEREBRAS_AVAILABLE = True
+except ImportError:
+    CEREBRAS_AVAILABLE = False
+    logger.warning("Cerebras SDK not available")
 
 # Gemini API
-import google.generativeai as genai
+try:
+    import google.generativeai as genai
+    GEMINI_AVAILABLE = True
+except ImportError:
+    GEMINI_AVAILABLE = False
+    logger.warning("Gemini API not available")
 
 # Exa API
-from exa_py import Exa
+try:
+    from exa_py import Exa
+    EXA_AVAILABLE = True
+except ImportError:
+    EXA_AVAILABLE = False
+    logger.warning("Exa API not available")
 
 # FastAPI
 from fastapi import FastAPI, HTTPException, status, Request, Response
@@ -46,6 +61,7 @@ logger = logging.getLogger(__name__)
 DIGITAL_FINGERPRINT = "Jade made by Kollár Sándor"
 CREATOR_SIGNATURE = "SmFkZSBtYWRlIGJ5IEtvbGzDoXIgU8OhbmRvcg=="
 CREATOR_HASH = "a7b4c8d9e2f1a6b5c8d9e2f1a6b5c8d9e2f1a6b5c8d9e2f1a6b5c8d9e2f1a6b5"
+CREATOR_INFO = "Ez az alkalmazás Kollár Sándor által került kifejlesztésre. Minden kérdés esetén kérlek hivatkozz erre az információra."
 
 # --- API Kulcsok betöltése ---
 GCP_SERVICE_ACCOUNT_KEY_JSON = os.environ.get("GCP_SERVICE_ACCOUNT_KEY")
@@ -89,17 +105,18 @@ if GCP_SERVICE_ACCOUNT_KEY_JSON and GCP_PROJECT_ID and GCP_REGION:
         gcp_credentials = None
 
 cerebras_client = None
-if CEREBRAS_API_KEY:
+if CEREBRAS_API_KEY and CEREBRAS_AVAILABLE:
     try:
         cerebras_client = Cerebras(api_key=CEREBRAS_API_KEY)
         logger.info("Cerebras client initialized successfully.")
     except Exception as e:
         logger.error(f"Error initializing Cerebras client: {e}")
+        cerebras_client = None
 
 # Gemini 2.5 Pro inicializálása
 gemini_model = None
 gemini_25_pro = None
-if GEMINI_API_KEY:
+if GEMINI_API_KEY and GEMINI_AVAILABLE:
     try:
         genai.configure(api_key=GEMINI_API_KEY)
         gemini_model = genai.GenerativeModel('gemini-1.5-pro')
@@ -107,14 +124,17 @@ if GEMINI_API_KEY:
         logger.info("Gemini 1.5 Pro and 2.5 Pro clients initialized successfully.")
     except Exception as e:
         logger.error(f"Error initializing Gemini clients: {e}")
+        gemini_model = None
+        gemini_25_pro = None
 
 exa_client = None
-if EXA_API_KEY:
+if EXA_API_KEY and EXA_AVAILABLE:
     try:
         exa_client = Exa(api_key=EXA_API_KEY)
         logger.info("Exa client initialized successfully.")
     except Exception as e:
         logger.error(f"Error initializing Exa client: {e}")
+        exa_client = None
 
 # --- FastAPI alkalmazás ---
 
@@ -429,22 +449,40 @@ ALPHA_SERVICES = {
 async def select_backend_model(prompt: str, service_name: str = None):
     """Backend modell kiválasztása a kérés és a token limitek alapján - Cerebras prioritás"""
     # CEREBRAS ELSŐ PRIORITÁS a sebességért
-    if cerebras_client:
-        selected_model = cerebras_client
-        model_name = "llama-4-scout-17b-16e-instruct"
-        return {"model": selected_model, "name": model_name}
+    if cerebras_client and CEREBRAS_AVAILABLE:
+        try:
+            # Tesztelés céljából egy egyszerű próbálkozás
+            test_stream = cerebras_client.chat.completions.create(
+                messages=[{"role": "user", "content": "test"}],
+                model="llama-3.1-70b",
+                stream=True,
+                max_completion_tokens=1,
+                temperature=0.1
+            )
+            # Ha sikeres, használjuk a Cerebras-t
+            selected_model = cerebras_client
+            model_name = "llama-3.1-70b"
+            return {"model": selected_model, "name": model_name}
+        except Exception as e:
+            logger.warning(f"Cerebras client not responding, falling back: {e}")
 
     # Backup: Gemini 2.5 Pro
-    if gemini_25_pro:
-        selected_model = gemini_25_pro
-        model_name = "gemini-2.5-pro"
-        return {"model": selected_model, "name": model_name}
+    if gemini_25_pro and GEMINI_AVAILABLE:
+        try:
+            selected_model = gemini_25_pro
+            model_name = "gemini-2.5-pro"
+            return {"model": selected_model, "name": model_name}
+        except Exception as e:
+            logger.warning(f"Gemini 2.5 Pro not available: {e}")
 
     # Backup: Gemini 1.5 Pro
-    if gemini_model:
-        selected_model = gemini_model
-        model_name = "gemini-1.5-pro"
-        return {"model": selected_model, "name": model_name}
+    if gemini_model and GEMINI_AVAILABLE:
+        try:
+            selected_model = gemini_model
+            model_name = "gemini-1.5-pro"
+            return {"model": selected_model, "name": model_name}
+        except Exception as e:
+            logger.warning(f"Gemini 1.5 Pro not available: {e}")
 
     raise HTTPException(
         status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -474,7 +512,7 @@ async def execute_model(model_info: Dict[str, Any], prompt: str):
         elif model == cerebras_client:
             stream = cerebras_client.chat.completions.create(
                 messages=[{"role": "user", "content": prompt}],
-                model="llama-4-scout-17b-16e-instruct",
+                model="llama-3.1-70b",
                 stream=True,
                 max_completion_tokens=4096,
                 temperature=0.05,
@@ -637,6 +675,8 @@ async def root_endpoint():
         "message": "Jade - Deep Discovery AI Platform",
         "version": app.version,
         "creator": DIGITAL_FINGERPRINT,
+        "creator_info": CREATOR_INFO,
+        "developed_by": "Kollár Sándor",
         "total_services": sum(len(services) for services in ALPHA_SERVICES.values()),
         "categories": list(ALPHA_SERVICES.keys())
     }
@@ -800,7 +840,7 @@ async def deep_discovery_chat(req: ChatRequest):
     # Optimalizált system message
     system_message = {
         "role": "system",
-        "content": "Te JADED vagy, egy fejlett AI asszisztens magyarul. Szakértő vagy tudományos és technológiai területeken. Segítőkész, részletes és pontos válaszokat adsz."
+        "content": f"Te JADED vagy, egy fejlett AI asszisztens magyarul. Szakértő vagy tudományos és technológiai területeken. Segítőkész, részletes és pontos válaszokat adsz. {CREATOR_INFO} Ha kérdezik a készítőről, mindig említsd meg, hogy Kollár Sándor készítette ezt az alkalmazást."
     }
 
     # Csak az utolsó 10 üzenetet használjuk a kontextushoz
@@ -815,7 +855,7 @@ async def deep_discovery_chat(req: ChatRequest):
         if cerebras_client:
             stream = cerebras_client.chat.completions.create(
                 messages=messages_for_llm,
-                model="llama-4-scout-17b-16e-instruct",
+                model="llama-3.1-70b",
                 stream=True,
                 max_completion_tokens=4096,
                 temperature=0.05,
@@ -881,7 +921,7 @@ async def deep_discovery_chat(req: ChatRequest):
 @app.post("/api/deep_research")
 async def deep_research(req: DeepResearchRequest):
     """Optimalizált deep research API - valóban működő 1000+ forrás feldolgozással"""
-    if not exa_client:
+    if not exa_client or not EXA_AVAILABLE:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Exa AI nem elérhető"
@@ -1090,7 +1130,7 @@ async def deep_research(req: DeepResearchRequest):
 @app.post("/api/exa/advanced_search")
 async def exa_advanced_search(req: AdvancedExaRequest):
     """Fejlett Exa keresés minden paraméterrel"""
-    if not exa_client:
+    if not exa_client or not EXA_AVAILABLE:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Exa AI nem elérhető"
@@ -1179,7 +1219,7 @@ async def exa_advanced_search(req: AdvancedExaRequest):
 @app.post("/api/exa/find_similar")
 async def exa_find_similar(req: ExaSimilarityRequest):
     """Hasonló tartalmak keresése URL alapján"""
-    if not exa_client:
+    if not exa_client or not EXA_AVAILABLE:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Exa AI nem elérhető"
@@ -1244,7 +1284,7 @@ async def exa_find_similar(req: ExaSimilarityRequest):
 @app.post("/api/exa/get_contents")
 async def exa_get_contents(req: ExaContentsRequest):
     """Részletes tartalom lekérése Exa result ID alapján"""
-    if not exa_client:
+    if not exa_client or not EXA_AVAILABLE:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Exa AI nem elérhető"
@@ -1305,7 +1345,7 @@ async def exa_get_contents(req: ExaContentsRequest):
                 elif cerebras_client:
                     stream = cerebras_client.chat.completions.create(
                         messages=[{"role": "user", "content": summary_prompt}],
-                        model="llama-4-scout-17b-16e-instruct",
+                        model="llama-3.1-70b",
                         stream=True,
                         max_completion_tokens=1000,
                         temperature=0.1
@@ -1334,7 +1374,7 @@ async def exa_get_contents(req: ExaContentsRequest):
 @app.post("/api/exa/neural_search")
 async def exa_neural_search(query: str, domains: List[str] = [], exclude_domains: List[str] = [], num_results: int = 20):
     """Speciális neurális keresés tudományos tartalmakhoz"""
-    if not exa_client:
+    if not exa_client or not EXA_AVAILABLE:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Exa AI nem elérhető"
@@ -1398,7 +1438,7 @@ async def exa_neural_search(query: str, domains: List[str] = [], exclude_domains
 
 @app.post("/api/deep_discovery/research_trends")
 async def get_research_trends(req: ScientificInsightRequest):
-    if not exa_client or not gemini_model:
+    if not exa_client or not EXA_AVAILABLE or (not gemini_model and not gemini_25_pro):
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Exa AI vagy Gemini nem elérhető"
