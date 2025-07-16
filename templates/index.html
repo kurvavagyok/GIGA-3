@@ -16,9 +16,9 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
         :root {
-            --primary: #0088ff;
-            --secondary: #ff12aa;
-            --accent: #ff6b6b;
+            --primary: #990c58;
+            --secondary: #e51284;
+            --accent: #0021f3;
             --bg: #000000;
             --surface: rgba(10, 10, 10, 0.95);
             --glass: rgba(255, 255, 255, 0.05);
@@ -55,7 +55,7 @@
             width: 100vw;
             height: 100vh;
             pointer-events: none;
-            background: linear-gradient(270deg, rgba(0,136,255,0.1), rgba(139,92,246,0.1), rgba(255,107,107,0.1), rgba(5,1,74,0.1));
+            background: linear-gradient(270deg, rgba(153,12,88,0.1), rgba(229,18,132,0.1), rgba(0,33,243,0.1), rgba(5,1,74,0.1));
             background-size: 800% 800%;
             animation: gradientShift 20s ease infinite;
             z-index: -1;
@@ -453,42 +453,14 @@
             max-width: 90%;
         }
 
-        .ai-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 6px;
-        }
-
-        .ai-avatar {
-            width: 36px;
-            height: 36px;
-            background: linear-gradient(135deg, var(--accent), var(--secondary));
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            font-size: 1rem;
-            flex-shrink: 0;
-        }
-
-        .ai-name {
-            font-weight: 600;
-            font-size: 0.85rem;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
         .ai-content {
-            background: var(--glass);
-            border: 1px solid var(--border);
-            border-radius: 16px 16px 16px 6px;
-            padding: 16px;
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            padding: 16px 0;
             line-height: 1.6;
-            backdrop-filter: blur(30px);
             font-size: 0.9rem;
+            color: var(--text);
         }
 
         .ai-content pre {
@@ -609,9 +581,9 @@
         .typing-indicator {
             display: flex;
             gap: 6px;
-            padding: 12px;
-            background: var(--glass);
-            border-radius: 16px 16px 16px 6px;
+            padding: 12px 0;
+            background: transparent;
+            border-radius: 0;
             max-width: 150px;
         }
 
@@ -934,7 +906,7 @@
                 <button class="menu-toggle" onclick="toggleSidebar()">
                     <i class="fas fa-bars"></i>
                 </button>
-                <h1 class="header-title">Jade AI Platform</h1>
+                <h1 class="header-title">JADED AI Platform</h1>
                 <div></div>
             </header>
 
@@ -942,7 +914,7 @@
                 <div class="messages-container" id="messagesContainer">
                     <div class="welcome-screen" id="welcomeScreen">
                         <div class="welcome-logo">J</div>
-                        <h1 class="welcome-title">Jade</h1>
+                        <h1 class="welcome-title">JADED</h1>
                         <p class="welcome-subtitle">
                             Deep Discovery AI Platform - 150+ Alpha szolgáltatás, neurális keresés és fejlett AI elemzés
                         </p>
@@ -1319,7 +1291,7 @@
             newWelcomeScreen.id = 'welcomeScreen';
             newWelcomeScreen.innerHTML = `
                 <div class="welcome-logo">J</div>
-                <h1 class="welcome-title">Jade</h1>
+                <h1 class="welcome-title">JADED</h1>
                 <p class="welcome-subtitle">Deep Discovery AI Platform</p>
                 <button class="start-btn" onclick="hideWelcome()"><i class="fas fa-rocket"></i> Kezdjük el!</button>
             `;
@@ -1380,13 +1352,28 @@
             scrollToBottom();
         }
 
-        function addAiMessage(content, model = 'Jade AI', sources = []) {
+        function addAiMessage(content, model = 'JADED AI', sources = []) {
             const messageId = 'msg_' + Date.now();
             const messageDiv = document.createElement('div');
             messageDiv.className = 'message ai-message';
 
-            let formattedContent = marked.parse(content);
+            messageDiv.innerHTML = `
+                <div class="ai-content" id="${messageId}"></div>
+                <div class="message-actions">
+                    <button class="action-btn" onclick="copyMessage('${messageId}')"><i class="fas fa-copy"></i> Másolás</button>
+                </div>
+            `;
+            messagesContainer.appendChild(messageDiv);
+            
+            // Live typing effect
+            typeWriterEffect(messageId, content, sources);
+            scrollToBottom();
+        }
 
+        function typeWriterEffect(messageId, content, sources = []) {
+            const element = document.getElementById(messageId);
+            let formattedContent = marked.parse(content);
+            
             if (sources && sources.length > 0) {
                 let sourcesHtml = '<div class="source-list"><h4>Források:</h4>';
                 sources.forEach(source => {
@@ -1395,24 +1382,24 @@
                 sourcesHtml += '</div>';
                 formattedContent += sourcesHtml;
             }
-
-            messageDiv.innerHTML = `
-                <div class="ai-header">
-                    <div class="ai-avatar"><i class="fas fa-robot"></i></div>
-                    <div class="ai-name">${model}</div>
-                </div>
-                <div class="ai-content" id="${messageId}">${formattedContent}</div>
-                <div class="message-actions">
-                    <button class="action-btn" onclick="copyMessage('${messageId}')"><i class="fas fa-copy"></i> Másolás</button>
-                </div>
-            `;
-            messagesContainer.appendChild(messageDiv);
             
-            // Kódblokkok színezése
-            messageDiv.querySelectorAll('pre code').forEach((block) => {
-                hljs.highlightElement(block);
-            });
-            scrollToBottom();
+            let i = 0;
+            const speed = 15; // karakterek per másodperc
+            
+            function typeChar() {
+                if (i < formattedContent.length) {
+                    element.innerHTML = formattedContent.substring(0, i + 1);
+                    i++;
+                    setTimeout(typeChar, speed);
+                    scrollToBottom();
+                } else {
+                    // Kódblokkok színezése a végén
+                    element.querySelectorAll('pre code').forEach((block) => {
+                        hljs.highlightElement(block);
+                    });
+                }
+            }
+            typeChar();
         }
 
         function showTypingIndicator() {
@@ -1422,7 +1409,6 @@
             indicator.id = 'typingIndicator';
             indicator.className = 'message ai-message';
             indicator.innerHTML = `
-                <div class="ai-header"><div class="ai-avatar"><i class="fas fa-robot"></i></div><div class="ai-name">Jade AI</div></div>
                 <div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>
             `;
             messagesContainer.appendChild(indicator);

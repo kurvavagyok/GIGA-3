@@ -462,28 +462,29 @@ async def execute_model(model_info: Dict[str, Any], prompt: str):
     try:
         if model == gemini_25_pro or model == gemini_model:
             generation_config = genai.types.GenerationConfig(
-                max_output_tokens=2048,
-                temperature=0.1
+                max_output_tokens=4096,
+                temperature=0.05
             )
             response = await model.generate_content_async(
                 prompt,
                 generation_config=generation_config
             )
             response_text = response.text
-            return {"response": response_text, "model_used": model_name, "selected_backend": model_name}
+            return {"response": response_text, "model_used": "JADED AI", "selected_backend": "JADED AI"}
 
         elif model == cerebras_client:
             stream = cerebras_client.chat.completions.create(
                 messages=[{"role": "user", "content": prompt}],
                 model="llama-4-scout-17b-16e-instruct",
                 stream=True,
-                max_completion_tokens=2048,
-                temperature=0.1
+                max_completion_tokens=4096,
+                temperature=0.05,
+                top_p=0.9
             )
             for chunk in stream:
                 if chunk.choices[0].delta.content:
                     response_text += chunk.choices[0].delta.content
-            return {"response": response_text, "model_used": "Cerebras Llama 4", "selected_backend": "Cerebras Llama 4"}
+            return {"response": response_text, "model_used": "JADED AI", "selected_backend": "JADED AI"}
 
         else:
             raise ValueError("Érvénytelen modell")
@@ -797,10 +798,10 @@ async def deep_discovery_chat(req: ChatRequest):
 
     history = chat_histories.get(user_id, [])
 
-    # Rövidebb system message a gyorsaságért
+    # Optimalizált system message
     system_message = {
         "role": "system",
-        "content": "Te Jade vagy, egy fejlett AI asszisztens magyarul. Szakértő vagy tudományos és technológiai területeken. Segítőkész, részletes válaszokat adsz."
+        "content": "Te JADED vagy, egy fejlett AI asszisztens magyarul. Szakértő vagy tudományos és technológiai területeken. Segítőkész, részletes és pontos válaszokat adsz."
     }
 
     # Csak az utolsó 10 üzenetet használjuk a kontextushoz
@@ -811,42 +812,42 @@ async def deep_discovery_chat(req: ChatRequest):
         response_text = ""
         model_used = ""
 
-        # Cerebras elsőként a gyorsaság miatt
+        # Optimalizált AI backend kiválasztás
         if cerebras_client:
             stream = cerebras_client.chat.completions.create(
                 messages=messages_for_llm,
                 model="llama-4-scout-17b-16e-instruct",
                 stream=True,
-                max_completion_tokens=2048,  # Optimalizált limit
-                temperature=0.15,  # Gyorsabb és konzisztensebb
-                top_p=0.95,  # Optimalizált sampling
-                presence_penalty=0.0,  # Gyorsabb feldolgozás
+                max_completion_tokens=4096,
+                temperature=0.05,
+                top_p=0.9,
+                presence_penalty=0.0,
                 frequency_penalty=0.0
             )
             for chunk in stream:
                 if chunk.choices[0].delta.content:
                     response_text += chunk.choices[0].delta.content
-            model_used = "Cerebras Llama 4"
+            model_used = "JADED AI"
         elif gemini_25_pro:
             response = await gemini_25_pro.generate_content_async(
                 '\n'.join([msg['content'] for msg in messages_for_llm]),
                 generation_config=genai.types.GenerationConfig(
-                    max_output_tokens=1500,
-                    temperature=0.2
+                    max_output_tokens=4096,
+                    temperature=0.05
                 )
             )
             response_text = response.text
-            model_used = "Gemini 2.5 Pro"
+            model_used = "JADED AI"
         elif gemini_model:
             response = await gemini_model.generate_content_async(
                 '\n'.join([msg['content'] for msg in messages_for_llm]),
                 generation_config=genai.types.GenerationConfig(
-                    max_output_tokens=1500,
-                    temperature=0.2
+                    max_output_tokens=4096,
+                    temperature=0.05
                 )
             )
             response_text = response.text
-            model_used = "Gemini 1.5 Pro"
+            model_used = "JADED AI"
 
         history.append({"role": "user", "content": current_message})
         history.append({"role": "assistant", "content": response_text})
