@@ -27,13 +27,7 @@ except ImportError:
     CEREBRAS_AVAILABLE = False
     logger.warning("Cerebras SDK not available")
 
-# Gemini API
-try:
-    import google.generativeai as genai
-    GEMINI_AVAILABLE = True
-except ImportError:
-    GEMINI_AVAILABLE = False
-    logger.warning("Gemini API not available")
+# Gemini API removed for performance optimization
 
 # Exa API
 try:
@@ -68,7 +62,7 @@ GCP_SERVICE_ACCOUNT_KEY_JSON = os.environ.get("GCP_SERVICE_ACCOUNT_KEY")
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID")
 GCP_REGION = os.environ.get("GCP_REGION")
 CEREBRAS_API_KEY = os.environ.get("CEREBRAS_API_KEY")
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+# GEMINI_API_KEY removed for optimization
 EXA_API_KEY = os.environ.get("EXA_API_KEY")
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 OPENAI_ORG_ID = os.environ.get("OPENAI_ORG_ID")
@@ -113,19 +107,9 @@ if CEREBRAS_API_KEY and CEREBRAS_AVAILABLE:
         logger.error(f"Error initializing Cerebras client: {e}")
         cerebras_client = None
 
-# Gemini 2.5 Pro inicializálása
+# Gemini initialization removed for performance optimization
 gemini_model = None
 gemini_25_pro = None
-if GEMINI_API_KEY and GEMINI_AVAILABLE:
-    try:
-        genai.configure(api_key=GEMINI_API_KEY)
-        gemini_model = genai.GenerativeModel('gemini-1.5-pro')
-        gemini_25_pro = genai.GenerativeModel('gemini-2.5-pro')
-        logger.info("Gemini 1.5 Pro and 2.5 Pro clients initialized successfully.")
-    except Exception as e:
-        logger.error(f"Error initializing Gemini clients: {e}")
-        gemini_model = None
-        gemini_25_pro = None
 
 exa_client = None
 if EXA_API_KEY and EXA_AVAILABLE:
@@ -447,69 +431,29 @@ ALPHA_SERVICES = {
 
 # --- Backend Model Selection ---
 async def select_backend_model(prompt: str, service_name: str = None):
-    """Backend modell kiválasztása a kérés és a token limitek alapján - Cerebras prioritás"""
-    # CEREBRAS ELSŐ PRIORITÁS a sebességért
+    """Backend modell kiválasztása - csak Cerebras a sebességért"""
+    # CSAK CEREBRAS az optimalizált sebességért
     if cerebras_client and CEREBRAS_AVAILABLE:
         try:
-            # Tesztelés céljából egy egyszerű próbálkozás
-            test_stream = cerebras_client.chat.completions.create(
-                messages=[{"role": "user", "content": "test"}],
-                model="llama-4-scout-17b-16e-instruct",
-                stream=True,
-                max_completion_tokens=1,
-                temperature=0.1
-            )
-            # Ha sikeres, használjuk a Cerebras-t
             selected_model = cerebras_client
             model_name = "llama-4-scout-17b-16e-instruct"
             return {"model": selected_model, "name": model_name}
         except Exception as e:
-            logger.warning(f"Cerebras client not responding, falling back: {e}")
-
-    # Backup: Gemini 2.5 Pro
-    if gemini_25_pro and GEMINI_AVAILABLE:
-        try:
-            selected_model = gemini_25_pro
-            model_name = "gemini-2.5-pro"
-            return {"model": selected_model, "name": model_name}
-        except Exception as e:
-            logger.warning(f"Gemini 2.5 Pro not available: {e}")
-
-    # Backup: Gemini 1.5 Pro
-    if gemini_model and GEMINI_AVAILABLE:
-        try:
-            selected_model = gemini_model
-            model_name = "gemini-1.5-pro"
-            return {"model": selected_model, "name": model_name}
-        except Exception as e:
-            logger.warning(f"Gemini 1.5 Pro not available: {e}")
+            logger.error(f"Cerebras client error: {e}")
 
     raise HTTPException(
         status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-        detail="Nincs elérhető AI modell"
+        detail="Cerebras AI modell nem elérhető"
     )
 
 # --- Model Execution ---
 async def execute_model(model_info: Dict[str, Any], prompt: str):
-    """Modell futtatása a kiválasztott backenddel."""
+    """Modell futtatása - csak Cerebras a sebességért."""
     model = model_info["model"]
-    model_name = model_info["name"]
     response_text = ""
 
     try:
-        if model == gemini_25_pro or model == gemini_model:
-            generation_config = genai.types.GenerationConfig(
-                max_output_tokens=4096,
-                temperature=0.05
-            )
-            response = await model.generate_content_async(
-                prompt,
-                generation_config=generation_config
-            )
-            response_text = response.text
-            return {"response": response_text, "model_used": "JADED AI", "selected_backend": "JADED AI"}
-
-        elif model == cerebras_client:
+        if model == cerebras_client:
             stream = cerebras_client.chat.completions.create(
                 messages=[{"role": "user", "content": prompt}],
                 model="llama-4-scout-17b-16e-instruct",
@@ -521,16 +465,15 @@ async def execute_model(model_info: Dict[str, Any], prompt: str):
             for chunk in stream:
                 if chunk.choices[0].delta.content:
                     response_text += chunk.choices[0].delta.content
-            return {"response": response_text, "model_used": "JADED AI", "selected_backend": "JADED AI"}
-
+            return {"response": response_text, "model_used": "JADED AI", "selected_backend": "Cerebras"}
         else:
-            raise ValueError("Érvénytelen modell")
+            raise ValueError("Csak Cerebras támogatott")
 
     except Exception as e:
-        logger.error(f"Modell végrehajtási hiba: {e}")
+        logger.error(f"Cerebras végrehajtási hiba: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Hiba a modell végrehajtása során: {e}"
+            detail=f"Hiba a Cerebras modell végrehajtása során: {e}"
         )
 
 # --- Egyszerű Alpha Service Handler ---
@@ -816,10 +759,10 @@ async def execute_simple_alpha_service(service_name: str, request: SimpleAlphaRe
 @app.post("/api/deep_discovery/chat")
 async def deep_discovery_chat(req: ChatRequest):
     """Optimalizált chat funkcionalitás cache-eléssel"""
-    if not cerebras_client and not gemini_model:
+    if not cerebras_client:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Nincs elérhető chat modell"
+            detail="Cerebras chat modell nem elérhető"
         )
 
     user_id = req.user_id
@@ -851,42 +794,21 @@ async def deep_discovery_chat(req: ChatRequest):
         response_text = ""
         model_used = ""
 
-        # Optimalizált AI backend kiválasztás
-        if cerebras_client:
-            stream = cerebras_client.chat.completions.create(
-                messages=messages_for_llm,
-                model="llama-4-scout-17b-16e-instruct",
-                stream=True,
-                max_completion_tokens=4096,
-                temperature=0.05,
-                top_p=0.9,
-                presence_penalty=0.0,
-                frequency_penalty=0.0
-            )
-            for chunk in stream:
-                if chunk.choices[0].delta.content:
-                    response_text += chunk.choices[0].delta.content
-            model_used = "JADED AI"
-        elif gemini_25_pro:
-            response = await gemini_25_pro.generate_content_async(
-                '\n'.join([msg['content'] for msg in messages_for_llm]),
-                generation_config=genai.types.GenerationConfig(
-                    max_output_tokens=4096,
-                    temperature=0.05
-                )
-            )
-            response_text = response.text
-            model_used = "JADED AI"
-        elif gemini_model:
-            response = await gemini_model.generate_content_async(
-                '\n'.join([msg['content'] for msg in messages_for_llm]),
-                generation_config=genai.types.GenerationConfig(
-                    max_output_tokens=4096,
-                    temperature=0.05
-                )
-            )
-            response_text = response.text
-            model_used = "JADED AI"
+        # Csak Cerebras az optimalizált sebességért
+        stream = cerebras_client.chat.completions.create(
+            messages=messages_for_llm,
+            model="llama-4-scout-17b-16e-instruct",
+            stream=True,
+            max_completion_tokens=4096,
+            temperature=0.05,
+            top_p=0.9,
+            presence_penalty=0.0,
+            frequency_penalty=0.0
+        )
+        for chunk in stream:
+            if chunk.choices[0].delta.content:
+                response_text += chunk.choices[0].delta.content
+        model_used = "JADED AI"
 
         history.append({"role": "user", "content": current_message})
         history.append({"role": "assistant", "content": response_text})
