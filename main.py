@@ -39,7 +39,7 @@ from pydantic import BaseModel, Field
 # AlphaFold 3 integráció
 alphafold3_path = pathlib.Path("alphafold3_repo/src")
 if alphafold3_path.exists():
-    sys.path.append(str(alphafold3_path))
+    sys.path.insert(0, str(alphafold3_path))
 
 # Naplózás konfigurálása
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -257,6 +257,23 @@ class CodeGenerationRequest(BaseModel):
 chat_histories: Dict[str, List[Message]] = {}
 response_cache: Dict[str, Dict[str, Any]] = {}
 CACHE_EXPIRY = 300  # 5 perc cache
+
+# Cache tisztítási funkció
+def clean_expired_cache():
+    """Lejárt cache bejegyzések törlése"""
+    current_time = time.time()
+    expired_keys = [
+        key for key, value in response_cache.items()
+        if current_time - value['timestamp'] > CACHE_EXPIRY
+    ]
+    for key in expired_keys:
+        del response_cache[key]
+    
+    # Túl nagy chat történetek rövidítése
+    for user_id in list(chat_histories.keys()):
+        history = chat_histories[user_id]
+        if len(history) > 50:  # Max 50 üzenet megtartása
+            chat_histories[user_id] = history[-50:]
 
 # --- Alpha Services definíciója ---
 ALPHA_SERVICES = {
@@ -486,14 +503,32 @@ async def execute_model(model_info: Dict[str, Any], prompt: str):
                     temperature=0.1
                 )
                 for chunk in stream:
-                    if chunk.choices and chunk.choices[0].delta and chunk.choices[0].delta.content:
+                    if chunk.choices and len(chunk.choices) > 0 and chunk.choices[0].delta and chunk.choices[0].delta.content:
                         response_text += chunk.choices[0].delta.content
+                
+                if not response_text.strip():
+                    response_text = "Üres válasz érkezett a modellből."
+                
                 return {"response": response_text, "model_used": "Cerebras Llama 4", "selected_backend": "Cerebras Llama 4"}
             except Exception as e:
                 logger.error(f"Cerebras API hiba: {e}")
+                # Fallback Gemini modellre
+                if gemini_25_pro:
+                    try:
+                        generation_config = genai.types.GenerationConfig(
+                            max_output_tokens=2048,
+                            temperature=0.1
+                        )
+                        response = await gemini_25_pro.generate_content_async(
+                            prompt,
+                            generation_config=generation_config
+                        )
+                        return {"response": response.text, "model_used": "Gemini 2.5 Pro (fallback)", "selected_backend": "Gemini 2.5 Pro"}
+                    except Exception as gemini_e:
+                        logger.error(f"Gemini fallback hiba: {gemini_e}")
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail=f"Cerebras API hiba: {e}"
+                    detail=f"Minden AI modell hibás: Cerebras: {e}"
                 )
 
         else:
@@ -795,6 +830,10 @@ async def deep_discovery_chat(req: ChatRequest):
 
     user_id = req.user_id
     current_message = req.message
+
+    # Periodikus cache tisztítás
+    if len(response_cache) > 1000:
+        clean_expired_cache()
 
     # Cache ellenőrzés
     cache_key = hashlib.md5(f"{user_id}:{current_message}".encode()).hexdigest()
