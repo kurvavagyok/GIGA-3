@@ -1324,15 +1324,9 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: inline-flex;
             align-items: center;
-            justify-content: center;
             gap: 0.5rem;
             position: relative;
             overflow: hidden;
-            min-height: 48px;
-            min-width: 160px;
-            touch-action: manipulation;
-            -webkit-user-select: none;
-            user-select: none;
         }
 
         .intro-button::before {
@@ -1598,18 +1592,6 @@
                 --blur-strength: 15px;
             }
 
-            .intro-button {
-                padding: 1rem 2.5rem;
-                font-size: 1rem;
-                min-height: 52px;
-                border-radius: 26px;
-            }
-
-            .intro-button:active {
-                transform: scale(0.95);
-                background: var(--color-glass-strong);
-            }
-
             .sidebar {
                 width: 85%;
                 max-width: 320px;
@@ -1779,23 +1761,16 @@
             }
 
             .service-item {
-                padding: 0.75rem;
-                margin-bottom: 0.5rem;
-                border-radius: 12px;
-                min-height: 48px;
-                touch-action: manipulation;
-            }
-
-            .service-item:active {
-                transform: scale(0.98);
-                background: var(--color-glass-strong);
+                padding: 0.6rem;
+                margin-bottom: 0.4rem;
+                border-radius: 10px;
             }
 
             .service-icon {
-                width: 32px;
-                height: 32px;
-                font-size: 14px;
-                border-radius: 8px;
+                width: 28px;
+                height: 28px;
+                font-size: 12px;
+                border-radius: 6px;
             }
 
             .service-title {
@@ -1807,19 +1782,10 @@
             }
 
             .section-header {
-                padding: 0.75rem 1rem;
-                font-size: 0.85rem;
-                border-radius: 14px;
-                margin-bottom: 0.75rem;
-                min-height: 48px;
-                touch-action: manipulation;
-            }
-
-            .section-header:active {
-                transform: scale(0.98);
-                background: linear-gradient(135deg, 
-                    rgba(0, 255, 136, 0.9), 
-                    rgba(0, 136, 255, 0.9));
+                padding: 0.6rem 0.85rem;
+                font-size: 0.8rem;
+                border-radius: 12px;
+                margin-bottom: 0.6rem;
             }
 
             .new-chat-btn {
@@ -3137,7 +3103,7 @@
                 </div>
                 <div class="floating-menu-text">
                     <div class="floating-menu-title">Kódolás</div>
-                    <div class="floating-menu-desc">AI kód generálás Qwen 3-mal - Professzionális kódolási segítség</div>
+                    <div class="floating-menu-desc">Professzionális kódolási segítség</div>
                 </div>
             </div>
         </div>
@@ -3148,7 +3114,7 @@
         <div class="code-panel-content">
             <div class="code-header">
                 <h2 class="text-xl font-bold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
-                    <i class="fas fa-code mr-2"></i>AI Kódolás - Qwen 3
+                    <i class="fas fa-code mr-2"></i>AI Kódolás
                 </h2>
                 <button class="modal-close haptic-feedback touch-feedback" onclick="closeCodePanel()">
                     <i class="fas fa-times"></i>
@@ -3238,8 +3204,23 @@
         let currentUser = 'user_' + Math.random().toString(36).substr(2, 9);
         let isProcessing = false;
 
-        // DOM elemek inicializálása DOMContentLoaded után
-        let elements = {};
+        // DOM elemek
+        const elements = {
+            menuItems: document.querySelectorAll('.floating-menu-item'),
+            sectionContents: document.querySelectorAll('.section-content'),
+            messageInput: document.getElementById('messageInput'),
+            sendMessageBtn: document.getElementById('sendMessageBtn'),
+            chatMessages: document.getElementById('chatMessages'),
+            researchQuery: document.getElementById('researchQuery'),
+            startResearchBtn: document.getElementById('startResearchBtn'),
+            generateCodeBtn: document.getElementById('generateCodeBtn'),
+            copyCodeBtn: document.getElementById('copyCodeBtn'),
+            codeOutput: document.getElementById('codeOutput'),
+            codePrompt: document.getElementById('codePrompt'),
+            languageSelect: document.getElementById('languageSelect'),
+            complexitySelect: document.getElementById('complexitySelect'),
+            temperatureRange: document.getElementById('temperatureRange')
+        };
 
         // Biztonságos event listener hozzáadás
         function safeAddEventListener(element, event, handler) {
@@ -3249,6 +3230,22 @@
                 console.warn('Element not found or invalid:', element);
             }
         }
+
+        // Menü navigáció
+        elements.menuItems.forEach(item => {
+            safeAddEventListener(item, 'click', () => {
+                const targetId = item.dataset.target;
+                if (targetId) {
+                    showSection(targetId);
+                    item.classList.add('active');
+                    elements.menuItems.forEach(otherItem => {
+                        if (otherItem !== item) {
+                            otherItem.classList.remove('active');
+                        }
+                    });
+                }
+            });
+        });
 
         // Szekció megjelenítése
         function showSection(sectionId) {
@@ -3550,7 +3547,7 @@
                     <div class="step-number">1</div>
                     <div class="step-content">
                         <div class="step-title">Kutatási terv kidolgozása</div>
-                        <div class="step-description">Cerebras Llama 4 a felhasználói megkeresés alapján meghatározza a kutatás fókuszát, a főbb vizsgálati irányokat és a releváns alkérdéseket.</div>
+                        <div class="step-description">felhasználói megkeresés alapján meghatározza a kutatás fókuszát, a főbb vizsgálati irányokat és a releváns alkérdéseket.</div>
                     </div>
                 </div>
 
@@ -3566,7 +3563,7 @@
                     <div class="step-number">3</div>
                     <div class="step-content">
                         <div class="step-title">Adatfeldolgozás és szintézis</div>
-                        <div class="step-description">A begyűjtött információkat Cerebras Llama 4 rendszerezi, elemzi és értelmezi. A kulcsfontosságú összefüggések feltárásával szintetizálja a megállapításokat.</div>
+                        <div class="step-description">A begyűjtött információkat Cerebras Llrendszerezi, elemzi és értelmezi. A kulcsfontosságú összefüggések feltárásával szintetizálja a megállapításokat.</div>
                     </div>
                 </div>
 
@@ -3590,8 +3587,8 @@
                                     <i class="fas fa-brain mr-2"></i>Többmodelles AI Elemzés
                                 </h4>
                                 <p class="text-gray-300 text-sm">
-                                    A kutatás során modellek párhuzamosan dolgoztak a téma átfogó elemzésén. 
-                                    A JADE AI keresőrendszer több mint 50 releváns forrást azonosított és dolgozott fel.
+                                    A kutatás során Cerebras Llama 4, Gemini 1.5 Pro és Gemini 2.5 Pro modellek párhuzamosan dolgoztak a téma átfogó elemzésén. 
+                                    Az Exa AI keresőrendszer több mint 50 releváns forrást azonosított és dolgozott fel.
                                 </p>
                             </div>
                             
@@ -3719,33 +3716,11 @@
         const fullscreenOverlay = document.getElementById('fullscreenOverlay');
 
         document.addEventListener('DOMContentLoaded', async () => {
-            // DOM elemek inicializálása
-            elements = {
-                menuItems: document.querySelectorAll('.floating-menu-item'),
-                sectionContents: document.querySelectorAll('.section-content'),
-                messageInput: document.getElementById('messageInput'),
-                sendMessageBtn: document.getElementById('sendMessageBtn'),
-                chatMessages: document.getElementById('chatMessages'),
-                researchQuery: document.getElementById('researchQuery'),
-                startResearchBtn: document.getElementById('startResearchBtn'),
-                generateCodeBtn: document.getElementById('generateCodeBtn'),
-                copyCodeBtn: document.getElementById('copyCodeBtn'),
-                codeOutput: document.getElementById('codeOutput'),
-                codePrompt: document.getElementById('codePrompt'),
-                languageSelect: document.getElementById('languageSelect'),
-                complexitySelect: document.getElementById('complexitySelect'),
-                temperatureRange: document.getElementById('temperatureRange')
-            };
-
             await loadAlphaServices();
             setupEventListeners();
             setupHapticFeedback();
             setupScrollEffects();
-            
-            // Focus csak akkor, ha van messageInput elem
-            if (elements.messageInput) {
-                elements.messageInput.focus();
-            }
+            messageInput.focus();
         });
 
         function setupHapticFeedback() {
@@ -4378,10 +4353,6 @@
 
         function showAppIntroduction() {
             const fullscreenContent = document.getElementById('fullscreenContent');
-            if (!fullscreenContent) {
-                console.error('Fullscreen content not found');
-                return;
-            }
             fullscreenContent.innerHTML = `
                 <div class="presentation-container">
                     <div class="presentation-navigation">
@@ -4645,7 +4616,7 @@
                 const payload = {
                     query: query,
                     type: 'keyword',
-                    num_results: 40
+                    num_results: 15
                 };
                 
                 if (domains) {
@@ -5523,8 +5494,14 @@ Generálva: Jade Deep Discovery AI Platform
 
 ÖSSZEFOGLALÓ:
 A komplex kutatási elemzés során 4 fő lépésben dolgoztuk fel a felhasználói kérést. 
-A modellek párhuzamosan elemezték a témát, 
-míg több mint 50 releváns forrást azonosított és dolgozott fel.
+A Cerebras Llama 4 és Gemini modellek párhuzamosan elemezték a témát, 
+míg az Exa AI több mint 50 releváns forrást azonosított és dolgozott fel.
+
+AI MODELLEK TELJESÍTMÉNYE:
+- Cerebras Llama 4: Aktív
+- Gemini 1.5 Pro: Aktív  
+- Gemini 2.5 Pro: Aktív
+- Exa AI keresés: Befejezve
 
 FELDOLGOZOTT FORRÁSOK:
 - Tudományos publikációk: 23 forrás
@@ -5559,9 +5536,10 @@ Kutatási dátum: ${new Date().toLocaleDateString('hu-HU')}
 
 ÖSSZEFOGLALÓ:
 A komplex kutatási elemzés során 4 fő lépésben dolgoztuk fel a felhasználói kérést. 
-A modellek párhuzamosan elemezték a témát, 
-míg több mint 50 releváns forrást azonosított és dolgozott fel.
+A Cerebras Llama 4 és Gemini modellek párhuzamosan elemezték a témát, 
+míg az Exa AI több mint 50 releváns forrást azonosított és dolgozott fel.
 
+AI MODELLEK: Cerebras Llama 4, Gemini 1.5 Pro, Gemini 2.5 Pro, Exa AI
 FORRÁSOK: 53 feldolgozott forrás (87.3% átlagos relevancia)
 
 FŐ MEGÁLLAPÍTÁSOK:
