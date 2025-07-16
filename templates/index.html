@@ -1466,7 +1466,10 @@
                 const data = await fetchAPI(`/alpha/simple/${serviceName}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query: query, details: "" })
+                    body: JSON.stringify({ 
+                        query: query, 
+                        details: "" 
+                    })
                 });
                 hideTypingIndicator();
                 addAiMessage(data.analysis, data.model_used);

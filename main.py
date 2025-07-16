@@ -164,7 +164,6 @@ class DeepResearchRequest(BaseModel):
     user_id: str = Field(..., description="Felhasználó azonosító")
 
 class SimpleAlphaRequest(BaseModel):
-    service_name: str = Field(..., description="Az Alpha szolgáltatás neve")
     query: str = Field(..., description="Egyszerű szöveges kérés")
     details: str = Field(default="", description="További részletek (opcionális)")
 
@@ -772,7 +771,7 @@ async def execute_simple_alpha_service(service_name: str, request: SimpleAlphaRe
         service_name=service_name,
         query=request.query,
         details=request.details
-        )
+    )
 
 @app.post("/api/deep_discovery/chat")
 async def deep_discovery_chat(req: ChatRequest):
