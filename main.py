@@ -47,16 +47,30 @@ DIGITAL_FINGERPRINT = "Jade made by Kollár Sándor"
 CREATOR_SIGNATURE = "SmFkZSBtYWRlIGJ5IEtvbGzDoXIgU8OhbmRvcg=="
 CREATOR_HASH = "a7b4c8d9e2f1a6b5c8d9e2f1a6b5c8d9e2f1a6b5c8d9e2f1a6b5c8d9e2f1a6b5"
 
-# --- API Kulcsok betöltése ---
+# --- API Kulcsok betöltése alapértelmezett értékekkel és figyelmeztetésekkel ---
 GCP_SERVICE_ACCOUNT_KEY_JSON = os.environ.get("GCP_SERVICE_ACCOUNT_KEY")
-GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID")
-GCP_REGION = os.environ.get("GCP_REGION")
+GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "default-project")
+GCP_REGION = os.environ.get("GCP_REGION", "us-central1")
 CEREBRAS_API_KEY = os.environ.get("CEREBRAS_API_KEY")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 EXA_API_KEY = os.environ.get("EXA_API_KEY")
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 OPENAI_ORG_ID = os.environ.get("OPENAI_ORG_ID")
 OPENAI_ADMIN_KEY = os.environ.get("OPENAI_ADMIN_KEY")
+
+# Környezeti változók ellenőrzése és figyelmeztetések
+missing_keys = []
+if not CEREBRAS_API_KEY:
+    missing_keys.append("CEREBRAS_API_KEY")
+if not GEMINI_API_KEY:
+    missing_keys.append("GEMINI_API_KEY")
+if not EXA_API_KEY:
+    missing_keys.append("EXA_API_KEY")
+if not GCP_SERVICE_ACCOUNT_KEY_JSON:
+    missing_keys.append("GCP_SERVICE_ACCOUNT_KEY")
+
+if missing_keys:
+    logger.warning(f"Hiányzó API kulcsok: {', '.join(missing_keys)}. Egyes szolgáltatások nem lesznek elérhetők.")
 
 # --- Token Limit Definíciók ---
 TOKEN_LIMITS = {
@@ -249,10 +263,48 @@ class CodeGenerationRequest(BaseModel):
     complexity: str = Field(default="medium", description="Kód komplexitása")
     temperature: float = Field(default=0.3, ge=0.0, le=1.0, description="AI kreativitás")
 
-# Beszélgetési előzmények és cache
+# Beszélgetési előzmények és cache optimalizált memóriakezeléssel
 chat_histories: Dict[str, List[Message]] = {}
 response_cache: Dict[str, Dict[str, Any]] = {}
 CACHE_EXPIRY = 300  # 5 perc cache
+MAX_CHAT_HISTORIES = 100  # Maximum felhasználók száma a memóriában
+MAX_HISTORY_MESSAGES = 50  # Maximum üzenetek felhasználónként
+MAX_CACHE_ENTRIES = 500  # Maximum cache bejegyzések
+
+def cleanup_memory():
+    """Memória tisztítása túl nagy cache esetén"""
+    current_time = time.time()
+    
+    # Régi cache bejegyzések törlése
+    expired_keys = []
+    for key, cached_item in response_cache.items():
+        if current_time - cached_item['timestamp'] > CACHE_EXPIRY:
+            expired_keys.append(key)
+    
+    for key in expired_keys:
+        del response_cache[key]
+    
+    # Cache méret korlátozása
+    if len(response_cache) > MAX_CACHE_ENTRIES:
+        # Legrégebbi bejegyzések törlése
+        sorted_cache = sorted(response_cache.items(), key=lambda x: x[1]['timestamp'])
+        items_to_remove = len(response_cache) - MAX_CACHE_ENTRIES
+        for i in range(items_to_remove):
+            del response_cache[sorted_cache[i][0]]
+    
+    # Chat history méret korlátozása
+    if len(chat_histories) > MAX_CHAT_HISTORIES:
+        # Legrégebben használt felhasználók törlése
+        oldest_users = list(chat_histories.keys())[:len(chat_histories) - MAX_CHAT_HISTORIES]
+        for user in oldest_users:
+            del chat_histories[user]
+    
+    # Felhasználónkénti üzenet history korlátozása
+    for user_id in chat_histories:
+        if len(chat_histories[user_id]) > MAX_HISTORY_MESSAGES:
+            chat_histories[user_id] = chat_histories[user_id][-MAX_HISTORY_MESSAGES:]
+    
+    logger.info(f"Memória tisztítás: {len(expired_keys)} lejárt cache, {len(response_cache)} cache, {len(chat_histories)} aktív felhasználó")
 
 # --- Alpha Services definíciója ---
 ALPHA_SERVICES = {
@@ -711,48 +763,64 @@ async def alphamissense_info():
 
 @app.get("/api/alphafold3/info")
 async def alphafold3_info():
-    """AlphaFold 3 információk és állapot"""
+    """AlphaFold 3 információk és állapot - FIGYELEM: Korlátozásokkal"""
     try:
         # AlphaFold 3 repository ellenőrzése
         af3_path = pathlib.Path("alphafold3_repo")
         af3_exists = af3_path.exists()
         
+        version = "Ismeretlen"
         if af3_exists:
-            version_file = af3_path / "src" / "alphafold3" / "version.py"
-            version = "Ismeretlen"
-            if version_file.exists():
-                version_content = version_file.read_text()
-                import re
-                version_match = re.search(r"__version__ = ['\"]([^'\"]+)['\"]", version_content)
-                if version_match:
-                    version = version_match.group(1)
+            try:
+                version_file = af3_path / "src" / "alphafold3" / "version.py"
+                if version_file.exists():
+                    version_content = version_file.read_text()
+                    import re
+                    version_match = re.search(r"__version__ = ['\"]([^'\"]+)['\"]", version_content)
+                    if version_match:
+                        version = version_match.group(1)
+            except Exception as version_error:
+                logger.warning(f"Nem sikerült a verzió beolvasása: {version_error}")
+        
+        limitations = [
+            "CSAK ADATFELDOLGOZÁSI PIPELINE elérhető",
+            "Model paraméterek NEM elérhetők (Google DeepMind-től külön kérelmezendő)",
+            "Teljes struktúra predikció NEM működik model nélkül",
+            "GPU szükséges a teljes funkcionalitáshoz",
+            "Nagy memóriaigény (min. 64GB RAM ajánlott)"
+        ]
         
         return {
             "alphafold3_available": af3_exists,
-            "version": version if af3_exists else None,
-            "repository_path": str(af3_path),
+            "version": version,
+            "repository_path": str(af3_path) if af3_exists else None,
             "main_script": str(af3_path / "run_alphafold.py") if af3_exists else None,
-            "capabilities": {
-                "protein_folding": True,
-                "protein_complexes": True,
-                "dna_interactions": True,
-                "rna_interactions": True,
-                "ligand_binding": True,
-                "antibody_antigen": True
+            "IMPORTANT_LIMITATIONS": limitations,
+            "available_features": {
+                "data_pipeline": af3_exists,
+                "msa_generation": af3_exists,
+                "template_search": af3_exists,
+                "structure_prediction": False,  # Model paraméterek nélkül nem elérhető
+                "confidence_scores": False
             },
             "requirements": {
                 "gpu_required": True,
-                "model_parameters": "Külön kérelmezendő a Google DeepMind-től",
-                "databases": "Genetikai adatbázisok szükségesek"
+                "model_parameters": "HIÁNYZIK - Google DeepMind-től kérelmezendő",
+                "databases": "Genetikai adatbázisok szükségesek",
+                "memory_gb": 64,
+                "disk_space_tb": 3
             },
-            "status": "Működőképes (model paraméterek nélkül csak data pipeline)"
+            "status": "KORLÁTOZOTT - Csak adatfeldolgozás elérhető",
+            "warning": "Ez az implementáció NEM tartalmazza a teljes AlphaFold 3 modellt!"
         }
         
     except Exception as e:
+        logger.error(f"AlphaFold 3 info hiba: {e}")
         return {
             "alphafold3_available": False,
             "error": str(e),
-            "status": "Hiba"
+            "status": "Hiba a rendszer ellenőrzése során",
+            "warning": "AlphaFold 3 nem elérhető vagy hibás a konfiguráció"
         }
 
 @app.post("/api/alpha/{service_name}")
@@ -775,15 +843,31 @@ async def execute_simple_alpha_service(service_name: str, request: SimpleAlphaRe
 
 @app.post("/api/deep_discovery/chat")
 async def deep_discovery_chat(req: ChatRequest):
-    """Optimalizált chat funkcionalitás cache-eléssel"""
+    """Optimalizált chat funkcionalitás cache-eléssel és memória menedzsmenttel"""
     if not cerebras_client and not gemini_model:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Nincs elérhető chat modell"
+            detail="Nincs elérhető chat modell - API kulcsok hiányoznak"
+        )
+
+    # Input validálás
+    if not req.message or len(req.message.strip()) < 1:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Az üzenet nem lehet üres"
+        )
+
+    if len(req.message) > 10000:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Az üzenet túl hosszú (max 10000 karakter)"
         )
 
     user_id = req.user_id
     current_message = req.message
+
+    # Memória tisztítás végrehajtása periodikusan
+    cleanup_memory()
 
     # Cache ellenőrzés
     cache_key = hashlib.md5(f"{user_id}:{current_message}".encode()).hexdigest()
@@ -1093,7 +1177,20 @@ async def exa_advanced_search(req: AdvancedExaRequest):
     if not exa_client:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Exa AI nem elérhető"
+            detail="Exa AI nem elérhető - API kulcs hiányzik"
+        )
+
+    # Input validálás
+    if not req.query or len(req.query.strip()) < 3:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="A keresési lekérdezés legalább 3 karakter hosszú kell legyen"
+        )
+
+    if req.num_results < 1 or req.num_results > 100:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="A találatok száma 1 és 100 között kell legyen"
         )
 
     try:
