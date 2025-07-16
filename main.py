@@ -60,6 +60,8 @@ OPENAI_ADMIN_KEY = os.environ.get("OPENAI_ADMIN_KEY")
 
 # --- Token Limit Definíciók ---
 TOKEN_LIMITS = {
+    "llama3.1-70b": 128000,  # Cerebras optimális token limit
+    "llama3.1-8b": 128000,   # Backup Cerebras modell
     "gpt-3.5-turbo": 200000,
     "gpt-4.1": 900000,
     "gpt-4.1-long-context": 200000,
@@ -91,10 +93,22 @@ if GCP_SERVICE_ACCOUNT_KEY_JSON and GCP_PROJECT_ID and GCP_REGION:
 cerebras_client = None
 if CEREBRAS_API_KEY:
     try:
-        cerebras_client = Cerebras(api_key=CEREBRAS_API_KEY)
-        logger.info("Cerebras client initialized successfully.")
+        cerebras_client = Cerebras(
+            api_key=CEREBRAS_API_KEY,
+            timeout=60.0,  # 60 sec timeout
+            max_retries=3,  # Retry mechanizmus
+        )
+        # Kapcsolat tesztelése
+        test_response = cerebras_client.chat.completions.create(
+            messages=[{"role": "user", "content": "test"}],
+            model="llama3.1-70b",
+            max_completion_tokens=10,
+            temperature=0.1
+        )
+        logger.info("Cerebras client initialized and tested successfully.")
     except Exception as e:
         logger.error(f"Error initializing Cerebras client: {e}")
+        cerebras_client = None
 
 # Gemini 2.5 Pro inicializálása
 gemini_model = None
@@ -428,10 +442,11 @@ ALPHA_SERVICES = {
 # --- Backend Model Selection ---
 async def select_backend_model(prompt: str, service_name: str = None):
     """Backend modell kiválasztása a kérés és a token limitek alapján - Cerebras prioritás"""
-    # CEREBRAS ELSŐ PRIORITÁS a sebességért
+    # CEREBRAS ELSŐ PRIORITÁS a sebességért és pontosságért
     if cerebras_client:
         selected_model = cerebras_client
-        model_name = "llama-4-scout-17b-16e-instruct"
+        # Javított modell név - legjobb sebesség/pontosság balansz
+        model_name = "llama3.1-70b"
         return {"model": selected_model, "name": model_name}
 
     # Backup: Gemini 2.5 Pro
@@ -472,18 +487,46 @@ async def execute_model(model_info: Dict[str, Any], prompt: str):
             return {"response": response_text, "model_used": "JADED AI", "selected_backend": "JADED AI"}
 
         elif model == cerebras_client:
+            # Optimalizált Cerebras paraméterek a legjobb sebesség/pontosság balansszal
             stream = cerebras_client.chat.completions.create(
                 messages=[{"role": "user", "content": prompt}],
-                model="llama-4-scout-17b-16e-instruct",
+                model="llama3.1-70b",  # Javított modell név
                 stream=True,
-                max_completion_tokens=4096,
-                temperature=0.05,
-                top_p=0.9
+                max_completion_tokens=8192,  # Növelt token limit
+                temperature=0.1,  # Optimalizált hőmérséklet a pontosságért
+                top_p=0.95,  # Jobb kreatív válaszokért
+                presence_penalty=0.1,  # Ismétlődések csökkentése
+                frequency_penalty=0.1,  # Változatosabb válaszok
+                seed=42  # Konzisztens eredményekért
             )
-            for chunk in stream:
-                if chunk.choices[0].delta.content:
-                    response_text += chunk.choices[0].delta.content
-            return {"response": response_text, "model_used": "JADED AI", "selected_backend": "JADED AI"}
+            
+            # Optimalizált streaming feldolgozás
+            response_text = ""
+            chunk_count = 0
+            try:
+                for chunk in stream:
+                    if chunk.choices and len(chunk.choices) > 0:
+                        delta = chunk.choices[0].delta
+                        if delta and delta.content:
+                            response_text += delta.content
+                            chunk_count += 1
+                            
+                            # Periodikus flush nagyobb streamek esetén
+                            if chunk_count % 50 == 0:
+                                await asyncio.sleep(0)  # Yield control
+                                
+            except Exception as stream_error:
+                logger.error(f"Cerebras streaming error: {stream_error}")
+                if not response_text:  # Ha még nincs válasz, próbáljuk újra
+                    raise stream_error
+                    
+            return {
+                "response": response_text, 
+                "model_used": "JADED AI", 
+                "selected_backend": "JADED AI",
+                "tokens_used": len(response_text.split()),
+                "chunks_processed": chunk_count
+            }
 
         else:
             raise ValueError("Érvénytelen modell")
@@ -811,22 +854,51 @@ async def deep_discovery_chat(req: ChatRequest):
         response_text = ""
         model_used = ""
 
-        # Optimalizált AI backend kiválasztás
+        # Optimalizált AI backend kiválasztás - Cerebras prioritás
         if cerebras_client:
-            stream = cerebras_client.chat.completions.create(
-                messages=messages_for_llm,
-                model="llama-4-scout-17b-16e-instruct",
-                stream=True,
-                max_completion_tokens=4096,
-                temperature=0.05,
-                top_p=0.9,
-                presence_penalty=0.0,
-                frequency_penalty=0.0
-            )
-            for chunk in stream:
-                if chunk.choices[0].delta.content:
-                    response_text += chunk.choices[0].delta.content
-            model_used = "JADED AI"
+            try:
+                stream = cerebras_client.chat.completions.create(
+                    messages=messages_for_llm,
+                    model="llama3.1-70b",  # Javított modell név
+                    stream=True,
+                    max_completion_tokens=8192,  # Nagyobb token limit
+                    temperature=0.1,  # Optimális pontosság/kreativitás balansz
+                    top_p=0.95,  # Jobb válaszminőség
+                    presence_penalty=0.1,  # Ismétlődések csökkentése
+                    frequency_penalty=0.1,  # Változatosabb válaszok
+                    seed=hash(current_message) % 1000,  # Determinisztikus de változatos
+                    response_format={"type": "text"}  # Explicit formátum
+                )
+                
+                # Optimalizált streaming feldolgozás hibakezeleléssel
+                chunk_count = 0
+                last_content_time = time.time()
+                
+                for chunk in stream:
+                    if chunk.choices and len(chunk.choices) > 0:
+                        delta = chunk.choices[0].delta
+                        if delta and delta.content:
+                            response_text += delta.content
+                            chunk_count += 1
+                            last_content_time = time.time()
+                            
+                            # Async yield minden 25 chunk után
+                            if chunk_count % 25 == 0:
+                                await asyncio.sleep(0.001)
+                                
+                    # Timeout ellenőrzés
+                    if time.time() - last_content_time > 30:  # 30 sec timeout
+                        logger.warning("Cerebras stream timeout, breaking")
+                        break
+                        
+                model_used = "JADED AI"
+                logger.info(f"Cerebras streaming completed: {chunk_count} chunks processed")
+                
+            except Exception as cerebras_error:
+                logger.error(f"Cerebras error: {cerebras_error}")
+                # Fallback to Gemini if Cerebras fails
+                response_text = ""
+                model_used = ""
         elif gemini_25_pro:
             response = await gemini_25_pro.generate_content_async(
                 '\n'.join([msg['content'] for msg in messages_for_llm]),
