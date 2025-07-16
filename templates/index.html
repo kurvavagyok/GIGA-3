@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="hu">
 <head>
@@ -778,51 +779,51 @@
             .sidebar {
                 width: 280px;
             }
-
+            
             .welcome-title {
                 font-size: 1.8rem;
             }
-
+            
             .welcome-logo {
                 width: 80px;
                 height: 80px;
                 font-size: 2rem;
             }
-
+            
             .header {
                 padding: 12px 16px;
             }
-
+            
             .messages-container {
                 padding: 12px;
             }
-
+            
             .input-area {
                 padding: 12px;
             }
-
+            
             .user-bubble {
                 max-width: 85%;
                 font-size: 0.85rem;
             }
-
+            
             .ai-message {
                 max-width: 95%;
             }
-
+            
             .modal-content {
                 padding: 20px;
                 margin: 12px;
             }
-
+            
             .service-item {
                 padding: 8px;
             }
-
+            
             .category-header {
                 padding: 10px;
             }
-
+            
             .sidebar-header {
                 padding: 16px 12px;
             }
@@ -832,30 +833,30 @@
             .welcome-title {
                 font-size: 1.6rem;
             }
-
+            
             .welcome-subtitle {
                 font-size: 0.9rem;
             }
-
+            
             .header-title {
                 font-size: 1rem;
             }
-
+            
             .input-wrapper {
                 gap: 6px;
             }
-
+            
             .message-input {
                 font-size: 0.85rem;
                 padding: 10px 12px;
             }
-
+            
             .send-btn {
                 width: 40px;
                 height: 40px;
                 font-size: 0.9rem;
             }
-
+            
             .modal-content {
                 padding: 16px;
             }
@@ -936,7 +937,7 @@
             <div class="sidebar-content" id="sidebarContent">
                 <!-- A szolgáltatások dinamikusan töltődnek be ide -->
             </div>
-
+            
             <div class="sidebar-footer">
                 <p class="made-by">JADED made by sándor kollár</p>
             </div>
@@ -1037,7 +1038,7 @@
         // --- Haptic Feedback Funkciók ---
         function triggerHapticFeedback(type = 'light') {
             if (!supportsHaptics) return;
-
+            
             switch(type) {
                 case 'light':
                     navigator.vibrate(10);
@@ -1074,13 +1075,13 @@
 
         function handleTouchMove(e) {
             if (!touchStartX || !touchStartY) return;
-
+            
             touchEndX = e.touches[0].clientX;
             touchEndY = e.touches[0].clientY;
-
+            
             const diffX = touchStartX - touchEndX;
             const diffY = touchStartY - touchEndY;
-
+            
             // Horizontális swipe detektálás
             if (Math.abs(diffX) > Math.abs(diffY)) {
                 if (Math.abs(diffX) > 50) { // Minimum swipe távolság
@@ -1101,10 +1102,10 @@
 
         function handleTouchEnd(e) {
             if (!touchStartX || !touchStartY) return;
-
+            
             const diffX = touchStartX - touchEndX;
             const diffY = touchStartY - touchEndY;
-
+            
             // Horizontális swipe végrehajtás
             if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 100) {
                 if (diffX > 0) {
@@ -1121,7 +1122,7 @@
                     }
                 }
             }
-
+            
             // Reset
             touchStartX = 0;
             touchStartY = 0;
@@ -1135,7 +1136,7 @@
             setupTouchGestures();
             loadServices();
             messageInput.focus();
-
+            
             // iOS specifikus optimalizációk
             if (isIOS) {
                 document.body.style.webkitUserSelect = 'none';
@@ -1169,7 +1170,7 @@
             serviceModal.addEventListener('click', (e) => {
                 if (e.target === serviceModal) closeModal();
             });
-
+            
             sidebarOverlay.addEventListener('click', () => {
                 closeSidebar();
                 triggerHapticFeedback('light');
@@ -1186,27 +1187,19 @@
         }
 
         // --- API Hívások ---
-        async function fetchAPI(url, options = {}) {
+        async function fetchAPI(endpoint, options = {}) {
             try {
-                const response = await fetch(url, {
-                    ...options,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        ...options.headers
-                    }
-                });
-
+                const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
                 if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error(`API Error ${response.status}:`, errorText);
-                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
                 }
-
-                const data = await response.json();
-                return data;
+                return await response.json();
             } catch (error) {
                 console.error('API Error:', error);
-                addAiMessage(`Hiba az API hívás során: ${error.message}`, "JADED AI");
+                addAiMessage(`Hiba történt a szerverrel való kommunikáció során: ${error.message}`, 'Hiba');
+                hideTypingIndicator();
+                triggerHapticFeedback('error');
                 throw error;
             }
         }
@@ -1412,7 +1405,7 @@
                 </div>
             `;
             messagesContainer.appendChild(messageDiv);
-
+            
             // Live typing effect
             typeWriterEffect(messageId, content, sources);
             scrollToBottom();
@@ -1421,7 +1414,7 @@
         function typeWriterEffect(messageId, content, sources = []) {
             const element = document.getElementById(messageId);
             let formattedContent = marked.parse(content);
-
+            
             if (sources && sources.length > 0) {
                 let sourcesHtml = '<div class="source-list"><h4>Források:</h4>';
                 sources.forEach(source => {
@@ -1430,10 +1423,10 @@
                 sourcesHtml += '</div>';
                 formattedContent += sourcesHtml;
             }
-
+            
             let i = 0;
             const speed = 15; // karakterek per másodperc
-
+            
             function typeChar() {
                 if (i < formattedContent.length) {
                     element.innerHTML = formattedContent.substring(0, i + 1);

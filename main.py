@@ -60,8 +60,6 @@ OPENAI_ADMIN_KEY = os.environ.get("OPENAI_ADMIN_KEY")
 
 # --- Token Limit Definíciók ---
 TOKEN_LIMITS = {
-    "llama3.1-70b": 128000,  # Cerebras optimális token limit
-    "llama3.1-8b": 128000,   # Backup Cerebras modell
     "gpt-3.5-turbo": 200000,
     "gpt-4.1": 900000,
     "gpt-4.1-long-context": 200000,
@@ -93,22 +91,10 @@ if GCP_SERVICE_ACCOUNT_KEY_JSON and GCP_PROJECT_ID and GCP_REGION:
 cerebras_client = None
 if CEREBRAS_API_KEY:
     try:
-        cerebras_client = Cerebras(
-            api_key=CEREBRAS_API_KEY,
-            timeout=60.0,  # 60 sec timeout
-            max_retries=3,  # Retry mechanizmus
-        )
-        # Kapcsolat tesztelése
-        test_response = cerebras_client.chat.completions.create(
-            messages=[{"role": "user", "content": "test"}],
-            model="llama3.1-70b",
-            max_completion_tokens=10,
-            temperature=0.1
-        )
-        logger.info("Cerebras client initialized and tested successfully.")
+        cerebras_client = Cerebras(api_key=CEREBRAS_API_KEY)
+        logger.info("Cerebras client initialized successfully.")
     except Exception as e:
         logger.error(f"Error initializing Cerebras client: {e}")
-        cerebras_client = None
 
 # Gemini 2.5 Pro inicializálása
 gemini_model = None
@@ -442,11 +428,10 @@ ALPHA_SERVICES = {
 # --- Backend Model Selection ---
 async def select_backend_model(prompt: str, service_name: str = None):
     """Backend modell kiválasztása a kérés és a token limitek alapján - Cerebras prioritás"""
-    # CEREBRAS ELSŐ PRIORITÁS a sebességért és pontosságért
+    # CEREBRAS ELSŐ PRIORITÁS a sebességért
     if cerebras_client:
         selected_model = cerebras_client
-        # Javított modell név - legjobb sebesség/pontosság balansz
-        model_name = "llama3.1-70b"
+        model_name = "llama-4-scout-17b-16e-instruct"
         return {"model": selected_model, "name": model_name}
 
     # Backup: Gemini 2.5 Pro
@@ -487,46 +472,18 @@ async def execute_model(model_info: Dict[str, Any], prompt: str):
             return {"response": response_text, "model_used": "JADED AI", "selected_backend": "JADED AI"}
 
         elif model == cerebras_client:
-            # Optimalizált Cerebras paraméterek a legjobb sebesség/pontosság balansszal
             stream = cerebras_client.chat.completions.create(
                 messages=[{"role": "user", "content": prompt}],
-                model="llama3.1-70b",  # Javított modell név
+                model="llama-4-scout-17b-16e-instruct",
                 stream=True,
-                max_completion_tokens=8192,  # Növelt token limit
-                temperature=0.1,  # Optimalizált hőmérséklet a pontosságért
-                top_p=0.95,  # Jobb kreatív válaszokért
-                presence_penalty=0.1,  # Ismétlődések csökkentése
-                frequency_penalty=0.1,  # Változatosabb válaszok
-                seed=42  # Konzisztens eredményekért
+                max_completion_tokens=4096,
+                temperature=0.05,
+                top_p=0.9
             )
-            
-            # Optimalizált streaming feldolgozás
-            response_text = ""
-            chunk_count = 0
-            try:
-                for chunk in stream:
-                    if chunk.choices and len(chunk.choices) > 0:
-                        delta = chunk.choices[0].delta
-                        if delta and delta.content:
-                            response_text += delta.content
-                            chunk_count += 1
-                            
-                            # Periodikus flush nagyobb streamek esetén
-                            if chunk_count % 50 == 0:
-                                await asyncio.sleep(0)  # Yield control
-                                
-            except Exception as stream_error:
-                logger.error(f"Cerebras streaming error: {stream_error}")
-                if not response_text:  # Ha még nincs válasz, próbáljuk újra
-                    raise stream_error
-                    
-            return {
-                "response": response_text, 
-                "model_used": "JADED AI", 
-                "selected_backend": "JADED AI",
-                "tokens_used": len(response_text.split()),
-                "chunks_processed": chunk_count
-            }
+            for chunk in stream:
+                if chunk.choices[0].delta.content:
+                    response_text += chunk.choices[0].delta.content
+            return {"response": response_text, "model_used": "JADED AI", "selected_backend": "JADED AI"}
 
         else:
             raise ValueError("Érvénytelen modell")
@@ -854,51 +811,22 @@ async def deep_discovery_chat(req: ChatRequest):
         response_text = ""
         model_used = ""
 
-        # Optimalizált AI backend kiválasztás - Cerebras prioritás
+        # Optimalizált AI backend kiválasztás
         if cerebras_client:
-            try:
-                stream = cerebras_client.chat.completions.create(
-                    messages=messages_for_llm,
-                    model="llama3.1-70b",  # Javított modell név
-                    stream=True,
-                    max_completion_tokens=8192,  # Nagyobb token limit
-                    temperature=0.1,  # Optimális pontosság/kreativitás balansz
-                    top_p=0.95,  # Jobb válaszminőség
-                    presence_penalty=0.1,  # Ismétlődések csökkentése
-                    frequency_penalty=0.1,  # Változatosabb válaszok
-                    seed=hash(current_message) % 1000,  # Determinisztikus de változatos
-                    response_format={"type": "text"}  # Explicit formátum
-                )
-                
-                # Optimalizált streaming feldolgozás hibakezeleléssel
-                chunk_count = 0
-                last_content_time = time.time()
-                
-                for chunk in stream:
-                    if chunk.choices and len(chunk.choices) > 0:
-                        delta = chunk.choices[0].delta
-                        if delta and delta.content:
-                            response_text += delta.content
-                            chunk_count += 1
-                            last_content_time = time.time()
-                            
-                            # Async yield minden 25 chunk után
-                            if chunk_count % 25 == 0:
-                                await asyncio.sleep(0.001)
-                                
-                    # Timeout ellenőrzés
-                    if time.time() - last_content_time > 30:  # 30 sec timeout
-                        logger.warning("Cerebras stream timeout, breaking")
-                        break
-                        
-                model_used = "JADED AI"
-                logger.info(f"Cerebras streaming completed: {chunk_count} chunks processed")
-                
-            except Exception as cerebras_error:
-                logger.error(f"Cerebras error: {cerebras_error}")
-                # Fallback to Gemini if Cerebras fails
-                response_text = ""
-                model_used = ""
+            stream = cerebras_client.chat.completions.create(
+                messages=messages_for_llm,
+                model="llama-4-scout-17b-16e-instruct",
+                stream=True,
+                max_completion_tokens=4096,
+                temperature=0.05,
+                top_p=0.9,
+                presence_penalty=0.0,
+                frequency_penalty=0.0
+            )
+            for chunk in stream:
+                if chunk.choices[0].delta.content:
+                    response_text += chunk.choices[0].delta.content
+            model_used = "JADED AI"
         elif gemini_25_pro:
             response = await gemini_25_pro.generate_content_async(
                 '\n'.join([msg['content'] for msg in messages_for_llm]),
@@ -978,11 +906,11 @@ async def deep_research(req: DeepResearchRequest):
         for batch in range(5):  # 5 batch = 250 eredmény
             try:
                 neural_search = exa_client.search(
-                    f"{req.query} scientific research study",
+                    query=f"{req.query} scientific research study",
                     type="neural",
                     num_results=50,
                     include_domains=scientific_domains,
-                    text={"max_characters": 3000, "include_html_tags": False},
+                    text_contents={"max_characters": 3000, "strategy": "comprehensive"},
                     livecrawl="when_necessary"
                 )
                 all_results.extend(neural_search.results)
@@ -1002,11 +930,11 @@ async def deep_research(req: DeepResearchRequest):
         for variant in keyword_variants:
             try:
                 keyword_search = exa_client.search(
-                    variant,
+                    query=variant,
                     type="keyword",
                     num_results=40,
                     include_domains=scientific_domains,
-                    text={"max_characters": 3000, "include_html_tags": False}
+                    text_contents={"max_characters": 3000, "strategy": "comprehensive"}
                 )
                 all_results.extend(keyword_search.results)
                 logger.info(f"Keyword search '{variant}': {len(keyword_search.results)} results")
@@ -1018,11 +946,11 @@ async def deep_research(req: DeepResearchRequest):
         for year in time_periods:
             try:
                 recent_search = exa_client.search(
-                    f"{req.query} {year}",
+                    query=f"{req.query} {year}",
                     type="neural",
                     num_results=30,
                     start_published_date=f"{year}-01-01",
-                    text={"max_characters": 3000, "include_html_tags": False}
+                    text_contents={"max_characters": 3000, "strategy": "comprehensive"}
                 )
                 all_results.extend(recent_search.results)
                 logger.info(f"Time period {year}: {len(recent_search.results)} results")
@@ -1033,11 +961,11 @@ async def deep_research(req: DeepResearchRequest):
         for domain in scientific_domains[:10]:  # Top 10 domain
             try:
                 domain_search = exa_client.search(
-                    req.query,
+                    query=req.query,
                     type="neural",
                     num_results=20,
                     include_domains=[domain],
-                    text={"max_characters": 3000, "include_html_tags": False}
+                    text_contents={"max_characters": 3000, "strategy": "comprehensive"}
                 )
                 all_results.extend(domain_search.results)
                 logger.info(f"Domain {domain}: {len(domain_search.results)} results")
@@ -1171,8 +1099,9 @@ async def exa_advanced_search(req: AdvancedExaRequest):
     try:
         # Keresési paraméterek összeállítása
         search_params = {
+            "query": req.query,
             "num_results": req.num_results,
-            "text": req.text_contents_options,
+            "text_contents": req.text_contents_options,
             "livecrawl": req.livecrawl
         }
 
@@ -1214,7 +1143,7 @@ async def exa_advanced_search(req: AdvancedExaRequest):
             search_params["subcategory"] = req.subcategory
 
         logger.info(f"Advanced Exa search with params: {search_params}")
-        response = exa_client.search(req.query, **search_params)
+        response = exa_client.search(**search_params)
 
         # Eredmények feldolgozása
         results = []
@@ -1421,14 +1350,14 @@ async def exa_neural_search(query: str, domains: List[str] = [], exclude_domains
 
     try:
         response = exa_client.search(
-            query,
+            query=query,
             type="neural",
             num_results=num_results,
             include_domains=domains,
             exclude_domains=exclude_domains,
-            text={
+            text_contents={
                 "max_characters": 3000,
-                "include_html_tags": False
+                "strategy": "comprehensive"
             },
             livecrawl="when_necessary"
         )
@@ -1484,12 +1413,13 @@ async def get_research_trends(req: ScientificInsightRequest):
         ]
 
         search_response = exa_client.search(
-            req.query,
+            query=req.query,
             type="neural",
             num_results=req.num_results,
             include_domains=scientific_domains,
-            text={
-                "max_characters": 2000,
+            text_contents={
+                "max_characters": 2000, 
+                "strategy": "comprehensive",
                 "include_html_tags": False
             },
             livecrawl="when_necessary",
