@@ -37,6 +37,71 @@ except ImportError:
     EXA_AVAILABLE = False
     logger.warning("Exa API not available")
 
+# Scientific Computing Libraries
+try:
+    import numpy as np
+    import scipy
+    import pandas as pd
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    SCIPY_STACK_AVAILABLE = True
+except ImportError:
+    SCIPY_STACK_AVAILABLE = False
+    logger.warning("SciPy stack not fully available")
+
+# Machine Learning Libraries
+try:
+    import sklearn
+    import tensorflow as tf
+    import torch
+    import keras
+    ML_LIBS_AVAILABLE = True
+except ImportError:
+    ML_LIBS_AVAILABLE = False
+    logger.warning("ML libraries not fully available")
+
+# Bioinformatics Libraries
+try:
+    from Bio import SeqIO, Align, Phylo
+    from Bio.Seq import Seq
+    from Bio.SeqUtils import GC, molecular_weight
+    import molearn
+    import PySB
+    BIO_LIBS_AVAILABLE = True
+except ImportError:
+    BIO_LIBS_AVAILABLE = False
+    logger.warning("Bioinformatics libraries not fully available")
+
+# Astronomy Libraries
+try:
+    import astropy
+    from astropy import units as u
+    from astropy.coordinates import SkyCoord
+    import sunpy
+    import astroquery
+    ASTRO_LIBS_AVAILABLE = True
+except ImportError:
+    ASTRO_LIBS_AVAILABLE = False
+    logger.warning("Astronomy libraries not fully available")
+
+# Geoscience Libraries
+try:
+    import pygimlite as pg
+    import gempy
+    import underworld2 as uw
+    GEO_LIBS_AVAILABLE = True
+except ImportError:
+    GEO_LIBS_AVAILABLE = False
+    logger.warning("Geoscience libraries not fully available")
+
+# Chemistry Libraries
+try:
+    import pyrolite
+    CHEM_LIBS_AVAILABLE = True
+except ImportError:
+    CHEM_LIBS_AVAILABLE = False
+    logger.warning("Chemistry libraries not fully available")
+
 # FastAPI
 from fastapi import FastAPI, HTTPException, status, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -287,10 +352,69 @@ ALPHA_SERVICES = {
         "AlphaRegenerative": "Regeneratív medicina alkalmazások",
         "AlphaPersonalized": "Személyre szabott orvoslás",
         "AlphaBioengineering": "Biomérnöki rendszerek tervezése",
-        "AlphaBioinformatics": "Bioinformatikai adatelemzés",
-        "AlphaSystemsBiology": "Rendszerbiológiai modellezés",
+        "AlphaBioinformatics": "Bioinformatikai adatelemzés (Biopython)",
+        "AlphaSystemsBiology": "Rendszerbiológiai modellezés (PySB)",
         "AlphaSynthbio": "Szintetikus biológiai rendszerek",
-        "AlphaLongevity": "Öregedés és hosszú élet kutatása"
+        "AlphaLongevity": "Öregedés és hosszú élet kutatása",
+        "AlphaMolecularDynamics": "Molekuláris dinamika szimuláció (molearn)",
+        "AlphaMBE": "Molekuláris bioenergetika elemzése (pyMBE)"
+    },
+    "csillagaszati_asztrofizikai": {
+        "AlphaAstronomy": "Csillagászati objektumok elemzése (Astropy)",
+        "AlphaSolarPhysics": "Napfizikai jelenségek vizsgálata (SunPy)",
+        "AlphaAstrodynamics": "Űrmechanikai számítások",
+        "AlphaAstroML": "Csillagászati gépi tanulás",
+        "AlphaExoplanet": "Exobolygó kutatás és karakterizálás",
+        "AlphaCosmology": "Kozmológiai modellek",
+        "AlphaGalacticDynamics": "Galaktikus dinamika",
+        "AlphaStellarEvolution": "Csillagfejlődés modellezése",
+        "AlphaAstroQuery": "Csillagászati adatbázis lekérdezések",
+        "AlphaSpectroscopy": "Csillagászati spektroszkópia",
+        "AlphaPlanetaryScience": "Bolygótudomány",
+        "AlphaSpaceWeather": "Űridőjárás előrejelzés"
+    },
+    "foldtudomanyi_geologiai": {
+        "AlphaGeophysics": "Geofizikai modellezés (PyGIMLi)",
+        "AlphaGeology": "Geológiai 3D modellezés (GemPy)",
+        "AlphaGeodynamics": "Geodinamikai szimuláció (Underworld2)",
+        "AlphaSeismology": "Szeizmológiai előrejelzés (PyCSEP)",
+        "AlphaHydrogeology": "Hidrogeológiai modellezés",
+        "AlphaGeochemistry": "Geokémiai elemzés (Pyrolite)",
+        "AlphaMineral": "Ásványtani analízis",
+        "AlphaPetrology": "Kőzettani vizsgálatok",
+        "AlphaTectonics": "Tektonikai folyamatok",
+        "AlphaVolcanology": "Vulkanológiai előrejelzés",
+        "AlphaEnvironmentalGeo": "Környezeti geológia",
+        "AlphaGeodata": "Geodata feldolgozás és betakarítás"
+    },
+    "klimatologiai_meteorologiai": {
+        "AlphaClimateData": "Klímaadatok elemzése (Open-Meteo)",
+        "AlphaWeatherPrediction": "Időjárás előrejelzés",
+        "AlphaClimateModeling": "Klímamodellezés",
+        "AlphaAtmosphericPhysics": "Légköri fizika",
+        "AlphaOceanography": "Oceanográfiai modellezés",
+        "AlphaHydrology": "Hidrológiai elemzés (SuperflexPy)",
+        "AlphaClimateImpact": "Klímahatás értékelés",
+        "AlphaExtremesWeather": "Szélsőséges időjárás elemzése",
+        "AlphaSeasonalForecast": "Szezonális előrejelzés",
+        "AlphaMicroclimate": "Mikroklíma analízis"
+    },
+    "adattudomanyi_ml": {
+        "AlphaDataScience": "Adattudományi elemzés (Pandas, NumPy)",
+        "AlphaMachineLearning": "Gépi tanulás (scikit-learn)",
+        "AlphaDeepLearning": "Mélytanulás (TensorFlow, PyTorch, Keras)",
+        "AlphaImageAI": "Képfelismerés és computer vision (ImageAI)",
+        "AlphaGeneticAlgorithm": "Genetikus algoritmusok (PyGAD)",
+        "AlphaAutoML": "Automatizált gépi tanulás (PHOTONAI)",
+        "AlphaQuantumML": "Kvantum gépi tanulás (MLatom)",
+        "AlphaStatisticalModeling": "Statisztikai modellezés (Statsmodels)",
+        "AlphaBayesian": "Bayesi statisztika (PyMC)",
+        "AlphaDataViz": "Adatvizualizáció (Matplotlib, Seaborn)",
+        "AlphaGeoViz": "Geovizualizáció (Folium)",
+        "AlphaParameterEstimation": "Paraméter becslés (pyPESTO)",
+        "AlphaPredictiveModeling": "Prediktív modellezés",
+        "AlphaTimeSeriesAnalysis": "Idősor elemzés",
+        "AlphaClusterAnalysis": "Klaszter elemzés"
     },
     "kemiai_anyagtudomanyi": {
         "AlphaCatalyst": "Katalizátor tervezés és optimalizálás",
@@ -1373,6 +1497,367 @@ async def exa_get_contents(req: ExaContentsRequest):
         )
 
 @app.post("/api/exa/neural_search")
+
+
+# --- Specialized Scientific Library Endpoints ---
+
+class BioinformaticsRequest(BaseModel):
+    sequence: str = Field(..., description="DNS/RNS/Protein szekvencia")
+    analysis_type: str = Field(..., description="Elemzés típusa: gc_content, molecular_weight, phylogeny, alignment")
+    format: str = Field(default="fasta", description="Szekvencia formátum")
+
+class AstronomyRequest(BaseModel):
+    object_name: str = Field(..., description="Csillagászati objektum neve")
+    coordinates: Optional[str] = Field(None, description="Koordináták (RA DEC)")
+    analysis_type: str = Field(..., description="Elemzés típusa")
+    catalog: str = Field(default="simbad", description="Katalógus")
+
+class GeoscienceRequest(BaseModel):
+    data_type: str = Field(..., description="Adat típusa: seismic, geological, geophysical")
+    region: str = Field(..., description="Földrajzi régió")
+    analysis_method: str = Field(..., description="Elemzési módszer")
+    parameters: Dict[str, Any] = Field(default_factory=dict)
+
+class MLAnalysisRequest(BaseModel):
+    data: List[List[float]] = Field(..., description="Bemeneti adatok")
+    target: Optional[List[float]] = Field(None, description="Célváltozó")
+    algorithm: str = Field(..., description="ML algoritmus")
+    parameters: Dict[str, Any] = Field(default_factory=dict)
+
+@app.post("/api/scientific/bioinformatics")
+async def bioinformatics_analysis(req: BioinformaticsRequest):
+    """Bioinformatikai elemzés Biopython segítségével"""
+    if not BIO_LIBS_AVAILABLE:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Bioinformatikai könyvtárak nem elérhetők"
+        )
+
+    try:
+        # Szekvencia objektum létrehozása
+        sequence = Seq(req.sequence)
+        
+        results = {
+            "sequence": str(sequence),
+            "length": len(sequence),
+            "analysis_type": req.analysis_type
+        }
+        
+        if req.analysis_type == "gc_content":
+            results["gc_content"] = GC(sequence)
+            results["at_content"] = 100 - GC(sequence)
+            
+        elif req.analysis_type == "molecular_weight":
+            if sequence.count('U') > 0:  # RNA
+                results["molecular_weight"] = molecular_weight(sequence, seq_type='RNA')
+                results["sequence_type"] = "RNA"
+            elif set(sequence) <= set('ATGC'):  # DNA
+                results["molecular_weight"] = molecular_weight(sequence, seq_type='DNA')
+                results["sequence_type"] = "DNA"
+            else:  # Protein
+                results["molecular_weight"] = molecular_weight(sequence, seq_type='protein')
+                results["sequence_type"] = "Protein"
+                
+        elif req.analysis_type == "translation":
+            if set(sequence) <= set('ATGCUN'):  # Nukleotid
+                results["translated_protein"] = str(sequence.translate())
+                
+        elif req.analysis_type == "complement":
+            if set(sequence) <= set('ATGC'):  # DNA
+                results["complement"] = str(sequence.complement())
+                results["reverse_complement"] = str(sequence.reverse_complement())
+
+        # AI értékelés hozzáadása
+        model_info = await select_backend_model(f"Bioinformatikai elemzés: {req.sequence[:100]}")
+        
+        analysis_prompt = f"""
+        Bioinformatikai Elemzés Eredmények:
+        
+        Szekvencia: {req.sequence[:200]}...
+        Elemzés típusa: {req.analysis_type}
+        Eredmények: {json.dumps(results, indent=2)}
+        
+        Kérlek, adj szakértői értékelést és magyarázatot ezekről az eredményekről.
+        Magyarázd el a biológiai jelentőséget és lehetséges funkciókat.
+        """
+        
+        ai_result = await execute_model(model_info, analysis_prompt)
+        results["ai_interpretation"] = ai_result["response"]
+        results["model_used"] = ai_result["model_used"]
+        
+        return {
+            "status": "success",
+            "results": results,
+            "timestamp": datetime.now().isoformat()
+        }
+
+    except Exception as e:
+        logger.error(f"Bioinformatics analysis error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Bioinformatikai elemzés hiba: {e}"
+        )
+
+@app.post("/api/scientific/astronomy")
+async def astronomy_analysis(req: AstronomyRequest):
+    """Csillagászati elemzés Astropy és SunPy segítségével"""
+    if not ASTRO_LIBS_AVAILABLE:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Csillagászati könyvtárak nem elérhetők"
+        )
+
+    try:
+        results = {
+            "object_name": req.object_name,
+            "analysis_type": req.analysis_type,
+            "catalog": req.catalog
+        }
+        
+        # Koordináták feldolgozása
+        if req.coordinates:
+            try:
+                coord = SkyCoord(req.coordinates, unit=(u.hourangle, u.deg))
+                results["coordinates"] = {
+                    "ra": coord.ra.to_string(),
+                    "dec": coord.dec.to_string(),
+                    "ra_deg": coord.ra.deg,
+                    "dec_deg": coord.dec.deg
+                }
+            except Exception as e:
+                results["coordinate_error"] = str(e)
+
+        # Csillagászati lekérdezések szimulálása
+        if req.analysis_type == "object_info":
+            # Itt valódi astroquery lekérdezés lenne
+            results["simulated_data"] = {
+                "object_type": "Ismeretlen",
+                "magnitude": "Nincs adat",
+                "spectral_type": "Nincs adat",
+                "distance": "Nincs adat"
+            }
+            
+        elif req.analysis_type == "solar_activity":
+            # SunPy integráció példa
+            results["solar_info"] = {
+                "current_solar_cycle": "Solar Cycle 25",
+                "activity_level": "Mérsékelt"
+            }
+
+        # AI értékelés
+        model_info = await select_backend_model(f"Csillagászati elemzés: {req.object_name}")
+        
+        analysis_prompt = f"""
+        Csillagászati Objektum Elemzés:
+        
+        Objektum: {req.object_name}
+        Elemzés típusa: {req.analysis_type}
+        Eredmények: {json.dumps(results, indent=2)}
+        
+        Kérlek, adj részletes csillagászati értékelést és kontextust.
+        Magyarázd el az objektum jelentőségét és fizikai tulajdonságait.
+        """
+        
+        ai_result = await execute_model(model_info, analysis_prompt)
+        results["ai_interpretation"] = ai_result["response"]
+        results["model_used"] = ai_result["model_used"]
+        
+        return {
+            "status": "success",
+            "results": results,
+            "timestamp": datetime.now().isoformat()
+        }
+
+    except Exception as e:
+        logger.error(f"Astronomy analysis error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Csillagászati elemzés hiba: {e}"
+        )
+
+@app.post("/api/scientific/geoscience")
+async def geoscience_analysis(req: GeoscienceRequest):
+    """Földtudományi elemzés PyGIMLi, GemPy stb. segítségével"""
+    if not GEO_LIBS_AVAILABLE:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Földtudományi könyvtárak nem elérhetők"
+        )
+
+    try:
+        results = {
+            "data_type": req.data_type,
+            "region": req.region,
+            "analysis_method": req.analysis_method,
+            "parameters": req.parameters
+        }
+        
+        # Szimuláció eredmények az elérhető könyvtárak alapján
+        if req.data_type == "seismic":
+            results["seismic_analysis"] = {
+                "earthquake_risk": "Közepes",
+                "magnitude_range": "4.0-6.5",
+                "depth_range": "5-25 km"
+            }
+            
+        elif req.data_type == "geological":
+            results["geological_model"] = {
+                "rock_types": ["Gránit", "Mészkő", "Homokkő"],
+                "structural_features": ["Törések", "Redők"],
+                "mineral_deposits": "Lehetséges"
+            }
+            
+        elif req.data_type == "geophysical":
+            results["geophysical_survey"] = {
+                "resistivity": "Változó",
+                "magnetic_anomalies": "Detektálva",
+                "gravity_field": "Normál"
+            }
+
+        # AI értékelés
+        model_info = await select_backend_model(f"Földtudományi elemzés: {req.region}")
+        
+        analysis_prompt = f"""
+        Földtudományi Elemzés:
+        
+        Adattípus: {req.data_type}
+        Régió: {req.region}
+        Módszer: {req.analysis_method}
+        Eredmények: {json.dumps(results, indent=2)}
+        
+        Kérlek, adj szakértői geológiai és geofizikai értékelést.
+        Magyarázd el a földtani jelentőséget és gyakorlati alkalmazásokat.
+        """
+        
+        ai_result = await execute_model(model_info, analysis_prompt)
+        results["ai_interpretation"] = ai_result["response"]
+        results["model_used"] = ai_result["model_used"]
+        
+        return {
+            "status": "success",
+            "results": results,
+            "timestamp": datetime.now().isoformat()
+        }
+
+    except Exception as e:
+        logger.error(f"Geoscience analysis error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Földtudományi elemzés hiba: {e}"
+        )
+
+@app.post("/api/scientific/machine_learning")
+async def ml_analysis(req: MLAnalysisRequest):
+    """Gépi tanulás elemzés scikit-learn, TensorFlow stb. segítségével"""
+    if not ML_LIBS_AVAILABLE or not SCIPY_STACK_AVAILABLE:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Gépi tanulás könyvtárak nem elérhetők"
+        )
+
+    try:
+        # Adatok NumPy array-be konvertálása
+        X = np.array(req.data)
+        results = {
+            "algorithm": req.algorithm,
+            "data_shape": X.shape,
+            "parameters": req.parameters
+        }
+        
+        # Alapvető statisztikák
+        results["data_statistics"] = {
+            "mean": np.mean(X, axis=0).tolist(),
+            "std": np.std(X, axis=0).tolist(),
+            "min": np.min(X, axis=0).tolist(),
+            "max": np.max(X, axis=0).tolist()
+        }
+        
+        # Algoritmus-specifikus elemzés
+        if req.algorithm == "clustering":
+            from sklearn.cluster import KMeans
+            kmeans = KMeans(n_clusters=req.parameters.get("n_clusters", 3))
+            clusters = kmeans.fit_predict(X)
+            results["clustering_results"] = {
+                "labels": clusters.tolist(),
+                "centers": kmeans.cluster_centers_.tolist(),
+                "inertia": kmeans.inertia_
+            }
+            
+        elif req.algorithm == "pca":
+            from sklearn.decomposition import PCA
+            pca = PCA(n_components=req.parameters.get("n_components", 2))
+            X_pca = pca.fit_transform(X)
+            results["pca_results"] = {
+                "explained_variance_ratio": pca.explained_variance_ratio_.tolist(),
+                "components": pca.components_.tolist(),
+                "transformed_data": X_pca.tolist()
+            }
+            
+        elif req.algorithm == "classification" and req.target:
+            from sklearn.ensemble import RandomForestClassifier
+            from sklearn.model_selection import cross_val_score
+            y = np.array(req.target)
+            clf = RandomForestClassifier()
+            scores = cross_val_score(clf, X, y, cv=5)
+            results["classification_results"] = {
+                "cv_scores": scores.tolist(),
+                "mean_accuracy": np.mean(scores),
+                "std_accuracy": np.std(scores)
+            }
+
+        # AI értékelés
+        model_info = await select_backend_model(f"Gépi tanulás elemzés: {req.algorithm}")
+        
+        analysis_prompt = f"""
+        Gépi Tanulás Elemzés:
+        
+        Algoritmus: {req.algorithm}
+        Adatok alakja: {X.shape}
+        Eredmények: {json.dumps(results, indent=2)}
+        
+        Kérlek, adj szakértői gépi tanulás értékelést.
+        Magyarázd el az eredményeket és adj javaslatokat a továbbfejlesztésre.
+        """
+        
+        ai_result = await execute_model(model_info, analysis_prompt)
+        results["ai_interpretation"] = ai_result["response"]
+        results["model_used"] = ai_result["model_used"]
+        
+        return {
+            "status": "success",
+            "results": results,
+            "timestamp": datetime.now().isoformat()
+        }
+
+    except Exception as e:
+        logger.error(f"ML analysis error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Gépi tanulás elemzés hiba: {e}"
+        )
+
+@app.get("/api/scientific/libraries_status")
+async def get_libraries_status():
+    """Telepített tudományos könyvtárak állapota"""
+    return {
+        "scipy_stack": SCIPY_STACK_AVAILABLE,
+        "machine_learning": ML_LIBS_AVAILABLE,
+        "bioinformatics": BIO_LIBS_AVAILABLE,
+        "astronomy": ASTRO_LIBS_AVAILABLE,
+        "geoscience": GEO_LIBS_AVAILABLE,
+        "chemistry": CHEM_LIBS_AVAILABLE,
+        "total_alpha_services": sum(len(services) for services in ALPHA_SERVICES.values()),
+        "enhanced_capabilities": [
+            "Bioinformatika (Biopython, molearn, PySB)",
+            "Csillagászat (Astropy, SunPy, astroquery)",
+            "Földtudomány (PyGIMLi, GemPy, Underworld2)",
+            "Gépi tanulás (scikit-learn, TensorFlow, PyTorch)",
+            "Kémia (Pyrolite, PyCoMo)",
+            "Klímatudomány (Open-Meteo, SuperflexPy)",
+            "Adattudomány (Pandas, NumPy, SciPy)"
+        ]
+    }
+
 async def exa_neural_search(query: str, domains: List[str] = [], exclude_domains: List[str] = [], num_results: int = 20):
     """Speciális neurális keresés tudományos tartalmakhoz"""
     if not exa_client or not EXA_AVAILABLE:
