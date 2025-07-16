@@ -1787,4 +1787,301 @@
        let researchState = {
             query: null,
             steps: [],
-            currentStepIndex" + language + "\n" + data.generated_code + "\n
+            currentStepIndex: 0,
+            totalSources: 0,
+            isProcessing: false
+        };
+
+        // --- Deep Research Funkciók ---
+        function startDeepResearch() {
+            modalTitle.innerText = 'Deep Research';
+            modalBody.innerHTML = `
+                <label for="researchQuery">Kutatási téma:</label>
+                <textarea id="researchQuery" rows="3" placeholder="Adja meg a kutatni kívánt témát részletesen..."></textarea>
+                <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 8px;">
+                    A Deep Research 1000+ tudományos forrást elemez és átfogó dokumentációt készít.
+                </p>
+            `;
+            modalFooter.innerHTML = `<button class="modal-submit-btn" onclick="executeDeepResearch()">Kutatás indítása</button>`;
+            openModal();
+        }
+
+        async function executeDeepResearch() {
+            const query = document.getElementById('researchQuery').value;
+            if (!query) return;
+
+            closeModal();
+            hideWelcome();
+            addUserMessage(`Deep Research kérés: ${query}`);
+            
+            // Progress tracking inicializálása
+            researchState.query = query;
+            researchState.isProcessing = true;
+            
+            showResearchProgress();
+            triggerHapticFeedback('light');
+
+            try {
+                const data = await fetchAPI('/comprehensive_research', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        query: query, 
+                        user_id: userId 
+                    })
+                });
+                
+                hideResearchProgress();
+                showResearchResults(data);
+                triggerHapticFeedback('success');
+            } catch (error) {
+                hideResearchProgress();
+                triggerHapticFeedback('error');
+            }
+        }
+
+        function showResearchProgress() {
+            const progressDiv = document.createElement('div');
+            progressDiv.id = 'researchProgress';
+            progressDiv.className = 'message ai-message';
+            progressDiv.innerHTML = `
+                <div class="progress-container">
+                    <div class="progress-title">🔬 Deep Research folyamatban...</div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="progressBar"></div>
+                    </div>
+                    <div class="progress-text" id="progressText">Kutatási adatbázisok keresése...</div>
+                    <div class="progress-details" id="progressDetails"></div>
+                </div>
+            `;
+            messagesContainer.appendChild(progressDiv);
+            scrollToBottom();
+
+            // Animált progress
+            simulateResearchProgress();
+        }
+
+        function simulateResearchProgress() {
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const progressDetails = document.getElementById('progressDetails');
+            
+            const steps = [
+                { text: "Tudományos adatbázisok keresése...", progress: 20 },
+                { text: "Szakirodalmi források gyűjtése...", progress: 40 },
+                { text: "Akadémiai publikációk elemzése...", progress: 60 },
+                { text: "AI szintézis készítése...", progress: 80 },
+                { text: "Dokumentáció generálása...", progress: 95 }
+            ];
+
+            let currentStep = 0;
+            
+            function updateProgress() {
+                if (currentStep < steps.length && researchState.isProcessing) {
+                    const step = steps[currentStep];
+                    progressBar.style.width = step.progress + '%';
+                    progressText.textContent = step.text;
+                    
+                    const stepDiv = document.createElement('div');
+                    stepDiv.className = 'progress-step';
+                    stepDiv.textContent = `✓ ${step.text}`;
+                    progressDetails.appendChild(stepDiv);
+                    
+                    currentStep++;
+                    setTimeout(updateProgress, 2000);
+                }
+            }
+            
+            updateProgress();
+        }
+
+        function hideResearchProgress() {
+            researchState.isProcessing = false;
+            const progress = document.getElementById('researchProgress');
+            if (progress) progress.remove();
+        }
+
+        function showResearchResults(data) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ai-message';
+            messageDiv.innerHTML = `
+                <div class="research-complete">
+                    <div class="completion-stats">
+                        <h3>✅ Kutatás befejezve</h3>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <span class="stat-number">${data.total_sources || 0}</span>
+                                <span class="stat-label">Források</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number">${data.unique_domains || 0}</span>
+                                <span class="stat-label">Domain</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number">${Math.round((data.final_synthesis?.length || 0) / 1000)}</span>
+                                <span class="stat-label">KB szöveg</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="document-preview" onclick="showFullDocument('${encodeURIComponent(JSON.stringify(data))}')">
+                        <div class="document-icon">📋</div>
+                        <div class="document-info">
+                            <h4>Teljes kutatási dokumentum</h4>
+                            <p>Részletes elemzés, források és következtetések</p>
+                        </div>
+                        <div class="document-arrow">→</div>
+                    </div>
+                </div>
+            `;
+            messagesContainer.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        function showFullDocument(encodedData) {
+            try {
+                const data = JSON.parse(decodeURIComponent(encodedData));
+                
+                documentContent.innerHTML = `
+                    <div class="document-section">
+                        <h3>📊 Kutatási összefoglaló</h3>
+                        <div class="stats-table">
+                            <div class="stat-row">
+                                <span class="stat-label">Kutatási téma:</span>
+                                <span class="stat-value">${data.query}</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Elemzett források:</span>
+                                <span class="stat-value">${data.total_sources || 0}</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Egyedi domének:</span>
+                                <span class="stat-value">${data.unique_domains || 0}</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Szintézis hossza:</span>
+                                <span class="stat-value">${Math.round((data.final_synthesis?.length || 0) / 1000)} KB</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="document-section">
+                        <h3>📝 Részletes elemzés</h3>
+                        <div class="synthesis-content">
+                            ${marked.parse(data.final_synthesis || 'Nincs elérhető szintézis.')}
+                        </div>
+                    </div>
+
+                    <div class="document-section">
+                        <h3>📚 Források (${(data.sources || []).length})</h3>
+                        <div class="sources-list">
+                            ${(data.sources || []).slice(0, 50).map((source, index) => `
+                                <div class="source-item">
+                                    <div class="source-number">${index + 1}.</div>
+                                    <div class="source-content">
+                                        <h4>${source.title || 'Nincs cím'}</h4>
+                                        <a href="${source.url}" target="_blank" rel="noopener noreferrer">${source.url}</a>
+                                        <span class="source-date">${source.published_date || 'Ismeretlen dátum'}</span>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                
+                openDocumentViewer();
+            } catch (error) {
+                console.error('Error showing document:', error);
+                addAiMessage('Hiba a dokumentum megjelenítése során.', 'Hiba');
+            }
+        }
+
+        // --- Code Generator Funkciók ---
+        function openCodeGenerator() {
+            modalTitle.innerText = 'AI Kód Generátor';
+            modalBody.innerHTML = `
+                <label for="codePrompt">Kód leírása:</label>
+                <textarea id="codePrompt" rows="4" placeholder="Írja le részletesen, milyen kódot szeretne generálni..."></textarea>
+                
+                <label for="codeLanguage">Programozási nyelv:</label>
+                <select id="codeLanguage">
+                    <option value="python">Python</option>
+                    <option value="javascript">JavaScript</option>
+                    <option value="java">Java</option>
+                    <option value="cpp">C++</option>
+                    <option value="csharp">C#</option>
+                    <option value="go">Go</option>
+                    <option value="rust">Rust</option>
+                    <option value="php">PHP</option>
+                </select>
+                
+                <label for="codeComplexity">Komplexitás:</label>
+                <select id="codeComplexity">
+                    <option value="simple">Egyszerű</option>
+                    <option value="medium">Közepes</option>
+                    <option value="complex">Komplex</option>
+                    <option value="enterprise">Vállalati szintű</option>
+                </select>
+            `;
+            modalFooter.innerHTML = `<button class="modal-submit-btn" onclick="generateCode()">Kód generálása</button>`;
+            openModal();
+        }
+
+        async function generateCode() {
+            const prompt = document.getElementById('codePrompt').value;
+            const language = document.getElementById('codeLanguage').value;
+            const complexity = document.getElementById('codeComplexity').value;
+            
+            if (!prompt) return;
+
+            closeModal();
+            hideWelcome();
+            addUserMessage(`Kód generálás kérés: ${prompt} (${language}, ${complexity})`);
+            showTypingIndicator();
+            triggerHapticFeedback('light');
+
+            try {
+                const data = await fetchAPI('/code/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prompt: prompt,
+                        language: language,
+                        complexity: complexity,
+                        temperature: 0.3
+                    })
+                });
+                
+                hideTypingIndicator();
+                const codeResponse = `## Generált ${data.language} kód\n\n\`\`\`${data.language}\n${data.generated_code}\n\`\`\`\n\n**Statisztikák:**\n- Sorok száma: ${data.estimated_lines}\n- Karakterek száma: ${data.character_count}\n- Modell: ${data.model_used}`;
+                addAiMessage(codeResponse, data.model_used);
+                triggerHapticFeedback('success');
+            } catch (error) {
+                hideTypingIndicator();
+                triggerHapticFeedback('error');
+            }
+        }
+
+        // --- Segédfunkciók ---
+        function copyMessage(messageId) {
+            const element = document.getElementById(messageId);
+            const text = element.textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                triggerHapticFeedback('light');
+                // Rövid visszajelzés
+                const originalText = element.innerHTML;
+                element.innerHTML = '✅ Másolva!';
+                setTimeout(() => {
+                    element.innerHTML = originalText;
+                }, 1000);
+            });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function scrollToBottom() {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
