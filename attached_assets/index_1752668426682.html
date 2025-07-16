@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jade - Deep Discovery AI Platform</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --primary: #00ff88;
+            --secondary: #0088ff;
+            --accent: #8b5cf6;
+            --bg: #000000;
+            --surface: rgba(10, 10, 10, 0.95);
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-strong: rgba(255, 255, 255, 0.12);
+            --border: rgba(255, 255, 255, 0.1);
+            --text: #ffffff;
+            --text-muted: #94a3b8;
+            --radius: 20px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .background-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 25% 25%, rgba(0, 255, 136, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 75% 75%, rgba(0, 136, 255, 0.06) 0%, transparent 45%),
+                radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
+            animation: gradientShift 30s ease-in-out infinite;
+            z-index: -1;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { filter: hue-rotate(0deg); }
+            50% { filter: hue-rotate(30deg); }
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 320px;
+            background: var(--surface);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar.open {
+            transform: translateX(0);
+        }
+
+        .sidebar-header {
+            padding: 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #000;
+        }
+
+        .logo-text h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-text p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .new-chat-btn {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #000;
+            border: none;
+            border-radius: 16px;
+            padding: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: transform 0.2s ease;
+        }
+
+        .new-chat-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .sidebar-content {
+            padding: 1.5rem;
+        }
+
+        .service-category {
+            margin-bottom: 2rem;
+        }
+
+        .category-header {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            transition: all 0.3s ease;
+        }
+
+        .category-header:hover {
+            background: var(--glass-strong);
+            border-color: var(--primary);
+        }
+
+        .category-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .category-services {
+            display: none;
+            padding-left: 1rem;
+        }
+
+        .category-services.open {
+            display: block;
+        }
+
+        .service-item {
+            background: var(--glass);
+            border: 1px solid transparent;
+            border-radius: 12px;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .service-item:hover {
+            background: var(--glass-strong);
+            border-color: var(--primary);
+            transform: translateX(8px);
+        }
+
+        .service-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            color: #000;
+        }
+
+        .service-info h4 {
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .service-info p {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            line-height: 1.3;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 0;
+            display: flex;
+            flex-direction: column;
+            transition: margin-left 0.3s ease;
+        }
+
+        .header {
+            padding: 1.5rem 2rem;
+            background: var(--surface);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .menu-toggle {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 0.75rem;
+            color: var(--text);
+            cursor: pointer;
+            display: block;
+            transition: all 0.3s ease;
+        }
+
+        .menu-toggle:hover {
+            background: var(--glass-strong);
+            border-color: var(--primary);
+        }
+
+        .header-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+            scroll-behavior: smooth;
+        }
+
+        .welcome-screen {
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+
+        .welcome-logo {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            font-weight: bold;
+            color: #000;
+            margin: 0 auto 2rem;
+            animation: logoFloat 6s ease-in-out infinite;
+        }
+
+        @keyframes logoFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .welcome-title {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .welcome-subtitle {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            margin-bottom: 3rem;
+            line-height: 1.6;
+        }
+
+        .start-btn {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1rem 2rem;
+            color: var(--text);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .start-btn:hover {
+            background: var(--glass-strong);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .message {
+            margin-bottom: 1.5rem;
+            animation: messageSlide 0.5s ease;
+        }
+
+        @keyframes messageSlide {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .user-bubble {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #000;
+            padding: 1rem 1.5rem;
+            border-radius: 20px 20px 8px 20px;
+            max-width: 70%;
+            font-weight: 500;
+        }
+
+        .ai-message {
+            display: flex;
+            flex-direction: column;
+            max-width: 85%;
+        }
+
+        .ai-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .ai-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent), var(--secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+        }
+
+        .ai-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .ai-content {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 20px 20px 20px 8px;
+            padding: 1.5rem;
+            line-height: 1.6;
+            backdrop-filter: blur(20px);
+        }
+
+        .message-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .action-btn {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.5rem 0.75rem;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .action-btn:hover {
+            background: var(--glass-strong);
+            color: var(--text);
+            border-color: var(--primary);
+        }
+
+        .input-area {
+            padding: 2rem;
+            background: var(--surface);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border);
+        }
+
+        .input-wrapper {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+        }
+
+        .message-input {
+            flex: 1;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 1rem 1.5rem;
+            color: var(--text);
+            font-size: 1rem;
+            resize: none;
+            outline: none;
+            transition: all 0.3s ease;
+            min-height: 56px;
+            max-height: 120px;
+        }
+
+        .message-input:focus {
+            border-color: var(--primary);
+            background: var(--glass-strong);
+        }
+
+        .send-btn {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            border-radius: 50%;
+            color: #000;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 0.5rem;
+            padding: 1rem;
+            background: var(--glass);
+            border-radius: 20px 20px 20px 8px;
+            max-width: 200px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: scale(0.8); opacity: 0.5; }
+            30% { transform: scale(1.2); opacity: 1; }
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.show {
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            backdrop-filter: blur(20px);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .close-btn {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: var(--glass-strong);
+            border-color: var(--primary);
+        }
+
+        /* Responsive Design */
+        @media (min-width: 768px) {
+            .sidebar {
+                position: relative;
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 320px;
+            }
+
+            .menu-toggle {
+                display: none;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .welcome-title {
+                font-size: 2rem;
+            }
+
+            .welcome-logo {
+                width: 80px;
+                height: 80px;
+                font-size: 2rem;
+            }
+
+            .header {
+                padding: 1rem;
+            }
+
+            .messages-container {
+                padding: 1rem;
+            }
+
+            .input-area {
+                padding: 1rem;
+            }
+
+            .user-bubble {
+                max-width: 85%;
+            }
+
+            .ai-message {
+                max-width: 95%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-gradient"></div>
+
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon">J</div>
+                    <div class="logo-text">
+                        <h1>Jade</h1>
+                        <p>Deep Discovery AI</p>
+                    </div>
+                </div>
+                <button class="new-chat-btn" onclick="newChat()">
+                    <i class="fas fa-plus"></i>
+                    Új beszélgetés
+                </button>
+            </div>
+
+            <div class="sidebar-content">
+                <div class="service-category">
+                    <div class="category-header" onclick="toggleCategory('biological')">
+                        <div class="category-title">
+                            <i class="fas fa-dna"></i>
+                            <span>Biológiai & Orvosi</span>
+                        </div>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="category-services" id="biological-services">
+                        <div class="service-item" onclick="selectService('AlphaFold3', 'Fehérje szerkezet előrejelzés')">
+                            <div class="service-icon"><i class="fas fa-cube"></i></div>
+                            <div class="service-info">
+                                <h4>AlphaFold 3</h4>
+                                <p>Fehérje szerkezet előrejelzés</p>
+                            </div>
+                        </div>
+                        <div class="service-item" onclick="selectService('AlphaMissense', 'Mutációs patogenitás elemzés')">
+                            <div class="service-icon"><i class="fas fa-exchange-alt"></i></div>
+                            <div class="service-info">
+                                <h4>AlphaMissense</h4>
+                                <p>Mutációs patogenitás elemzés</p>
+                            </div>
+                        </div>
+                        <div class="service-item" onclick="selectService('AlphaGenome', 'Genom szekvencia elemzés')">
+                            <div class="service-icon"><i class="fas fa-code-branch"></i></div>
+                            <div class="service-info">
+                                <h4>AlphaGenome</h4>
+                                <p>Genom szekvencia elemzés</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="service-category">
+                    <div class="category-header" onclick="toggleCategory('chemical')">
+                        <div class="category-title">
+                            <i class="fas fa-atom"></i>
+                            <span>Kémiai & Anyagtudományi</span>
+                        </div>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="category-services" id="chemical-services">
+                        <div class="service-item" onclick="selectService('AlphaCatalyst', 'Katalizátor tervezés')">
+                            <div class="service-icon"><i class="fas fa-flask"></i></div>
+                            <div class="service-info">
+                                <h4>AlphaCatalyst</h4>
+                                <p>Katalizátor tervezés</p>
+                            </div>
+                        </div>
+                        <div class="service-item" onclick="selectService('AlphaPolymer', 'Polimer tulajdonságok')">
+                            <div class="service-icon"><i class="fas fa-link"></i></div>
+                            <div class="service-info">
+                                <h4>AlphaPolymer</h4>
+                                <p>Polimer tulajdonságok</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="service-category">
+                    <div class="category-header" onclick="toggleCategory('research')">
+                        <div class="category-title">
+                            <i class="fas fa-search"></i>
+                            <span>Kutatási Funkciók</span>
+                        </div>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="category-services" id="research-services">
+                        <div class="service-item" onclick="startDeepResearch()">
+                            <div class="service-icon"><i class="fas fa-microscope"></i></div>
+                            <div class="service-info">
+                                <h4>Deep Research</h4>
+                                <p>Mélyreható kutatási elemzés</p>
+                            </div>
+                        </div>
+                        <div class="service-item" onclick="openCodeGenerator()">
+                            <div class="service-icon"><i class="fas fa-code"></i></div>
+                            <div class="service-info">
+                                <h4>Kód Generátor</h4>
+                                <p>AI-powered kódolás</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="header">
+                <button class="menu-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1 class="header-title">Jade AI Platform</h1>
+                <div></div>
+            </header>
+
+            <div class="chat-area">
+                <div class="messages-container" id="messagesContainer">
+                    <div class="welcome-screen" id="welcomeScreen">
+                        <div class="welcome-logo">J</div>
+                        <h1 class="welcome-title">Jade</h1>
+                        <p class="welcome-subtitle">
+                            Deep Discovery AI Platform - 150+ Alpha szolgáltatás, neurális keresés és fejlett AI elemzés
+                        </p>
+                        <button class="start-btn" onclick="hideWelcome()">
+                            <i class="fas fa-rocket"></i>
+                            Kezdjük el!
+                        </button>
+                    </div>
+                </div>
+
+                <div class="input-area">
+                    <div class="input-wrapper">
+                        <textarea 
+                            class="message-input" 
+                            id="messageInput" 
+                            placeholder="Kérdezz bármit, vagy válassz egy Alpha szolgáltatást..."
+                            rows="1"
+                        ></textarea>
+                        <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Service Modal -->
+    <div class="modal" id="serviceModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Alpha Szolgáltatás</h2>
+                <button class="close-btn" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="modalContent">
+                <!-- Modal content will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Globális változók
+        let currentUser = 'user_' + Math.random().toString(36).substr(2, 9);
+        let isTyping = false;
+
+        // DOM elemek
+        const sidebar = document.getElementById('sidebar');
+        const messagesContainer = document.getElementById('messagesContainer');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const serviceModal = document.getElementById('serviceModal');
+
+        // Inicializálás
+        document.addEventListener('DOMContentLoaded', function() {
+            setupEventListeners();
+            messageInput.focus();
+        });
+
+        function setupEventListeners() {
+            // Enter küldés
+            messageInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            // Auto-resize textarea
+            messageInput.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+            });
+
+            // Escape modal bezárás
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeModal();
+                }
+            });
+
+            // Modal overlay click bezárás
+            serviceModal.addEventListener('click', function(e) {
+                if (e.target === serviceModal) {
+                    closeModal();
+                }
+            });
+        }
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('open');
+        }
+
+        function toggleCategory(categoryId) {
+            const services = document.getElementById(categoryId + '-services');
+            const header = services.previousElementSibling;
+            const chevron = header.querySelector('.fas.fa-chevron-down');
+
+            services.classList.toggle('open');
+            chevron.style.transform = services.classList.contains('open') ? 'rotate(180deg)' : 'rotate(0deg)';
+        }
+
+        function hideWelcome() {
+            welcomeScreen.style.display = 'none';
+            messageInput.focus();
+        }
+
+        function newChat() {
+            messagesContainer.innerHTML = `
+                <div class="welcome-screen" id="welcomeScreen">
+                    <div class="welcome-logo">J</div>
+                    <h1 class="welcome-title">Jade</h1>
+                    <p class="welcome-subtitle">
+                        Deep Discovery AI Platform - 150+ Alpha szolgáltatás, neurális keresés és fejlett AI elemzés
+                    </p>
+                    <button class="start-btn" onclick="hideWelcome()">
+                        <i class="fas fa-rocket"></i>
+                        Kezdjük el!
+                    </button>
+                </div>
+            `;
+            messageInput.value = '';
+            messageInput.focus();
+        }
+
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message || isTyping) return;
+
+            // UI frissítés
+            addUserMessage(message);
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+            hideWelcome();
+            showTypingIndicator();
+
+            try {
+                const response = await fetch('/api/deep_discovery/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        message: message, 
+                        user_id: currentUser 
+                    })
+                });
+
+                const data = await response.json();
+                hideTypingIndicator();
+
+                if (data.status === 'success') {
+                    addAiMessage(data.response, data.model_used);
+                } else {
+                    addAiMessage('Hiba történt a válasz feldolgozása során.', 'Error');
+                }
+            } catch (error) {
+                hideTypingIndicator();
+                addAiMessage(`Hiba történt: ${error.message}`, 'Error');
+            }
+
+            messageInput.focus();
+        }
+
+        function addUserMessage(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message user-message';
+            messageDiv.innerHTML = `
+                <div class="user-bubble">${escapeHtml(message)}</div>
+            `;
+
+            messagesContainer.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        function addAiMessage(message, model = 'Jade AI') {
+            const messageId = 'msg_' + Date.now();
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ai-message';
+            messageDiv.innerHTML = `
+                <div class="ai-header">
+                    <div class="ai-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="ai-name">${model}</div>
+                </div>
+                <div class="ai-content" id="${messageId}">
+                    ${formatMessage(message)}
+                </div>
+                <div class="message-actions">
+                    <button class="action-btn" onclick="copyMessage('${messageId}')">
+                        <i class="fas fa-copy"></i> Másolás
+                    </button>
+                    <button class="action-btn" onclick="regenerateMessage('${messageId}')">
+                        <i class="fas fa-redo"></i> Újragenerálás
+                    </button>
+                </div>
+            `;
+
+            messagesContainer.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        function showTypingIndicator() {
+            isTyping = true;
+            sendBtn.disabled = true;
+
+            const indicator = document.createElement('div');
+            indicator.id = 'typingIndicator';
+            indicator.className = 'message ai-message';
+            indicator.innerHTML = `
+                <div class="ai-header">
+                    <div class="ai-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="ai-name">Jade AI</div>
+                </div>
+                <div class="typing-indicator">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            `;
+
+            messagesContainer.appendChild(indicator);
+            scrollToBottom();
+        }
+
+        function hideTypingIndicator() {
+            isTyping = false;
+            sendBtn.disabled = false;
+
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) {([^`]+)
