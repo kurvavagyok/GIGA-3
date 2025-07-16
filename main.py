@@ -1204,12 +1204,32 @@ async def comprehensive_research(req: DeepResearchRequest):
             }
             sources.append(source_data)
 
-            # Tartalom hozzáadása ha elérhető
-            if result.text_contents and result.text_contents.text:
-                content_snippet = result.text_contents.text[:3000]
-                combined_content += f"\n--- Forrás {i+1}: {result.title} ---\n{content_snippet}\n"
-            elif hasattr(result, 'snippet') and result.snippet:
-                combined_content += f"\n--- Forrás {i+1}: {result.title} ---\n{result.snippet}\n"
+        # Tartalom lekérése külön API hívással a első 100 eredményhez
+        if final_results:
+            try:
+                # Csak az első 100 eredmény ID-jét gyűjtjük
+                result_ids = [result.id for result in final_results[:100]]
+                
+                contents_response = exa_client.get_contents(
+                    ids=result_ids,
+                    text=True,
+                    text_contents={
+                        "max_characters": 3000,
+                        "strategy": "comprehensive"
+                    }
+                )
+                
+                # Tartalom hozzáadása
+                for i, content in enumerate(contents_response.contents):
+                    if content.text:
+                        combined_content += f"\n--- Forrás {i+1}: {content.title or 'Cím nem elérhető'} ---\n{content.text[:3000]}\n"
+                        
+            except Exception as e:
+                logger.error(f"Error fetching comprehensive contents: {e}")
+                # Fallback: használjuk a snippet-eket ha vannak
+                for i, result in enumerate(final_results[:100]):
+                    if hasattr(result, 'snippet') and result.snippet:
+                        combined_content += f"\n--- Forrás {i+1}: {result.title} ---\n{result.snippet}\n"
 
         # AI elemzés kibővített prompt-tal
         analysis_text = ""
@@ -1455,6 +1475,7 @@ async def deep_research(req: DeepResearchRequest):
         sources = []
         combined_content = ""
 
+        # Először csak az alapvető adatokat gyűjtjük
         for i, result in enumerate(final_results[:1000]):  # Max 1000 eredmény
             source_data = {
                 "id": i + 1,
@@ -1465,9 +1486,32 @@ async def deep_research(req: DeepResearchRequest):
             }
             sources.append(source_data)
 
-            if result.text_contents and result.text_contents.text:
-                content_snippet = result.text_contents.text[:2000]  # Hosszabb részletek
-                combined_content += f"\n--- Forrás {i+1}: {result.title} ---\n{content_snippet}\n"
+        # Tartalom lekérése külön API hívással a első 50 eredményhez
+        if final_results:
+            try:
+                # Csak az első 50 eredmény ID-jét gyűjtjük
+                result_ids = [result.id for result in final_results[:50]]
+                
+                contents_response = exa_client.get_contents(
+                    ids=result_ids,
+                    text=True,
+                    text_contents={
+                        "max_characters": 2000,
+                        "strategy": "comprehensive"
+                    }
+                )
+                
+                # Tartalom hozzáadása
+                for i, content in enumerate(contents_response.contents):
+                    if content.text:
+                        combined_content += f"\n--- Forrás {i+1}: {content.title or 'Cím nem elérhető'} ---\n{content.text[:2000]}\n"
+                        
+            except Exception as e:
+                logger.error(f"Error fetching contents: {e}")
+                # Fallback: használjuk a snippet-eket ha vannak
+                for i, result in enumerate(final_results[:50]):
+                    if hasattr(result, 'snippet') and result.snippet:
+                        combined_content += f"\n--- Forrás {i+1}: {result.title} ---\n{result.snippet}\n"
 
         # AI elemzés kibővített prompt-tal
         analysis_text = ""
@@ -2208,7 +2252,7 @@ async def exa_neural_search(query: str, domains: List[str] = [], exclude_domains
                 "score": getattr(result, 'score', 0),
                 "published_date": result.published_date,
                 "domain": result.url.split('/')[2] if '/' in result.url else result.url,
-                "text_preview": result.text_contents.text[:500] + "..." if result.text_contents else None
+                "text_preview": getattr(result, 'snippet', None) or "Nincs szöveg előnézet"
             }
             processed_results.append(processed_result)
 
