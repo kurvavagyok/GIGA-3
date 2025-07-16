@@ -1384,7 +1384,7 @@ async def deep_research(req: DeepResearchRequest):
         # Kibővített tudományos és akadémiai domainok listája
         scientific_domains = [
             "arxiv.org", "pubmed.ncbi.nlm.nih.gov", "nature.com", "science.org",
-            "cell.com", "nejm.org", "ieee.org", "acm.org", "springer.com", "wiley.com",
+            "cell.com", "nejm.org", "nejm.org", "ieee.org", "acm.org", "springer.com", "wiley.com",
             "sciencedirect.com", "jstor.org", "researchgate.net", "semantic-scholar.org",
             "biorxiv.org", "medrxiv.org", "plos.org", "bmj.com", "thelancet.com",
             "nih.gov", "who.int", "cdc.gov", "fda.gov", "ema.europa.eu"
@@ -1475,8 +1475,8 @@ async def deep_research(req: DeepResearchRequest):
         sources = []
         combined_content = ""
 
-        # Először csak az alapvető adatokat gyűjtjük - 1000 eredményhez
-        for i, result in enumerate(final_results[:1000]):
+        # Először csak az alapvető adatokat gyűjtjük
+        for i, result in enumerate(final_results[:1000]):  # Max 1000 eredmény
             source_data = {
                 "id": i + 1,
                 "title": result.title or "Cím nem elérhető",
@@ -1494,88 +1494,95 @@ async def deep_research(req: DeepResearchRequest):
                 
                 contents_response = exa_client.get_contents(
                     ids=result_ids,
-                    text=True
+                    text=True,
+                    text_contents={
+                        "max_characters": 2000,
+                        "strategy": "comprehensive"
+                    }
                 )
                 
                 # Tartalom hozzáadása
                 for i, content in enumerate(contents_response.contents):
-                    if hasattr(content, 'text') and content.text:
+                    if content.text:
                         combined_content += f"\n--- Forrás {i+1}: {content.title or 'Cím nem elérhető'} ---\n{content.text[:2000]}\n"
                         
             except Exception as e:
                 logger.error(f"Error fetching contents: {e}")
-                # Fallback: snippet helyett üres tartalom
-                combined_content = f"Nem sikerült a tartalmak lekérése: {e}"
+                # Fallback: használjuk a snippet-eket ha vannak
+                for i, result in enumerate(final_results[:50]):
+                    if hasattr(result, 'snippet') and result.snippet:
+                        combined_content += f"\n--- Forrás {i+1}: {result.title} ---\n{result.snippet}\n"
 
         # AI elemzés kibővített prompt-tal
         analysis_text = ""
 
-        if len(sources) > 0:
+        if combined_content and len(combined_content) > 500:
+            model_info = await select_backend_model(req.query)
+            analysis_prompt = f"""
+        ÁTFOGÓ TUDOMÁNYOS ELEMZÉS: {req.query}
+
+        Feldolgozott források száma: {len(sources)} db
+        Teljes tartalom hossza: {len(combined_content)} karakter
+
+        FORRÁS ADATOK:
+        {combined_content[:50000]}
+
+        KÉRLEK, KÉSZÍTS RÉSZLETES, TUDOMÁNYOS ELEMZÉST:
+
+        1. EXECUTIVE SUMMARY
+        - Legfontosabb megállapítások
+        - Kulcs információk
+
+        2. TUDOMÁNYOS ÁTTEKINTÉS
+        - Jelenlegi kutatási állapot
+        - Főbb tanulmányok eredményei
+        - Konszenzus és viták
+
+        3. MÓDSZERTANI MEGKÖZELÍTÉSEK
+        - Alkalmazott kutatási módszerek
+        - Adatgyűjtési technikák
+        - Elemzési eljárások
+
+        4. GYAKORLATI ALKALMAZÁSOK
+        - Valós életbeli implementációk
+        - Ipari alkalmazások
+        - Társadalmi hatások
+
+        5. JÖVŐBELI KUTATÁSI IRÁNYOK
+        - Azonosított kutatási rések
+        - Új technológiai lehetőségek
+        - Várható fejlődési trendek
+
+        6. FORRÁSOK MINŐSÉGI ÉRTÉKELÉSE
+        - Magas impakt faktorú publikációk
+        - Peer-reviewed források aránya
+        - Földrajzi és intézményi diverzitás
+
+        7. KÖVETKEZTETÉSEK ÉS AJÁNLÁSOK
+        - Összegző megállapítások
+        - Döntéshozóknak szóló ajánlások
+        - További kutatási prioritások
+
+        A válasz legyen strukturált, magyar nyelvű, és használjon tudományos terminológiát.
+        Hivatkozz konkrét forrásokra ahol lehetséges.
+        """
+
             try:
-                model_info = await select_backend_model(req.query)
-                analysis_prompt = f"""
-ÁTFOGÓ TUDOMÁNYOS ELEMZÉS: {req.query}
-
-Feldolgozott források száma: {len(sources)} db
-Teljes tartalom hossza: {len(combined_content)} karakter
-
-FORRÁS ADATOK:
-{combined_content[:30000] if combined_content else "Tartalmak nem elérhetők"}
-
-KÉRLEK, KÉSZÍTS RÉSZLETES, TUDOMÁNYOS ELEMZÉST:
-
-1. EXECUTIVE SUMMARY
-- Legfontosabb megállapítások
-- Kulcs információk
-
-2. TUDOMÁNYOS ÁTTEKINTÉS
-- Jelenlegi kutatási állapot
-- Főbb tanulmányok eredményei
-- Konszenzus és viták
-
-3. MÓDSZERTANI MEGKÖZELÍTÉSEK
-- Alkalmazott kutatási módszerek
-- Adatgyűjtési technikák
-- Elemzési eljárások
-
-4. GYAKORLATI ALKALMAZÁSOK
-- Valós életbeli implementációk
-- Ipari alkalmazások
-- Társadalmi hatások
-
-5. JÖVŐBELI KUTATÁSI IRÁNYOK
-- Azonosított kutatási rések
-- Új technológiai lehetőségek
-- Várható fejlődési trendek
-
-6. FORRÁSOK MINŐSÉGI ÉRTÉKELÉSE
-- Magas impakt faktorú publikációk
-- Peer-reviewed források aránya
-- Földrajzi és intézményi diverzitás
-
-7. KÖVETKEZTETÉSEK ÉS AJÁNLÁSOK
-- Összegző megállapítások
-- Döntéshozóknak szóló ajánlások
-- További kutatási prioritások
-
-A válasz legyen strukturált, magyar nyelvű, és használjon tudományos terminológiát.
-"""
-
                 result = await execute_model(model_info, analysis_prompt)
                 analysis_text = result["response"]
                 logger.info(f"AI analysis completed using {result['model_used']}")
             except Exception as e:
                 logger.error(f"Analysis error: {e}")
-                analysis_text = f"AI elemzés hiba: {e}\n\nAlapvető statisztikák: {len(sources)} forrás került feldolgozásra a témában."
+                analysis_text = f"Részleges elemzés készült. Hiba részletei: {e}\n\nElérhető források alapján: {len(sources)} publikáció került feldolgozásra a témában."
         else:
-            analysis_text = "Nem sikerült forrásokat találni az elemzéshez."
+            analysis_text = "Nem sikerült elegendő forrást találni az elemzéshez."
 
         return {
             "query": req.query,
             "final_synthesis": analysis_text,
             "sources": sources,
             "total_sources": len(sources),
-            "unique_domains": len(set(s["domain"] for s in sources)) if sources else 0,
+            "unique_domains": len(set(s["domain"] for s in sources)),
             "processing_stats": {
                 "total_results_found": len(all_results),
                 "unique_results": len(final_results),
@@ -1588,22 +1595,10 @@ A válasz legyen strukturált, magyar nyelvű, és használjon tudományos termi
 
     except Exception as e:
         logger.error(f"Error in deep research: {e}")
-        return {
-            "query": req.query,
-            "final_synthesis": f"Hiba történt a deep research során: {e}",
-            "sources": [],
-            "total_sources": 0,
-            "unique_domains": 0,
-            "processing_stats": {
-                "total_results_found": 0,
-                "unique_results": 0,
-                "content_length": 0,
-                "domains_searched": 0
-            },
-            "timestamp": datetime.now().isoformat(),
-            "status": "error",
-            "error": str(e)
-        }
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Hiba a mélyreható kutatás során: {e}"
+        )
 
 # Meglévő specializált végpontok megőrzése
 @app.post("/api/exa/advanced_search")
@@ -1851,57 +1846,7 @@ async def exa_get_contents(req: ExaContentsRequest):
         )
 
 @app.post("/api/exa/neural_search")
-async def exa_neural_search_endpoint(query: str, num_results: int = 20):
-    """Neurális keresés endpoint"""
-    if not exa_client or not EXA_AVAILABLE:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Exa AI nem elérhető"
-        )
 
-    try:
-        # Tudományos domainok
-        domains = [
-            "arxiv.org", "pubmed.ncbi.nlm.nih.gov", "nature.com", "science.org",
-            "cell.com", "nejm.org", "thelancet.com", "bmj.com", "plos.org",
-            "ieee.org", "acm.org", "springer.com", "wiley.com", "elsevier.com"
-        ]
-
-        response = exa_client.search(
-            query=query,
-            type="neural",
-            num_results=num_results,
-            include_domains=domains,
-            use_autoprompt=True
-        )
-
-        # Eredmények feldolgozása
-        processed_results = []
-        for result in response.results:
-            processed_result = {
-                "title": result.title,
-                "url": result.url,
-                "score": getattr(result, 'score', 0),
-                "published_date": result.published_date,
-                "domain": result.url.split('/')[2] if '/' in result.url else result.url,
-                "text_preview": "Nincs szöveg előnézet"
-            }
-            processed_results.append(processed_result)
-
-        return {
-            "query": query,
-            "neural_results": processed_results,
-            "domains_searched": domains,
-            "total_results": len(processed_results),
-            "status": "success"
-        }
-
-    except Exception as e:
-        logger.error(f"Error in neural search: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Hiba a neurális keresés során: {e}"
-        )
 
 # --- Specialized Scientific Library Endpoints ---
 
