@@ -1,8 +1,9 @@
+
 <!DOCTYPE html>
 <html lang="hu">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Jade - Deep Discovery AI Platform</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- highlight.js a kód színezéséhez -->
@@ -25,13 +26,15 @@
             --border: rgba(255, 255, 255, 0.1);
             --text: #ffffff;
             --text-muted: #94a3b8;
-            --radius: 20px;
+            --radius: 16px;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -42,6 +45,7 @@
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+            touch-action: manipulation;
         }
 
         .background-gradient {
@@ -51,91 +55,106 @@
             width: 100vw;
             height: 100vh;
             pointer-events: none;
-            background: linear-gradient(270deg, rgba(153,12,88,0.2), rgba(229,18,132,0.2), rgba(0,33,243,0.2), rgba(5,1,74,0.2));
+            background: linear-gradient(270deg, rgba(153,12,88,0.15), rgba(229,18,132,0.15), rgba(0,33,243,0.15), rgba(5,1,74,0.15));
             background-size: 800% 800%;
-            animation: gradientShift 300s ease infinite;
+            animation: gradientShift 20s ease infinite;
             z-index: -1;
         }
 
         @keyframes gradientShift {
             0% { background-position: 0% 50%; }
-            50% { background-position: 10% 50%; }
+            50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
 
         .container {
             display: flex;
             min-height: 100vh;
+            position: relative;
         }
 
         .sidebar {
-            width: 320px;
+            width: 340px;
             background: var(--surface);
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(30px);
             border-right: 1px solid var(--border);
             overflow-y: auto;
             position: fixed;
             height: 100vh;
-            z-index: 100;
+            z-index: 1000;
             transform: translateX(-100%);
-            transition: transform 0.3s ease;
-        }
-
-        @media (min-width: 768px) {
-            .sidebar {
-                position: relative;
-                transform: translateX(0);
-            }
-
-            .main-content {
-                margin-left: 320px;
-            }
-
-            .menu-toggle {
-                display: none;
-            }
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--shadow);
+            -webkit-overflow-scrolling: touch;
         }
 
         .sidebar.open {
             transform: translateX(0);
         }
 
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
         .sidebar-header {
-            padding: 2rem;
+            padding: 24px 20px;
             border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            background: var(--surface);
+            backdrop-filter: blur(30px);
+            z-index: 10;
         }
 
         .logo {
             display: flex;
             align-items: center;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
+            gap: 12px;
+            margin-bottom: 20px;
         }
 
         .logo-icon {
-            width: 50px;
-            height: 50px;
+            width: 56px;
+            height: 56px;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
-            border-radius: 16px;
+            border-radius: var(--radius);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             font-weight: bold;
             color: #000;
+            box-shadow: 0 4px 16px rgba(0, 255, 136, 0.3);
         }
 
         .logo-text h1 {
-            font-size: 1.5rem;
+            font-size: 1.6rem;
             font-weight: 700;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            line-height: 1.2;
         }
 
         .logo-text p {
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             color: var(--text-muted);
+            margin-top: 2px;
         }
 
         .new-chat-btn {
@@ -143,105 +162,121 @@
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: #000;
             border: none;
-            border-radius: 16px;
-            padding: 1rem;
+            border-radius: var(--radius);
+            padding: 16px 20px;
             font-weight: 600;
+            font-size: 1rem;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 0.5rem;
-            transition: transform 0.2s ease;
+            gap: 8px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 16px rgba(0, 255, 136, 0.3);
+            touch-action: manipulation;
         }
 
-        .new-chat-btn:hover {
+        .new-chat-btn:hover, .new-chat-btn:active {
             transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 255, 136, 0.4);
         }
 
         .sidebar-content {
-            padding: 1.5rem;
+            padding: 20px;
+            padding-bottom: 40px;
         }
 
         .service-category {
-            margin-bottom: 2rem;
+            margin-bottom: 24px;
         }
 
         .category-header {
             background: var(--glass);
             border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 1rem;
+            border-radius: var(--radius);
+            padding: 16px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 0.75rem;
-            transition: all 0.3s ease;
+            margin-bottom: 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            touch-action: manipulation;
         }
 
-        .category-header:hover {
+        .category-header:hover, .category-header:active {
             background: var(--glass-strong);
             border-color: var(--primary);
+            transform: translateY(-1px);
         }
 
         .category-title {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 12px;
             font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
         }
 
         .category-services {
             display: none;
-            padding-left: 1rem;
+            padding-left: 16px;
+            animation: slideDown 0.3s ease;
         }
 
         .category-services.open {
             display: block;
         }
 
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .service-item {
             background: var(--glass);
             border: 1px solid transparent;
             border-radius: 12px;
-            padding: 0.75rem;
-            margin-bottom: 0.5rem;
+            padding: 14px;
+            margin-bottom: 8px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 12px;
+            touch-action: manipulation;
         }
 
-        .service-item:hover {
+        .service-item:hover, .service-item:active {
             background: var(--glass-strong);
             border-color: var(--primary);
             transform: translateX(8px);
         }
 
         .service-icon {
-            width: 32px;
-            height: 32px;
+            width: 36px;
+            height: 36px;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
-            border-radius: 8px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.9rem;
+            font-size: 1rem;
             color: #000;
+            flex-shrink: 0;
         }
 
         .service-info h4 {
-            font-size: 0.8rem;
+            font-size: 0.9rem;
             font-weight: 600;
-            margin-bottom: 0.25rem;
+            margin-bottom: 4px;
+            line-height: 1.3;
         }
 
         .service-info p {
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             color: var(--text-muted);
-            line-height: 1.3;
+            line-height: 1.4;
         }
 
         .main-content {
@@ -249,40 +284,49 @@
             margin-left: 0;
             display: flex;
             flex-direction: column;
-            transition: margin-left 0.3s ease;
+            transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            min-height: 100vh;
         }
 
         .header {
-            padding: 1.5rem 2rem;
+            padding: 20px 24px;
             background: var(--surface);
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(30px);
             border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
             justify-content: space-between;
             position: sticky;
             top: 0;
-            z-index: 50;
+            z-index: 100;
+            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.1);
         }
 
         .menu-toggle {
             background: var(--glass);
             border: 1px solid var(--border);
             border-radius: 12px;
-            padding: 0.75rem;
+            padding: 12px;
             color: var(--text);
             cursor: pointer;
-            display: block;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 1.1rem;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
         }
 
-        .menu-toggle:hover {
+        .menu-toggle:hover, .menu-toggle:active {
             background: var(--glass-strong);
             border-color: var(--primary);
+            transform: scale(1.05);
         }
 
         .header-title {
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             font-weight: 600;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             -webkit-background-clip: text;
@@ -299,15 +343,16 @@
         .messages-container {
             flex: 1;
             overflow-y: auto;
-            padding: 2rem;
+            padding: 20px;
             scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
         }
 
         .welcome-screen {
             text-align: center;
             max-width: 600px;
             margin: 0 auto;
-            padding: 4rem 2rem;
+            padding: 60px 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -328,6 +373,7 @@
             color: #000;
             margin: 0 auto 2rem;
             animation: logoFloat 6s ease-in-out infinite;
+            box-shadow: 0 8px 32px rgba(0, 255, 136, 0.3);
         }
 
         @keyframes logoFloat {
@@ -336,16 +382,17 @@
         }
 
         .welcome-title {
-            font-size: 3rem;
+            font-size: 2.5rem;
             font-weight: 700;
             margin-bottom: 1rem;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            line-height: 1.2;
         }
 
         .welcome-subtitle {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             color: var(--text-muted);
             margin-bottom: 3rem;
             line-height: 1.6;
@@ -354,25 +401,27 @@
         .start-btn {
             background: var(--glass);
             border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 1rem 2rem;
+            border-radius: var(--radius);
+            padding: 16px 32px;
             color: var(--text);
             font-weight: 600;
+            font-size: 1rem;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 8px;
+            touch-action: manipulation;
         }
 
-        .start-btn:hover {
+        .start-btn:hover, .start-btn:active {
             background: var(--glass-strong);
             border-color: var(--primary);
             transform: translateY(-2px);
         }
 
         .message {
-            margin-bottom: 1.5rem;
+            margin-bottom: 20px;
             animation: messageSlide 0.5s ease;
         }
 
@@ -389,39 +438,44 @@
         .user-bubble {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: #000;
-            padding: 1rem 1.5rem;
+            padding: 16px 20px;
             border-radius: 20px 20px 8px 20px;
-            max-width: 70%;
+            max-width: 80%;
             font-weight: 500;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            box-shadow: 0 4px 16px rgba(0, 255, 136, 0.2);
         }
 
         .ai-message {
             display: flex;
             flex-direction: column;
-            max-width: 85%;
+            max-width: 90%;
         }
 
         .ai-header {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            margin-bottom: 0.5rem;
+            gap: 12px;
+            margin-bottom: 8px;
         }
 
         .ai-avatar {
-            width: 40px;
-            height: 40px;
+            width: 44px;
+            height: 44px;
             background: linear-gradient(135deg, var(--accent), var(--secondary));
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #fff;
+            font-size: 1.1rem;
+            flex-shrink: 0;
         }
 
         .ai-name {
             font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -431,79 +485,72 @@
             background: var(--glass);
             border: 1px solid var(--border);
             border-radius: 20px 20px 20px 8px;
-            padding: 1.5rem;
+            padding: 20px;
             line-height: 1.6;
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(30px);
+            font-size: 0.95rem;
         }
+
         .ai-content pre {
             white-space: pre-wrap;
             word-wrap: break-word;
-            background: rgba(0,0,0,0.3);
+            background: rgba(0,0,0,0.4);
             border-radius: 8px;
-            padding: 1rem;
-            margin: 1rem 0;
+            padding: 16px;
+            margin: 16px 0;
+            font-size: 0.9rem;
+            overflow-x: auto;
         }
+
         .ai-content code {
             font-family: 'Courier New', Courier, monospace;
-        }
-        .ai-content .source-list {
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid var(--border);
-        }
-        .ai-content .source-list h4 {
-            margin-bottom: 0.5rem;
-        }
-        .ai-content .source-item {
-            font-size: 0.8rem;
-            margin-bottom: 0.25rem;
-        }
-        .ai-content .source-item a {
-            color: var(--primary);
-            text-decoration: none;
-        }
-        .ai-content .source-item a:hover {
-            text-decoration: underline;
+            font-size: 0.9rem;
         }
 
         .message-actions {
             display: flex;
-            gap: 0.5rem;
-            margin-top: 0.75rem;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
         }
 
         .action-btn {
             background: var(--glass);
             border: 1px solid var(--border);
             border-radius: 8px;
-            padding: 0.5rem 0.75rem;
+            padding: 8px 12px;
             color: var(--text-muted);
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
-            gap: 0.25rem;
+            gap: 6px;
+            touch-action: manipulation;
         }
 
-        .action-btn:hover {
+        .action-btn:hover, .action-btn:active {
             background: var(--glass-strong);
             color: var(--text);
             border-color: var(--primary);
+            transform: translateY(-1px);
         }
 
         .input-area {
-            padding: 2rem;
+            padding: 20px;
             background: var(--surface);
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(30px);
             border-top: 1px solid var(--border);
+            position: sticky;
+            bottom: 0;
+            z-index: 50;
         }
 
         .input-wrapper {
             max-width: 1000px;
             margin: 0 auto;
             display: flex;
-            gap: 1rem;
+            gap: 12px;
             align-items: flex-end;
         }
 
@@ -512,19 +559,22 @@
             background: var(--glass);
             border: 1px solid var(--border);
             border-radius: 20px;
-            padding: 1rem 1.5rem;
+            padding: 16px 20px;
             color: var(--text);
             font-size: 1rem;
             resize: none;
             outline: none;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             min-height: 56px;
             max-height: 120px;
+            font-family: inherit;
+            line-height: 1.4;
         }
 
         .message-input:focus {
             border-color: var(--primary);
             background: var(--glass-strong);
+            box-shadow: 0 0 0 2px rgba(0, 255, 136, 0.2);
         }
 
         .send-btn {
@@ -536,14 +586,18 @@
             color: #000;
             font-size: 1.2rem;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 4px 16px rgba(0, 255, 136, 0.3);
+            touch-action: manipulation;
+            flex-shrink: 0;
         }
 
-        .send-btn:hover {
+        .send-btn:hover, .send-btn:active {
             transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 255, 136, 0.4);
         }
 
         .send-btn:disabled {
@@ -554,8 +608,8 @@
 
         .typing-indicator {
             display: flex;
-            gap: 0.5rem;
-            padding: 1rem;
+            gap: 8px;
+            padding: 16px;
             background: var(--glass);
             border-radius: 20px 20px 20px 8px;
             max-width: 200px;
@@ -588,9 +642,10 @@
             display: none;
             align-items: center;
             justify-content: center;
-            z-index: 1000;
+            z-index: 2000;
             opacity: 0;
             transition: opacity 0.3s ease;
+            padding: 20px;
         }
 
         .modal.show {
@@ -602,14 +657,15 @@
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: 24px;
-            padding: 2rem;
+            padding: 32px;
             max-width: 600px;
-            width: 90%;
+            width: 100%;
             max-height: 80vh;
             overflow-y: auto;
-            backdrop-filter: blur(20px);
-            transform: scale(0.95);
+            backdrop-filter: blur(30px);
+            transform: scale(0.9);
             transition: transform 0.3s ease;
+            box-shadow: var(--shadow);
         }
 
         .modal.show .modal-content {
@@ -620,46 +676,71 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 1.5rem;
+            margin-bottom: 24px;
         }
 
         .modal-title {
-            font-size: 1.25rem;
+            font-size: 1.4rem;
             font-weight: 600;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
+        .close-btn {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            touch-action: manipulation;
+        }
+
+        .close-btn:hover, .close-btn:active {
+            background: var(--glass-strong);
+            border-color: var(--primary);
+            transform: scale(1.1);
+        }
+
         .modal-body {
             display: flex;
             flex-direction: column;
-            gap: 1rem;
+            gap: 16px;
         }
 
         .modal-body label {
             font-weight: 500;
             color: var(--text-muted);
+            font-size: 0.9rem;
         }
 
         .modal-body input, .modal-body textarea {
             background: var(--glass);
             border: 1px solid var(--border);
             border-radius: 12px;
-            padding: 0.75rem 1rem;
+            padding: 16px;
             color: var(--text);
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             outline: none;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: inherit;
+            resize: vertical;
         }
 
         .modal-body input:focus, .modal-body textarea:focus {
             border-color: var(--primary);
             background: var(--glass-strong);
+            box-shadow: 0 0 0 2px rgba(0, 255, 136, 0.2);
         }
 
         .modal-footer {
-            margin-top: 1.5rem;
+            margin-top: 24px;
             display: flex;
             justify-content: flex-end;
         }
@@ -669,58 +750,161 @@
             color: #000;
             border: none;
             border-radius: 12px;
-            padding: 0.75rem 1.5rem;
+            padding: 16px 24px;
             font-weight: 600;
+            font-size: 1rem;
             cursor: pointer;
-            transition: transform 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            touch-action: manipulation;
         }
 
-        .modal-submit-btn:hover {
+        .modal-submit-btn:hover, .modal-submit-btn:active {
             transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 255, 136, 0.4);
         }
 
-        .close-btn {
-            background: var(--glass);
-            border: 1px solid var(--border);
-            border-radius: 50%;
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text);
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .close-btn:hover {
-            background: var(--glass-strong);
-            border-color: var(--primary);
-        }
-
-        /* Responsive Design */
-        @media (max-width: 767px) {
+        /* Mobil optimalizációk */
+        @media (max-width: 768px) {
             .sidebar {
-                width: 280px;
+                width: 320px;
             }
+            
             .welcome-title {
                 font-size: 2rem;
             }
+            
             .welcome-logo {
-                width: 80px;
-                height: 80px;
-                font-size: 2rem;
+                width: 100px;
+                height: 100px;
+                font-size: 2.5rem;
             }
-            .header { padding: 1rem; }
-            .messages-container { padding: 1rem; }
-            .input-area { padding: 1rem; }
-            .user-bubble { max-width: 85%; }
-            .ai-message { max-width: 95%; }
+            
+            .header {
+                padding: 16px 20px;
+            }
+            
+            .messages-container {
+                padding: 16px;
+            }
+            
+            .input-area {
+                padding: 16px;
+            }
+            
+            .user-bubble {
+                max-width: 85%;
+                font-size: 0.9rem;
+            }
+            
+            .ai-message {
+                max-width: 95%;
+            }
+            
+            .modal-content {
+                padding: 24px;
+                margin: 16px;
+            }
+            
+            .service-item {
+                padding: 12px;
+            }
+            
+            .category-header {
+                padding: 14px;
+            }
+            
+            .sidebar-header {
+                padding: 20px 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .welcome-title {
+                font-size: 1.8rem;
+            }
+            
+            .welcome-subtitle {
+                font-size: 1rem;
+            }
+            
+            .header-title {
+                font-size: 1.1rem;
+            }
+            
+            .input-wrapper {
+                gap: 8px;
+            }
+            
+            .message-input {
+                font-size: 0.9rem;
+                padding: 14px 16px;
+            }
+            
+            .send-btn {
+                width: 48px;
+                height: 48px;
+                font-size: 1.1rem;
+            }
+            
+            .modal-content {
+                padding: 20px;
+            }
+        }
+
+        /* Desktop optimalizációk */
+        @media (min-width: 769px) {
+            .sidebar {
+                position: relative;
+                transform: translateX(0);
+                box-shadow: none;
+            }
+
+            .main-content {
+                margin-left: 340px;
+            }
+
+            .menu-toggle {
+                display: none;
+            }
+
+            .sidebar-overlay {
+                display: none;
+            }
+        }
+
+        /* Scroll optimalizáció */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--glass);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
+        }
+
+        /* Pulzáló animáció aktív elemekhez */
+        .pulse {
+            animation: pulse 0.3s ease;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
     </style>
 </head>
 <body>
     <div class="background-gradient"></div>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <div class="container">
         <!-- Sidebar -->
@@ -808,10 +992,24 @@
         // --- Globális Változók és Konfiguráció ---
         let isTyping = false;
         let userId = 'user_' + Math.random().toString(36).substr(2, 9);
-        const API_BASE_URL = '/api'; // Feltételezzük, hogy a frontend és a backend ugyanazon a domainen fut
+        const API_BASE_URL = '/api';
+
+        // Mobil detektálás
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+        // Haptic feedback támogatás
+        const supportsHaptics = 'vibrate' in navigator;
+
+        // Touch gesztusok
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchEndX = 0;
+        let touchEndY = 0;
 
         // --- DOM Elemek ---
         const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
         const sidebarContent = document.getElementById('sidebarContent');
         const mainContent = document.getElementById('mainContent');
         const messagesContainer = document.getElementById('messagesContainer');
@@ -823,18 +1021,123 @@
         const modalBody = document.getElementById('modalBody');
         const modalFooter = document.getElementById('modalFooter');
 
+        // --- Haptic Feedback Funkciók ---
+        function triggerHapticFeedback(type = 'light') {
+            if (!supportsHaptics) return;
+            
+            switch(type) {
+                case 'light':
+                    navigator.vibrate(10);
+                    break;
+                case 'medium':
+                    navigator.vibrate(50);
+                    break;
+                case 'heavy':
+                    navigator.vibrate(100);
+                    break;
+                case 'selection':
+                    navigator.vibrate([10, 10, 10]);
+                    break;
+                case 'success':
+                    navigator.vibrate([50, 50, 100]);
+                    break;
+                case 'error':
+                    navigator.vibrate([100, 50, 100, 50, 100]);
+                    break;
+            }
+        }
+
+        // --- Touch Gesztusok ---
+        function setupTouchGestures() {
+            document.addEventListener('touchstart', handleTouchStart, { passive: false });
+            document.addEventListener('touchmove', handleTouchMove, { passive: false });
+            document.addEventListener('touchend', handleTouchEnd, { passive: false });
+        }
+
+        function handleTouchStart(e) {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        }
+
+        function handleTouchMove(e) {
+            if (!touchStartX || !touchStartY) return;
+            
+            touchEndX = e.touches[0].clientX;
+            touchEndY = e.touches[0].clientY;
+            
+            const diffX = touchStartX - touchEndX;
+            const diffY = touchStartY - touchEndY;
+            
+            // Horizontális swipe detektálás
+            if (Math.abs(diffX) > Math.abs(diffY)) {
+                if (Math.abs(diffX) > 50) { // Minimum swipe távolság
+                    if (diffX > 0) {
+                        // Balra swipe - sidebar bezárás
+                        if (sidebar.classList.contains('open')) {
+                            e.preventDefault();
+                        }
+                    } else {
+                        // Jobbra swipe - sidebar megnyitás
+                        if (!sidebar.classList.contains('open') && touchStartX < 50) {
+                            e.preventDefault();
+                        }
+                    }
+                }
+            }
+        }
+
+        function handleTouchEnd(e) {
+            if (!touchStartX || !touchStartY) return;
+            
+            const diffX = touchStartX - touchEndX;
+            const diffY = touchStartY - touchEndY;
+            
+            // Horizontális swipe végrehajtás
+            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 100) {
+                if (diffX > 0) {
+                    // Balra swipe - sidebar bezárás
+                    if (sidebar.classList.contains('open')) {
+                        closeSidebar();
+                        triggerHapticFeedback('light');
+                    }
+                } else {
+                    // Jobbra swipe - sidebar megnyitás
+                    if (!sidebar.classList.contains('open') && touchStartX < 50) {
+                        openSidebar();
+                        triggerHapticFeedback('light');
+                    }
+                }
+            }
+            
+            // Reset
+            touchStartX = 0;
+            touchStartY = 0;
+            touchEndX = 0;
+            touchEndY = 0;
+        }
+
         // --- Inicializálás ---
         document.addEventListener('DOMContentLoaded', () => {
             setupEventListeners();
+            setupTouchGestures();
             loadServices();
             messageInput.focus();
+            
+            // iOS specifikus optimalizációk
+            if (isIOS) {
+                document.body.style.webkitUserSelect = 'none';
+                document.body.style.webkitTouchCallout = 'none';
+            }
         });
 
         function setupEventListeners() {
             messageInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
-                    if (!sendBtn.disabled) sendMessage();
+                    if (!sendBtn.disabled) {
+                        sendMessage();
+                        triggerHapticFeedback('light');
+                    }
                 }
             });
 
@@ -844,11 +1147,28 @@
             });
 
             document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') closeModal();
+                if (e.key === 'Escape') {
+                    closeModal();
+                    closeSidebar();
+                }
             });
 
             serviceModal.addEventListener('click', (e) => {
                 if (e.target === serviceModal) closeModal();
+            });
+            
+            sidebarOverlay.addEventListener('click', () => {
+                closeSidebar();
+                triggerHapticFeedback('light');
+            });
+
+            // Gomb interakciók haptic feedback-del
+            document.addEventListener('click', (e) => {
+                if (e.target.matches('button, .service-item, .category-header, .action-btn')) {
+                    triggerHapticFeedback('light');
+                    e.target.classList.add('pulse');
+                    setTimeout(() => e.target.classList.remove('pulse'), 300);
+                }
             });
         }
 
@@ -865,15 +1185,38 @@
                 console.error('API Error:', error);
                 addAiMessage(`Hiba történt a szerverrel való kommunikáció során: ${error.message}`, 'Hiba');
                 hideTypingIndicator();
+                triggerHapticFeedback('error');
                 throw error;
             }
+        }
+
+        // --- Sidebar Funkciók ---
+        function openSidebar() {
+            sidebar.classList.add('open');
+            sidebarOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeSidebar() {
+            sidebar.classList.remove('open');
+            sidebarOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function toggleSidebar() {
+            if (sidebar.classList.contains('open')) {
+                closeSidebar();
+            } else {
+                openSidebar();
+            }
+            triggerHapticFeedback('light');
         }
 
         // --- Szolgáltatások Betöltése ---
         async function loadServices() {
             try {
                 const { categories } = await fetchAPI('/services');
-                sidebarContent.innerHTML = ''; // Törli a meglévő tartalmat
+                sidebarContent.innerHTML = '';
 
                 const categoryIcons = {
                     biologiai_orvosi: 'fa-dna',
@@ -946,27 +1289,26 @@
                 `;
                 sidebarContent.appendChild(researchCategory);
 
+                triggerHapticFeedback('success');
             } catch (error) {
                 sidebarContent.innerHTML = '<p style="padding: 1rem; color: var(--text-muted);">Szolgáltatások betöltése sikertelen.</p>';
+                triggerHapticFeedback('error');
             }
         }
 
         // --- UI Kezelés ---
-        function toggleSidebar() {
-            sidebar.classList.toggle('open');
-        }
-
         function toggleCategory(headerElement) {
             const services = headerElement.nextElementSibling;
             const chevron = headerElement.querySelector('.fas.fa-chevron-down');
             services.classList.toggle('open');
             chevron.style.transform = services.classList.contains('open') ? 'rotate(180deg)' : 'rotate(0deg)';
+            triggerHapticFeedback('selection');
         }
 
         function hideWelcome() {
             if (welcomeScreen) {
                 welcomeScreen.style.display = 'none';
-                welcomeScreen = null; // Csak egyszer tűnjön el
+                welcomeScreen = null;
             }
         }
 
@@ -985,16 +1327,22 @@
             welcomeScreen = document.getElementById('welcomeScreen');
             messageInput.value = '';
             messageInput.focus();
+            triggerHapticFeedback('light');
         }
 
         function openModal() {
             serviceModal.style.display = 'flex';
             setTimeout(() => serviceModal.classList.add('show'), 10);
+            document.body.style.overflow = 'hidden';
         }
 
         function closeModal() {
             serviceModal.classList.remove('show');
-            setTimeout(() => serviceModal.style.display = 'none', 300);
+            setTimeout(() => {
+                serviceModal.style.display = 'none';
+                document.body.style.overflow = '';
+            }, 300);
+            triggerHapticFeedback('light');
         }
 
         // --- Üzenetküldés és Feldolgozás ---
@@ -1007,6 +1355,7 @@
             messageInput.value = '';
             messageInput.style.height = 'auto';
             showTypingIndicator();
+            triggerHapticFeedback('light');
 
             try {
                 const data = await fetchAPI('/deep_discovery/chat', {
@@ -1016,9 +1365,10 @@
                 });
                 hideTypingIndicator();
                 addAiMessage(data.response, data.model_used);
+                triggerHapticFeedback('success');
             } catch (error) {
-                // A hibaüzenetet már az fetchAPI-ban megjelenítettük
                 hideTypingIndicator();
+                triggerHapticFeedback('error');
             }
         }
 
@@ -1057,6 +1407,7 @@
                 </div>
             `;
             messagesContainer.appendChild(messageDiv);
+            
             // Kódblokkok színezése
             messageDiv.querySelectorAll('pre code').forEach((block) => {
                 hljs.highlightElement(block);
@@ -1105,6 +1456,7 @@
             hideWelcome();
             addUserMessage(`Kérés a(z) ${serviceName} szolgáltatáshoz: ${query}`);
             showTypingIndicator();
+            triggerHapticFeedback('light');
 
             try {
                 const data = await fetchAPI(`/alpha/simple/${serviceName}`, {
@@ -1114,8 +1466,10 @@
                 });
                 hideTypingIndicator();
                 addAiMessage(data.analysis, data.model_used);
+                triggerHapticFeedback('success');
             } catch (error) {
                 hideTypingIndicator();
+                triggerHapticFeedback('error');
             }
         }
 
@@ -1137,6 +1491,7 @@
             hideWelcome();
             addUserMessage(`Deep Research indítva: ${query}`);
             showTypingIndicator();
+            triggerHapticFeedback('light');
 
             try {
                 const data = await fetchAPI('/deep_research', {
@@ -1146,8 +1501,10 @@
                 });
                 hideTypingIndicator();
                 addAiMessage(data.final_synthesis, 'Deep Research AI', data.sources);
+                triggerHapticFeedback('success');
             } catch (error) {
                 hideTypingIndicator();
+                triggerHapticFeedback('error');
             }
         }
 
@@ -1172,6 +1529,7 @@
             hideWelcome();
             addUserMessage(`Kód generálási kérés (${language}): ${prompt}`);
             showTypingIndicator();
+            triggerHapticFeedback('light');
 
             try {
                 const data = await fetchAPI('/code/generate', {
@@ -1182,8 +1540,10 @@
                 hideTypingIndicator();
                 const codeMessage = "```" + language + "\n" + data.generated_code + "\n```";
                 addAiMessage(codeMessage, data.model_used);
+                triggerHapticFeedback('success');
             } catch(error) {
                 hideTypingIndicator();
+                triggerHapticFeedback('error');
             }
         }
 
@@ -1204,13 +1564,11 @@
         function copyMessage(messageId) {
             const messageElement = document.getElementById(messageId);
             if (messageElement) {
-                // A formázott HTML helyett a nyers szöveget másoljuk
                 const codeContent = messageElement.querySelector('pre code');
                 const textToCopy = codeContent ? codeContent.innerText : messageElement.innerText;
 
                 navigator.clipboard.writeText(textToCopy).then(() => {
-                    console.log('Az üzenet a vágólapra másolva!');
-                    // Ideiglenes vizuális visszajelzés
+                    triggerHapticFeedback('success');
                     const copyBtn = event.target.closest('.action-btn');
                     if(copyBtn) {
                         const originalText = copyBtn.innerHTML;
@@ -1221,6 +1579,7 @@
                     }
                 }).catch(err => {
                     console.error('A szöveg másolása sikertelen: ', err);
+                    triggerHapticFeedback('error');
                 });
             }
         }
