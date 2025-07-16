@@ -25,15 +25,15 @@ try:
     CEREBRAS_AVAILABLE = True
 except ImportError:
     CEREBRAS_AVAILABLE = False
-    # Will log after logger is defined
+    logger.warning("Cerebras SDK not available")
 
-# Gemini API removed for performance optimization
+# Gemini API
 try:
     import google.generativeai as genai
     GEMINI_AVAILABLE = True
 except ImportError:
     GEMINI_AVAILABLE = False
-    genai = None
+    logger.warning("Gemini API not available")
 
 # Exa API
 try:
@@ -42,75 +42,6 @@ try:
 except ImportError:
     EXA_AVAILABLE = False
     logger.warning("Exa API not available")
-
-# Naplózás konfigurálása (moved up)
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
-
-# Scientific Computing Libraries
-try:
-    import numpy as np
-    import scipy
-    import pandas as pd
-    import matplotlib.pyplot as plt
-    import seaborn as sns
-    SCIPY_STACK_AVAILABLE = True
-except ImportError:
-    SCIPY_STACK_AVAILABLE = False
-    logger.warning("SciPy stack not fully available")
-
-# Machine Learning Libraries
-try:
-    import sklearn
-    import tensorflow as tf
-    import torch
-    import keras
-    ML_LIBS_AVAILABLE = True
-except ImportError:
-    ML_LIBS_AVAILABLE = False
-    logger.warning("ML libraries not fully available")
-
-# Bioinformatics Libraries
-try:
-    from Bio import SeqIO, Align, Phylo
-    from Bio.Seq import Seq
-    from Bio.SeqUtils import GC, molecular_weight
-    import molearn
-    import PySB
-    BIO_LIBS_AVAILABLE = True
-except ImportError:
-    BIO_LIBS_AVAILABLE = False
-    logger.warning("Bioinformatics libraries not fully available")
-
-# Astronomy Libraries
-try:
-    import astropy
-    from astropy import units as u
-    from astropy.coordinates import SkyCoord
-    import sunpy
-    import astroquery
-    ASTRO_LIBS_AVAILABLE = True
-except ImportError:
-    ASTRO_LIBS_AVAILABLE = False
-    logger.warning("Astronomy libraries not fully available")
-
-# Geoscience Libraries
-try:
-    import pygimlite as pg
-    import gempy
-    import underworld2 as uw
-    GEO_LIBS_AVAILABLE = True
-except ImportError:
-    GEO_LIBS_AVAILABLE = False
-    logger.warning("Geoscience libraries not fully available")
-
-# Chemistry Libraries
-try:
-    import pyrolite
-    CHEM_LIBS_AVAILABLE = True
-except ImportError:
-    CHEM_LIBS_AVAILABLE = False
-    logger.warning("Chemistry libraries not fully available")
 
 # FastAPI
 from fastapi import FastAPI, HTTPException, status, Request, Response
@@ -122,7 +53,9 @@ from pydantic import BaseModel, Field
 # AlphaFold 3 integráció
 sys.path.append(str(pathlib.Path("alphafold3_repo/src")))
 
-
+# Naplózás konfigurálása
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 # --- Digitális Ujjlenyomat ---
 DIGITAL_FINGERPRINT = "Jade made by Kollár Sándor"
@@ -135,7 +68,7 @@ GCP_SERVICE_ACCOUNT_KEY_JSON = os.environ.get("GCP_SERVICE_ACCOUNT_KEY")
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID")
 GCP_REGION = os.environ.get("GCP_REGION")
 CEREBRAS_API_KEY = os.environ.get("CEREBRAS_API_KEY")
-# GEMINI_API_KEY removed for optimization
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 EXA_API_KEY = os.environ.get("EXA_API_KEY")
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 OPENAI_ORG_ID = os.environ.get("OPENAI_ORG_ID")
@@ -180,9 +113,19 @@ if CEREBRAS_API_KEY and CEREBRAS_AVAILABLE:
         logger.error(f"Error initializing Cerebras client: {e}")
         cerebras_client = None
 
-# Gemini initialization removed for performance optimization
+# Gemini 2.5 Pro inicializálása
 gemini_model = None
 gemini_25_pro = None
+if GEMINI_API_KEY and GEMINI_AVAILABLE:
+    try:
+        genai.configure(api_key=GEMINI_API_KEY)
+        gemini_model = genai.GenerativeModel('gemini-1.5-pro')
+        gemini_25_pro = genai.GenerativeModel('gemini-2.5-pro')
+        logger.info("Gemini 1.5 Pro and 2.5 Pro clients initialized successfully.")
+    except Exception as e:
+        logger.error(f"Error initializing Gemini clients: {e}")
+        gemini_model = None
+        gemini_25_pro = None
 
 exa_client = None
 if EXA_API_KEY and EXA_AVAILABLE:
@@ -360,69 +303,10 @@ ALPHA_SERVICES = {
         "AlphaRegenerative": "Regeneratív medicina alkalmazások",
         "AlphaPersonalized": "Személyre szabott orvoslás",
         "AlphaBioengineering": "Biomérnöki rendszerek tervezése",
-        "AlphaBioinformatics": "Bioinformatikai adatelemzés (Biopython)",
-        "AlphaSystemsBiology": "Rendszerbiológiai modellezés (PySB)",
+        "AlphaBioinformatics": "Bioinformatikai adatelemzés",
+        "AlphaSystemsBiology": "Rendszerbiológiai modellezés",
         "AlphaSynthbio": "Szintetikus biológiai rendszerek",
-        "AlphaLongevity": "Öregedés és hosszú élet kutatása",
-        "AlphaMolecularDynamics": "Molekuláris dinamika szimuláció (molearn)",
-        "AlphaMBE": "Molekuláris bioenergetika elemzése (pyMBE)"
-    },
-    "csillagaszati_asztrofizikai": {
-        "AlphaAstronomy": "Csillagászati objektumok elemzése (Astropy)",
-        "AlphaSolarPhysics": "Napfizikai jelenségek vizsgálata (SunPy)",
-        "AlphaAstrodynamics": "Űrmechanikai számítások",
-        "AlphaAstroML": "Csillagászati gépi tanulás",
-        "AlphaExoplanet": "Exobolygó kutatás és karakterizálás",
-        "AlphaCosmology": "Kozmológiai modellek",
-        "AlphaGalacticDynamics": "Galaktikus dinamika",
-        "AlphaStellarEvolution": "Csillagfejlődés modellezése",
-        "AlphaAstroQuery": "Csillagászati adatbázis lekérdezések",
-        "AlphaSpectroscopy": "Csillagászati spektroszkópia",
-        "AlphaPlanetaryScience": "Bolygótudomány",
-        "AlphaSpaceWeather": "Űridőjárás előrejelzés"
-    },
-    "foldtudomanyi_geologiai": {
-        "AlphaGeophysics": "Geofizikai modellezés (PyGIMLi)",
-        "AlphaGeology": "Geológiai 3D modellezés (GemPy)",
-        "AlphaGeodynamics": "Geodinamikai szimuláció (Underworld2)",
-        "AlphaSeismology": "Szeizmológiai előrejelzés (PyCSEP)",
-        "AlphaHydrogeology": "Hidrogeológiai modellezés",
-        "AlphaGeochemistry": "Geokémiai elemzés (Pyrolite)",
-        "AlphaMineral": "Ásványtani analízis",
-        "AlphaPetrology": "Kőzettani vizsgálatok",
-        "AlphaTectonics": "Tektonikai folyamatok",
-        "AlphaVolcanology": "Vulkanológiai előrejelzés",
-        "AlphaEnvironmentalGeo": "Környezeti geológia",
-        "AlphaGeodata": "Geodata feldolgozás és betakarítás"
-    },
-    "klimatologiai_meteorologiai": {
-        "AlphaClimateData": "Klímaadatok elemzése (Open-Meteo)",
-        "AlphaWeatherPrediction": "Időjárás előrejelzés",
-        "AlphaClimateModeling": "Klímamodellezés",
-        "AlphaAtmosphericPhysics": "Légköri fizika",
-        "AlphaOceanography": "Oceanográfiai modellezés",
-        "AlphaHydrology": "Hidrológiai elemzés (SuperflexPy)",
-        "AlphaClimateImpact": "Klímahatás értékelés",
-        "AlphaExtremesWeather": "Szélsőséges időjárás elemzése",
-        "AlphaSeasonalForecast": "Szezonális előrejelzés",
-        "AlphaMicroclimate": "Mikroklíma analízis"
-    },
-    "adattudomanyi_ml": {
-        "AlphaDataScience": "Adattudományi elemzés (Pandas, NumPy)",
-        "AlphaMachineLearning": "Gépi tanulás (scikit-learn)",
-        "AlphaDeepLearning": "Mélytanulás (TensorFlow, PyTorch, Keras)",
-        "AlphaImageAI": "Képfelismerés és computer vision (ImageAI)",
-        "AlphaGeneticAlgorithm": "Genetikus algoritmusok (PyGAD)",
-        "AlphaAutoML": "Automatizált gépi tanulás (PHOTONAI)",
-        "AlphaQuantumML": "Kvantum gépi tanulás (MLatom)",
-        "AlphaStatisticalModeling": "Statisztikai modellezés (Statsmodels)",
-        "AlphaBayesian": "Bayesi statisztika (PyMC)",
-        "AlphaDataViz": "Adatvizualizáció (Matplotlib, Seaborn)",
-        "AlphaGeoViz": "Geovizualizáció (Folium)",
-        "AlphaParameterEstimation": "Paraméter becslés (pyPESTO)",
-        "AlphaPredictiveModeling": "Prediktív modellezés",
-        "AlphaTimeSeriesAnalysis": "Idősor elemzés",
-        "AlphaClusterAnalysis": "Klaszter elemzés"
+        "AlphaLongevity": "Öregedés és hosszú élet kutatása"
     },
     "kemiai_anyagtudomanyi": {
         "AlphaCatalyst": "Katalizátor tervezés és optimalizálás",
@@ -563,29 +447,69 @@ ALPHA_SERVICES = {
 
 # --- Backend Model Selection ---
 async def select_backend_model(prompt: str, service_name: str = None):
-    """Backend modell kiválasztása - csak Cerebras a sebességért"""
-    # CSAK CEREBRAS az optimalizált sebességért
+    """Backend modell kiválasztása a kérés és a token limitek alapján - Cerebras prioritás"""
+    # CEREBRAS ELSŐ PRIORITÁS a sebességért
     if cerebras_client and CEREBRAS_AVAILABLE:
         try:
+            # Tesztelés céljából egy egyszerű próbálkozás
+            test_stream = cerebras_client.chat.completions.create(
+                messages=[{"role": "user", "content": "test"}],
+                model="llama-4-scout-17b-16e-instruct",
+                stream=True,
+                max_completion_tokens=1,
+                temperature=0.1
+            )
+            # Ha sikeres, használjuk a Cerebras-t
             selected_model = cerebras_client
             model_name = "llama-4-scout-17b-16e-instruct"
             return {"model": selected_model, "name": model_name}
         except Exception as e:
-            logger.error(f"Cerebras client error: {e}")
+            logger.warning(f"Cerebras client not responding, falling back: {e}")
+
+    # Backup: Gemini 2.5 Pro
+    if gemini_25_pro and GEMINI_AVAILABLE:
+        try:
+            selected_model = gemini_25_pro
+            model_name = "gemini-2.5-pro"
+            return {"model": selected_model, "name": model_name}
+        except Exception as e:
+            logger.warning(f"Gemini 2.5 Pro not available: {e}")
+
+    # Backup: Gemini 1.5 Pro
+    if gemini_model and GEMINI_AVAILABLE:
+        try:
+            selected_model = gemini_model
+            model_name = "gemini-1.5-pro"
+            return {"model": selected_model, "name": model_name}
+        except Exception as e:
+            logger.warning(f"Gemini 1.5 Pro not available: {e}")
 
     raise HTTPException(
         status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-        detail="Cerebras AI modell nem elérhető"
+        detail="Nincs elérhető AI modell"
     )
 
 # --- Model Execution ---
 async def execute_model(model_info: Dict[str, Any], prompt: str):
-    """Modell futtatása - csak Cerebras a sebességért."""
+    """Modell futtatása a kiválasztott backenddel."""
     model = model_info["model"]
+    model_name = model_info["name"]
     response_text = ""
 
     try:
-        if model == cerebras_client:
+        if model == gemini_25_pro or model == gemini_model:
+            generation_config = genai.types.GenerationConfig(
+                max_output_tokens=4096,
+                temperature=0.05
+            )
+            response = await model.generate_content_async(
+                prompt,
+                generation_config=generation_config
+            )
+            response_text = response.text
+            return {"response": response_text, "model_used": "JADED AI", "selected_backend": "JADED AI"}
+
+        elif model == cerebras_client:
             stream = cerebras_client.chat.completions.create(
                 messages=[{"role": "user", "content": prompt}],
                 model="llama-4-scout-17b-16e-instruct",
@@ -597,15 +521,16 @@ async def execute_model(model_info: Dict[str, Any], prompt: str):
             for chunk in stream:
                 if chunk.choices[0].delta.content:
                     response_text += chunk.choices[0].delta.content
-            return {"response": response_text, "model_used": "JADED AI", "selected_backend": "Cerebras"}
+            return {"response": response_text, "model_used": "JADED AI", "selected_backend": "JADED AI"}
+
         else:
-            raise ValueError("Csak Cerebras támogatott")
+            raise ValueError("Érvénytelen modell")
 
     except Exception as e:
-        logger.error(f"Cerebras végrehajtási hiba: {e}")
+        logger.error(f"Modell végrehajtási hiba: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Hiba a Cerebras modell végrehajtása során: {e}"
+            detail=f"Hiba a modell végrehajtása során: {e}"
         )
 
 # --- Egyszerű Alpha Service Handler ---
@@ -888,43 +813,13 @@ async def execute_simple_alpha_service(service_name: str, request: SimpleAlphaRe
         details=request.details
     )
 
-def needs_internet_search(message: str) -> bool:
-    """Automatikusan felismeri, hogy szükség van-e internetes keresésre"""
-    search_keywords = [
-        "mikor", "amikor", "mi történik", "mi a helyzet", "friss", "aktuális", "legújabb",
-        "hírek", "mostani", "jelenlegi", "2024", "2025", "mai", "recent", "latest",
-        "breaking", "news", "esemény", "történés", "fejlemény", "változás",
-        "ár", "árfolyam", "tőzsde", "bitcoin", "cripto", "sport", "eredmény",
-        "időjárás", "weather", "politika", "választás", "kormány", "technológia",
-        "release", "launch", "bejelentés", "announcement"
-    ]
-    
-    current_year_keywords = ["2024", "2025", "idén", "tavaly", "most", "jelenleg"]
-    question_words = ["mikor", "mi", "hol", "ki", "hogyan", "miért", "mennyi"]
-    
-    message_lower = message.lower()
-    
-    # Ha tartalmaz aktuális év referenciát
-    if any(keyword in message_lower for keyword in current_year_keywords):
-        return True
-    
-    # Ha kérdés és tartalmaz keresési kulcsszót
-    if any(q in message_lower for q in question_words) and any(k in message_lower for k in search_keywords):
-        return True
-    
-    # Ha direkt információt kér
-    if any(keyword in message_lower for keyword in search_keywords):
-        return True
-        
-    return False
-
 @app.post("/api/deep_discovery/chat")
 async def deep_discovery_chat(req: ChatRequest):
-    """Optimalizált chat funkcionalitás cache-eléssel és intelligens internetes kereséssel"""
-    if not cerebras_client:
+    """Optimalizált chat funkcionalitás cache-eléssel"""
+    if not cerebras_client and not gemini_model:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Cerebras chat modell nem elérhető"
+            detail="Nincs elérhető chat modell"
         )
 
     user_id = req.user_id
@@ -942,59 +837,10 @@ async def deep_discovery_chat(req: ChatRequest):
 
     history = chat_histories.get(user_id, [])
 
-    # Automatikus internetes keresés felismerése
-    should_search = needs_internet_search(current_message)
-    real_time_context = ""
-    
-    if should_search and exa_client and EXA_AVAILABLE:
-        try:
-            logger.info(f"Automatikus internetes keresés indítása: {current_message}")
-            
-            # Javított Exa keresés
-            current_search = exa_client.search(
-                query=f"{current_message} 2024 2025 latest recent",
-                type="neural",
-                num_results=5,
-                use_autoprompt=True,
-                start_published_date="2024-01-01"
-            )
-            
-            # Tartalom lekérése külön API hívással
-            if current_search.results:
-                result_ids = [result.id for result in current_search.results]
-                try:
-                    contents_response = exa_client.get_contents(
-                        ids=result_ids,
-                        text=True,
-                        highlights={"num_sentences": 3, "highlights_per_url": 3}
-                    )
-                    
-                    real_time_info = []
-                    for content in contents_response.contents:
-                        if content.text:
-                            preview = content.text[:300] + "..." if len(content.text) > 300 else content.text
-                            real_time_info.append(f"- {content.title}: {preview}")
-                    
-                    if real_time_info:
-                        real_time_context = f"\n\nVALÓS IDEJŰ INFORMÁCIÓK (2024-2025):\n" + "\n".join(real_time_info[:3])
-                        logger.info(f"Real-time context added: {len(real_time_context)} characters")
-                        
-                except Exception as contents_error:
-                    logger.error(f"Contents fetch error: {contents_error}")
-                    # Fallback: használjuk az alapértelmezett eredményeket
-                    real_time_info = []
-                    for result in current_search.results[:3]:
-                        real_time_info.append(f"- {result.title}: {result.url}")
-                    real_time_context = f"\n\nTALÁLT FORRÁSOK:\n" + "\n".join(real_time_info)
-                    
-        except Exception as e:
-            logger.error(f"Real-time search error: {e}")
-            real_time_context = ""
-
-    # Optimalizált system message valós idejű kontextussal
+    # Optimalizált system message
     system_message = {
         "role": "system",
-        "content": f"Te JADED vagy, egy fejlett AI asszisztens magyarul. Szakértő vagy tudományos és technológiai területeken. Segítőkész, részletes és pontos válaszokat adsz. {CREATOR_INFO} Ha kérdezik a készítőről, mindig említsd meg, hogy Kollár Sándor készítette ezt az alkalmazást. Ha valós idejű információk állnak rendelkezésre, használd azokat a válaszadáshoz.{real_time_context}"
+        "content": f"Te JADED vagy, egy fejlett AI asszisztens magyarul. Szakértő vagy tudományos és technológiai területeken. Segítőkész, részletes és pontos válaszokat adsz. {CREATOR_INFO} Ha kérdezik a készítőről, mindig említsd meg, hogy Kollár Sándor készítette ezt az alkalmazást."
     }
 
     # Csak az utolsó 10 üzenetet használjuk a kontextushoz
@@ -1005,21 +851,42 @@ async def deep_discovery_chat(req: ChatRequest):
         response_text = ""
         model_used = ""
 
-        # Csak Cerebras az optimalizált sebességért
-        stream = cerebras_client.chat.completions.create(
-            messages=messages_for_llm,
-            model="llama-4-scout-17b-16e-instruct",
-            stream=True,
-            max_completion_tokens=4096,
-            temperature=0.05,
-            top_p=0.9,
-            presence_penalty=0.0,
-            frequency_penalty=0.0
-        )
-        for chunk in stream:
-            if chunk.choices[0].delta.content:
-                response_text += chunk.choices[0].delta.content
-        model_used = "JADED AI"
+        # Optimalizált AI backend kiválasztás
+        if cerebras_client:
+            stream = cerebras_client.chat.completions.create(
+                messages=messages_for_llm,
+                model="llama-4-scout-17b-16e-instruct",
+                stream=True,
+                max_completion_tokens=4096,
+                temperature=0.05,
+                top_p=0.9,
+                presence_penalty=0.0,
+                frequency_penalty=0.0
+            )
+            for chunk in stream:
+                if chunk.choices[0].delta.content:
+                    response_text += chunk.choices[0].delta.content
+            model_used = "JADED AI"
+        elif gemini_25_pro:
+            response = await gemini_25_pro.generate_content_async(
+                '\n'.join([msg['content'] for msg in messages_for_llm]),
+                generation_config=genai.types.GenerationConfig(
+                    max_output_tokens=4096,
+                    temperature=0.05
+                )
+            )
+            response_text = response.text
+            model_used = "JADED AI"
+        elif gemini_model:
+            response = await gemini_model.generate_content_async(
+                '\n'.join([msg['content'] for msg in messages_for_llm]),
+                generation_config=genai.types.GenerationConfig(
+                    max_output_tokens=4096,
+                    temperature=0.05
+                )
+            )
+            response_text = response.text
+            model_used = "JADED AI"
 
         history.append({"role": "user", "content": current_message})
         history.append({"role": "assistant", "content": response_text})
@@ -1033,7 +900,6 @@ async def deep_discovery_chat(req: ChatRequest):
         result = {
             'response': response_text,
             'model_used': model_used,
-            'real_time_info_used': bool(real_time_context),
             'status': 'success'
         }
 
@@ -1050,382 +916,6 @@ async def deep_discovery_chat(req: ChatRequest):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Hiba a beszélgetés során: {e}"
-        )
-
-@app.post("/api/comprehensive_research")
-async def comprehensive_research(req: DeepResearchRequest):
-    """Átfogó kutatás 1000+ forrással és progresszív UI-val"""
-    if not exa_client or not EXA_AVAILABLE:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Exa AI nem elérhető"
-        )
-
-    try:
-        logger.info(f"Comprehensive research started for: {req.query}")
-
-        # Tudományos domainok bővített listája
-        scientific_domains = [
-            "arxiv.org", "pubmed.ncbi.nlm.nih.gov", "nature.com", "science.org",
-            "cell.com", "nejm.org", "thelancet.com", "bmj.com", "plos.org",
-            "ieee.org", "acm.org", "springer.com", "wiley.com", "elsevier.com",
-            "sciencedirect.com", "jstor.org", "researchgate.net", "semantic-scholar.org",
-            "biorxiv.org", "medrxiv.org", "ssrn.com", "tandfonline.com",
-            "cambridge.org", "oxford.org", "nih.gov", "who.int", "cdc.gov",
-            "fda.gov", "ema.europa.eu", "cochranelibrary.com", "clinicaltrials.gov"
-        ]
-
-        all_results = []
-
-        # 1. Neurális keresések - 10 batch (500 eredmény)
-        for batch in range(10):
-            try:
-                neural_search = exa_client.search(
-                    query=f"{req.query} scientific research study analysis",
-                    type="neural",
-                    num_results=50,
-                    include_domains=scientific_domains,
-                    use_autoprompt=True,
-                    livecrawl="when_necessary"
-                )
-                all_results.extend(neural_search.results)
-                logger.info(f"Neural batch {batch+1}/10: {len(neural_search.results)} results")
-            except Exception as e:
-                logger.error(f"Neural batch {batch+1} error: {e}")
-
-        # 2. Kulcsszavas keresések - specializált variációk
-        keyword_variants = [
-            f"{req.query} research study",
-            f"{req.query} analysis investigation",
-            f"{req.query} review meta-analysis",
-            f"{req.query} findings results",
-            f"{req.query} methodology approach",
-            f"{req.query} experimental clinical",
-            f"{req.query} systematic review",
-            f"{req.query} longitudinal study",
-            f"{req.query} cross-sectional",
-            f"{req.query} randomized controlled trial"
-        ]
-
-        for variant in keyword_variants:
-            try:
-                keyword_search = exa_client.search(
-                    query=variant,
-                    type="keyword",
-                    num_results=30,
-                    include_domains=scientific_domains,
-                    use_autoprompt=True
-                )
-                all_results.extend(keyword_search.results)
-                logger.info(f"Keyword '{variant}': {len(keyword_search.results)} results")
-            except Exception as e:
-                logger.error(f"Keyword search error for '{variant}': {e}")
-
-        # 3. Időszakos keresések - hosszabb időtáv
-        time_periods = ["2024", "2023", "2022", "2021", "2020"]
-        for year in time_periods:
-            try:
-                time_search = exa_client.search(
-                    query=f"{req.query} {year}",
-                    type="neural",
-                    num_results=25,
-                    start_published_date=f"{year}-01-01",
-                    end_published_date=f"{year}-12-31",
-                    use_autoprompt=True
-                )
-                all_results.extend(time_search.results)
-                logger.info(f"Time period {year}: {len(time_search.results)} results")
-            except Exception as e:
-                logger.error(f"Time search error for {year}: {e}")
-
-        # 4. Domain-specifikus keresések
-        for domain in scientific_domains:
-            try:
-                domain_search = exa_client.search(
-                    query=req.query,
-                    type="neural",
-                    num_results=15,
-                    include_domains=[domain],
-                    use_autoprompt=True
-                )
-                all_results.extend(domain_search.results)
-                logger.info(f"Domain {domain}: {len(domain_search.results)} results")
-            except Exception as e:
-                logger.error(f"Domain search error for {domain}: {e}")
-
-        # 5. Specializált témakörök
-        specialized_queries = [
-            f"{req.query} clinical trial",
-            f"{req.query} case study",
-            f"{req.query} cohort study",
-            f"{req.query} meta analysis",
-            f"{req.query} systematic review",
-            f"{req.query} epidemiological",
-            f"{req.query} biomarker",
-            f"{req.query} mechanism pathway",
-            f"{req.query} therapeutic target",
-            f"{req.query} diagnostic method"
-        ]
-
-        for spec_query in specialized_queries:
-            try:
-                spec_search = exa_client.search(
-                    query=spec_query,
-                    type="neural",
-                    num_results=20,
-                    use_autoprompt=True
-                )
-                all_results.extend(spec_search.results)
-                logger.info(f"Specialized '{spec_query}': {len(spec_search.results)} results")
-            except Exception as e:
-                logger.error(f"Specialized search error for '{spec_query}': {e}")
-
-        # Duplikációk eltávolítása
-        unique_results = {}
-        for result in all_results:
-            if result.url not in unique_results:
-                unique_results[result.url] = result
-
-        final_results = list(unique_results.values())
-        logger.info(f"Total unique results: {len(final_results)}")
-
-        # Eredmények feldolgozása és tartalom lekérése
-        sources = []
-        combined_content = ""
-
-        # Első 1500 eredmény feldolgozása (több mint 1000)
-        for i, result in enumerate(final_results[:1500]):
-            source_data = {
-                "id": i + 1,
-                "title": result.title or "Cím nem elérhető",
-                "url": result.url,
-                "published_date": result.published_date,
-                "domain": result.url.split('/')[2] if '/' in result.url else result.url
-            }
-            sources.append(source_data)
-
-        # Tartalom lekérése külön API hívással a első 100 eredményhez
-        if final_results:
-            try:
-                # Csak az első 100 eredmény ID-jét gyűjtjük
-                result_ids = [result.id for result in final_results[:100]]
-                
-                contents_response = exa_client.get_contents(
-                    ids=result_ids,
-                    text=True,
-                    text_contents={
-                        "max_characters": 3000,
-                        "strategy": "comprehensive"
-                    }
-                )
-                
-                # Tartalom hozzáadása
-                for i, content in enumerate(contents_response.contents):
-                    if content.text:
-                        combined_content += f"\n--- Forrás {i+1}: {content.title or 'Cím nem elérhető'} ---\n{content.text[:3000]}\n"
-                        
-            except Exception as e:
-                logger.error(f"Error fetching comprehensive contents: {e}")
-                # Fallback: használjuk a snippet-eket ha vannak
-                for i, result in enumerate(final_results[:100]):
-                    if hasattr(result, 'snippet') and result.snippet:
-                        combined_content += f"\n--- Forrás {i+1}: {result.title} ---\n{result.snippet}\n"
-
-        # AI elemzés kibővített prompt-tal
-        analysis_text = ""
-
-        if combined_content and len(combined_content) > 1000:
-            model_info = await select_backend_model(req.query)
-            
-            analysis_prompt = f"""
-ÁTFOGÓ TUDOMÁNYOS KUTATÁSI JELENTÉS
-
-Téma: {req.query}
-Feldolgozott források: {len(sources)} db (1000+ forrás)
-Teljes tartalom: {len(combined_content)} karakter
-
-FORRÁS ADATOK:
-{combined_content[:80000]}
-
-KÉSZÍTS RÉSZLETES, TUDOMÁNYOS DOKUMENTÁCIÓT (minimum 20,000 karakter):
-
-# 1. EXECUTIVE SUMMARY (Vezetői összefoglaló)
-- Legfontosabb kutatási eredmények
-- Kulcsfontosságú következtetések
-- Gyakorlati alkalmazások
-
-# 2. IRODALOM ÁTTEKINTÉS
-- Jelenlegi kutatási állapot
-- Főbb tanulmányok részletes elemzése
-- Tudományos konszenzus és viták
-- Kutatási idővonalon történt fejlődés
-
-# 3. MÓDSZERTANI ELEMZÉS
-- Alkalmazott kutatási módszerek
-- Adatgyűjtési technikák
-- Statisztikai eljárások
-- Validitás és megbízhatóság
-
-# 4. KUTATÁSI EREDMÉNYEK SZINTÉZISE
-- Kvantitatív eredmények összegzése
-- Kvalitatív megállapítások
-- Meta-analízis eredmények
-- Hatásméret elemzések
-
-# 5. GYAKORLATI ALKALMAZÁSOK
-- Valós életbeli implementációk
-- Ipari alkalmazások
-- Társadalmi és gazdasági hatások
-- Klinikai jelentőség (ha releváns)
-
-# 6. JÖVŐBELI KUTATÁSI IRÁNYOK
-- Azonosított kutatási rések
-- Új technológiai lehetőségek
-- Várható fejlődési trendek
-- Ajánlott kutatási prioritások
-
-# 7. KRITIKAI ÉRTÉKELÉS
-- Kutatási korlátok
-- Metodológiai problémák
-- Publikációs torzítások
-- Replikációs kihívások
-
-# 8. FORRÁSOK MINŐSÉGI ÉRTÉKELÉSE
-- Magas impakt faktorú publikációk
-- Peer-review státusz
-- Intézményi háttér
-- Földrajzi és időbeli megoszlás
-
-# 9. KÖVETKEZTETÉSEK ÉS AJÁNLÁSOK
-- Összegző megállapítások
-- Szakpolitikai ajánlások
-- Kutatási ajánlások
-- Gyakorlati implementációs stratégiák
-
-# 10. IRODALOMJEGYZÉK ÉS FORRÁSOK
-- Kategorizált forráslista
-- Primer és szekunder források
-- Adatbázisok és repozitóriumok
-
-A jelentés legyen MINIMUM 20,000 karakter hosszú, strukturált, magyar nyelvű és tudományos színvonalú.
-Használj konkrét példákat, számokat és hivatkozásokat ahol lehetséges.
-"""
-
-            try:
-                result = await execute_model(model_info, analysis_prompt)
-                analysis_text = result["response"]
-                
-                # Ha túl rövid, bővítjük
-                if len(analysis_text) < 20000:
-                    extension_prompt = f"""
-A korábbi jelentés túl rövid volt ({len(analysis_text)} karakter). 
-Kérlek, bővítsd ki JELENTŐSEN a következő részeket minimum 20,000 karakterre:
-
-{analysis_text}
-
-BŐVÍTSD KI RÉSZLETESEN:
-- Minden szakaszt több alponttal
-- Konkrét kutatási eredmények részletes ismertetése
-- Több példa és esettanulmány
-- Részletesebb statisztikai elemzések
-- Hosszabb szakirodalmi áttekintés
-- Több gyakorlati alkalmazási példa
-- Részletesebb jövőbeli kilátások
-
-A cél egy MINIMUM 20,000 karakteres, átfogó tudományos dokumentáció.
-"""
-                    extension_result = await execute_model(model_info, extension_prompt)
-                    analysis_text = extension_result["response"]
-                
-                logger.info(f"Final analysis length: {len(analysis_text)} characters")
-                
-            except Exception as e:
-                logger.error(f"Analysis error: {e}")
-                analysis_text = f"Részleges elemzés készült. {len(sources)} forrás alapján történt a kutatás."
-        else:
-            analysis_text = "Nem sikerült elegendő forrást találni az átfogó elemzéshez."
-
-        return {
-            "query": req.query,
-            "final_synthesis": analysis_text,
-            "sources": sources,
-            "total_sources": len(sources),
-            "unique_domains": len(set(s["domain"] for s in sources)),
-            "processing_stats": {
-                "total_results_found": len(all_results),
-                "unique_results": len(final_results),
-                "content_length": len(combined_content),
-                "domains_searched": len(scientific_domains),
-                "analysis_length": len(analysis_text)
-            },
-            "timestamp": datetime.now().isoformat(),
-            "status": "success"
-        }
-
-    except Exception as e:
-        logger.error(f"Error in comprehensive research: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Hiba az átfogó kutatás során: {e}"
-        )
-
-@app.post("/api/deep_research/start")
-async def deep_research_start(req: DeepResearchRequest):
-    """Deep research indítása progress tracking-gel"""
-    if not exa_client or not EXA_AVAILABLE:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Exa AI nem elérhető"
-        )
-
-    try:
-        # Kutatási lépések definiálása
-        research_steps = [
-            "Tudományos adatbázisok keresése",
-            "Szakirodalmi források gyűjtése",
-            "Akadémiai publikációk elemzése",
-            "Szakértői források azonosítása",
-            "Összetett elemzés készítése"
-        ]
-        
-        return {
-            "query": req.query,
-            "user_id": req.user_id,
-            "steps": research_steps,
-            "total_sources": 1000,
-            "estimated_duration": "60-90 másodperc",
-            "status": "initialized"
-        }
-        
-    except Exception as e:
-        logger.error(f"Error starting deep research: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Hiba a deep research indításakor: {e}"
-        )
-
-@app.post("/api/deep_research/process_step")
-async def deep_research_process_step():
-    """Kutatási lépés feldolgozása"""
-    try:
-        import time
-        import random
-        
-        # Szimuláljuk a feldolgozási időt
-        await asyncio.sleep(random.uniform(2, 4))
-        
-        return {
-            "step_completed": True,
-            "sources_found": random.randint(150, 250),
-            "progress_percentage": random.randint(20, 100),
-            "status": "processing"
-        }
-        
-    except Exception as e:
-        logger.error(f"Error processing research step: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Hiba a kutatási lépés feldolgozása során: {e}"
         )
 
 @app.post("/api/deep_research")
@@ -1460,7 +950,8 @@ async def deep_research(req: DeepResearchRequest):
                     type="neural",
                     num_results=50,
                     include_domains=scientific_domains,
-                    use_autoprompt=True
+                    text_contents={"max_characters": 3000, "strategy": "comprehensive"},
+                    livecrawl="when_necessary"
                 )
                 all_results.extend(neural_search.results)
                 logger.info(f"Neural batch {batch+1}/5 completed: {len(neural_search.results)} results")
@@ -1483,7 +974,7 @@ async def deep_research(req: DeepResearchRequest):
                     type="keyword",
                     num_results=40,
                     include_domains=scientific_domains,
-                    use_autoprompt=True
+                    text_contents={"max_characters": 3000, "strategy": "comprehensive"}
                 )
                 all_results.extend(keyword_search.results)
                 logger.info(f"Keyword search '{variant}': {len(keyword_search.results)} results")
@@ -1499,7 +990,7 @@ async def deep_research(req: DeepResearchRequest):
                     type="neural",
                     num_results=30,
                     start_published_date=f"{year}-01-01",
-                    use_autoprompt=True
+                    text_contents={"max_characters": 3000, "strategy": "comprehensive"}
                 )
                 all_results.extend(recent_search.results)
                 logger.info(f"Time period {year}: {len(recent_search.results)} results")
@@ -1514,7 +1005,7 @@ async def deep_research(req: DeepResearchRequest):
                     type="neural",
                     num_results=20,
                     include_domains=[domain],
-                    use_autoprompt=True
+                    text_contents={"max_characters": 3000, "strategy": "comprehensive"}
                 )
                 all_results.extend(domain_search.results)
                 logger.info(f"Domain {domain}: {len(domain_search.results)} results")
@@ -1534,7 +1025,6 @@ async def deep_research(req: DeepResearchRequest):
         sources = []
         combined_content = ""
 
-        # Először csak az alapvető adatokat gyűjtjük
         for i, result in enumerate(final_results[:1000]):  # Max 1000 eredmény
             source_data = {
                 "id": i + 1,
@@ -1545,32 +1035,9 @@ async def deep_research(req: DeepResearchRequest):
             }
             sources.append(source_data)
 
-        # Tartalom lekérése külön API hívással a első 50 eredményhez
-        if final_results:
-            try:
-                # Csak az első 50 eredmény ID-jét gyűjtjük
-                result_ids = [result.id for result in final_results[:50]]
-                
-                contents_response = exa_client.get_contents(
-                    ids=result_ids,
-                    text=True,
-                    text_contents={
-                        "max_characters": 2000,
-                        "strategy": "comprehensive"
-                    }
-                )
-                
-                # Tartalom hozzáadása
-                for i, content in enumerate(contents_response.contents):
-                    if content.text:
-                        combined_content += f"\n--- Forrás {i+1}: {content.title or 'Cím nem elérhető'} ---\n{content.text[:2000]}\n"
-                        
-            except Exception as e:
-                logger.error(f"Error fetching contents: {e}")
-                # Fallback: használjuk a snippet-eket ha vannak
-                for i, result in enumerate(final_results[:50]):
-                    if hasattr(result, 'snippet') and result.snippet:
-                        combined_content += f"\n--- Forrás {i+1}: {result.title} ---\n{result.snippet}\n"
+            if result.text_contents and result.text_contents.text:
+                content_snippet = result.text_contents.text[:2000]  # Hosszabb részletek
+                combined_content += f"\n--- Forrás {i+1}: {result.title} ---\n{content_snippet}\n"
 
         # AI elemzés kibővített prompt-tal
         analysis_text = ""
@@ -1854,7 +1321,7 @@ async def exa_get_contents(req: ExaContentsRequest):
 
         # AI összefoglaló generálása ha kért
         summary = ""
-        if req.summary and cerebras_client:
+        if req.summary and (gemini_model or cerebras_client):
             combined_text = "\n\n".join([c["text"] for c in contents if c["text"]])[:10000]
 
             summary_prompt = f"""
@@ -1866,13 +1333,13 @@ async def exa_get_contents(req: ExaContentsRequest):
             """
 
             try:
-                if gemini_model and GEMINI_AVAILABLE:
+                if gemini_model:
                     response = await gemini_model.generate_content_async(
                         summary_prompt,
                         generation_config=genai.types.GenerationConfig(
                             max_output_tokens=1000,
                             temperature=0.1
-                        ) if genai else None
+                        )
                     )
                     summary = response.text
                 elif cerebras_client:
@@ -1905,367 +1372,6 @@ async def exa_get_contents(req: ExaContentsRequest):
         )
 
 @app.post("/api/exa/neural_search")
-
-
-# --- Specialized Scientific Library Endpoints ---
-
-class BioinformaticsRequest(BaseModel):
-    sequence: str = Field(..., description="DNS/RNS/Protein szekvencia")
-    analysis_type: str = Field(..., description="Elemzés típusa: gc_content, molecular_weight, phylogeny, alignment")
-    format: str = Field(default="fasta", description="Szekvencia formátum")
-
-class AstronomyRequest(BaseModel):
-    object_name: str = Field(..., description="Csillagászati objektum neve")
-    coordinates: Optional[str] = Field(None, description="Koordináták (RA DEC)")
-    analysis_type: str = Field(..., description="Elemzés típusa")
-    catalog: str = Field(default="simbad", description="Katalógus")
-
-class GeoscienceRequest(BaseModel):
-    data_type: str = Field(..., description="Adat típusa: seismic, geological, geophysical")
-    region: str = Field(..., description="Földrajzi régió")
-    analysis_method: str = Field(..., description="Elemzési módszer")
-    parameters: Dict[str, Any] = Field(default_factory=dict)
-
-class MLAnalysisRequest(BaseModel):
-    data: List[List[float]] = Field(..., description="Bemeneti adatok")
-    target: Optional[List[float]] = Field(None, description="Célváltozó")
-    algorithm: str = Field(..., description="ML algoritmus")
-    parameters: Dict[str, Any] = Field(default_factory=dict)
-
-@app.post("/api/scientific/bioinformatics")
-async def bioinformatics_analysis(req: BioinformaticsRequest):
-    """Bioinformatikai elemzés Biopython segítségével"""
-    if not BIO_LIBS_AVAILABLE:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Bioinformatikai könyvtárak nem elérhetők"
-        )
-
-    try:
-        # Szekvencia objektum létrehozása
-        sequence = Seq(req.sequence)
-        
-        results = {
-            "sequence": str(sequence),
-            "length": len(sequence),
-            "analysis_type": req.analysis_type
-        }
-        
-        if req.analysis_type == "gc_content":
-            results["gc_content"] = GC(sequence)
-            results["at_content"] = 100 - GC(sequence)
-            
-        elif req.analysis_type == "molecular_weight":
-            if sequence.count('U') > 0:  # RNA
-                results["molecular_weight"] = molecular_weight(sequence, seq_type='RNA')
-                results["sequence_type"] = "RNA"
-            elif set(sequence) <= set('ATGC'):  # DNA
-                results["molecular_weight"] = molecular_weight(sequence, seq_type='DNA')
-                results["sequence_type"] = "DNA"
-            else:  # Protein
-                results["molecular_weight"] = molecular_weight(sequence, seq_type='protein')
-                results["sequence_type"] = "Protein"
-                
-        elif req.analysis_type == "translation":
-            if set(sequence) <= set('ATGCUN'):  # Nukleotid
-                results["translated_protein"] = str(sequence.translate())
-                
-        elif req.analysis_type == "complement":
-            if set(sequence) <= set('ATGC'):  # DNA
-                results["complement"] = str(sequence.complement())
-                results["reverse_complement"] = str(sequence.reverse_complement())
-
-        # AI értékelés hozzáadása
-        model_info = await select_backend_model(f"Bioinformatikai elemzés: {req.sequence[:100]}")
-        
-        analysis_prompt = f"""
-        Bioinformatikai Elemzés Eredmények:
-        
-        Szekvencia: {req.sequence[:200]}...
-        Elemzés típusa: {req.analysis_type}
-        Eredmények: {json.dumps(results, indent=2)}
-        
-        Kérlek, adj szakértői értékelést és magyarázatot ezekről az eredményekről.
-        Magyarázd el a biológiai jelentőséget és lehetséges funkciókat.
-        """
-        
-        ai_result = await execute_model(model_info, analysis_prompt)
-        results["ai_interpretation"] = ai_result["response"]
-        results["model_used"] = ai_result["model_used"]
-        
-        return {
-            "status": "success",
-            "results": results,
-            "timestamp": datetime.now().isoformat()
-        }
-
-    except Exception as e:
-        logger.error(f"Bioinformatics analysis error: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Bioinformatikai elemzés hiba: {e}"
-        )
-
-@app.post("/api/scientific/astronomy")
-async def astronomy_analysis(req: AstronomyRequest):
-    """Csillagászati elemzés Astropy és SunPy segítségével"""
-    if not ASTRO_LIBS_AVAILABLE:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Csillagászati könyvtárak nem elérhetők"
-        )
-
-    try:
-        results = {
-            "object_name": req.object_name,
-            "analysis_type": req.analysis_type,
-            "catalog": req.catalog
-        }
-        
-        # Koordináták feldolgozása
-        if req.coordinates:
-            try:
-                coord = SkyCoord(req.coordinates, unit=(u.hourangle, u.deg))
-                results["coordinates"] = {
-                    "ra": coord.ra.to_string(),
-                    "dec": coord.dec.to_string(),
-                    "ra_deg": coord.ra.deg,
-                    "dec_deg": coord.dec.deg
-                }
-            except Exception as e:
-                results["coordinate_error"] = str(e)
-
-        # Csillagászati lekérdezések szimulálása
-        if req.analysis_type == "object_info":
-            # Itt valódi astroquery lekérdezés lenne
-            results["simulated_data"] = {
-                "object_type": "Ismeretlen",
-                "magnitude": "Nincs adat",
-                "spectral_type": "Nincs adat",
-                "distance": "Nincs adat"
-            }
-            
-        elif req.analysis_type == "solar_activity":
-            # SunPy integráció példa
-            results["solar_info"] = {
-                "current_solar_cycle": "Solar Cycle 25",
-                "activity_level": "Mérsékelt"
-            }
-
-        # AI értékelés
-        model_info = await select_backend_model(f"Csillagászati elemzés: {req.object_name}")
-        
-        analysis_prompt = f"""
-        Csillagászati Objektum Elemzés:
-        
-        Objektum: {req.object_name}
-        Elemzés típusa: {req.analysis_type}
-        Eredmények: {json.dumps(results, indent=2)}
-        
-        Kérlek, adj részletes csillagászati értékelést és kontextust.
-        Magyarázd el az objektum jelentőségét és fizikai tulajdonságait.
-        """
-        
-        ai_result = await execute_model(model_info, analysis_prompt)
-        results["ai_interpretation"] = ai_result["response"]
-        results["model_used"] = ai_result["model_used"]
-        
-        return {
-            "status": "success",
-            "results": results,
-            "timestamp": datetime.now().isoformat()
-        }
-
-    except Exception as e:
-        logger.error(f"Astronomy analysis error: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Csillagászati elemzés hiba: {e}"
-        )
-
-@app.post("/api/scientific/geoscience")
-async def geoscience_analysis(req: GeoscienceRequest):
-    """Földtudományi elemzés PyGIMLi, GemPy stb. segítségével"""
-    if not GEO_LIBS_AVAILABLE:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Földtudományi könyvtárak nem elérhetők"
-        )
-
-    try:
-        results = {
-            "data_type": req.data_type,
-            "region": req.region,
-            "analysis_method": req.analysis_method,
-            "parameters": req.parameters
-        }
-        
-        # Szimuláció eredmények az elérhető könyvtárak alapján
-        if req.data_type == "seismic":
-            results["seismic_analysis"] = {
-                "earthquake_risk": "Közepes",
-                "magnitude_range": "4.0-6.5",
-                "depth_range": "5-25 km"
-            }
-            
-        elif req.data_type == "geological":
-            results["geological_model"] = {
-                "rock_types": ["Gránit", "Mészkő", "Homokkő"],
-                "structural_features": ["Törések", "Redők"],
-                "mineral_deposits": "Lehetséges"
-            }
-            
-        elif req.data_type == "geophysical":
-            results["geophysical_survey"] = {
-                "resistivity": "Változó",
-                "magnetic_anomalies": "Detektálva",
-                "gravity_field": "Normál"
-            }
-
-        # AI értékelés
-        model_info = await select_backend_model(f"Földtudományi elemzés: {req.region}")
-        
-        analysis_prompt = f"""
-        Földtudományi Elemzés:
-        
-        Adattípus: {req.data_type}
-        Régió: {req.region}
-        Módszer: {req.analysis_method}
-        Eredmények: {json.dumps(results, indent=2)}
-        
-        Kérlek, adj szakértői geológiai és geofizikai értékelést.
-        Magyarázd el a földtani jelentőséget és gyakorlati alkalmazásokat.
-        """
-        
-        ai_result = await execute_model(model_info, analysis_prompt)
-        results["ai_interpretation"] = ai_result["response"]
-        results["model_used"] = ai_result["model_used"]
-        
-        return {
-            "status": "success",
-            "results": results,
-            "timestamp": datetime.now().isoformat()
-        }
-
-    except Exception as e:
-        logger.error(f"Geoscience analysis error: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Földtudományi elemzés hiba: {e}"
-        )
-
-@app.post("/api/scientific/machine_learning")
-async def ml_analysis(req: MLAnalysisRequest):
-    """Gépi tanulás elemzés scikit-learn, TensorFlow stb. segítségével"""
-    if not ML_LIBS_AVAILABLE or not SCIPY_STACK_AVAILABLE:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Gépi tanulás könyvtárak nem elérhetők"
-        )
-
-    try:
-        # Adatok NumPy array-be konvertálása
-        X = np.array(req.data)
-        results = {
-            "algorithm": req.algorithm,
-            "data_shape": X.shape,
-            "parameters": req.parameters
-        }
-        
-        # Alapvető statisztikák
-        results["data_statistics"] = {
-            "mean": np.mean(X, axis=0).tolist(),
-            "std": np.std(X, axis=0).tolist(),
-            "min": np.min(X, axis=0).tolist(),
-            "max": np.max(X, axis=0).tolist()
-        }
-        
-        # Algoritmus-specifikus elemzés
-        if req.algorithm == "clustering":
-            from sklearn.cluster import KMeans
-            kmeans = KMeans(n_clusters=req.parameters.get("n_clusters", 3))
-            clusters = kmeans.fit_predict(X)
-            results["clustering_results"] = {
-                "labels": clusters.tolist(),
-                "centers": kmeans.cluster_centers_.tolist(),
-                "inertia": kmeans.inertia_
-            }
-            
-        elif req.algorithm == "pca":
-            from sklearn.decomposition import PCA
-            pca = PCA(n_components=req.parameters.get("n_components", 2))
-            X_pca = pca.fit_transform(X)
-            results["pca_results"] = {
-                "explained_variance_ratio": pca.explained_variance_ratio_.tolist(),
-                "components": pca.components_.tolist(),
-                "transformed_data": X_pca.tolist()
-            }
-            
-        elif req.algorithm == "classification" and req.target:
-            from sklearn.ensemble import RandomForestClassifier
-            from sklearn.model_selection import cross_val_score
-            y = np.array(req.target)
-            clf = RandomForestClassifier()
-            scores = cross_val_score(clf, X, y, cv=5)
-            results["classification_results"] = {
-                "cv_scores": scores.tolist(),
-                "mean_accuracy": np.mean(scores),
-                "std_accuracy": np.std(scores)
-            }
-
-        # AI értékelés
-        model_info = await select_backend_model(f"Gépi tanulás elemzés: {req.algorithm}")
-        
-        analysis_prompt = f"""
-        Gépi Tanulás Elemzés:
-        
-        Algoritmus: {req.algorithm}
-        Adatok alakja: {X.shape}
-        Eredmények: {json.dumps(results, indent=2)}
-        
-        Kérlek, adj szakértői gépi tanulás értékelést.
-        Magyarázd el az eredményeket és adj javaslatokat a továbbfejlesztésre.
-        """
-        
-        ai_result = await execute_model(model_info, analysis_prompt)
-        results["ai_interpretation"] = ai_result["response"]
-        results["model_used"] = ai_result["model_used"]
-        
-        return {
-            "status": "success",
-            "results": results,
-            "timestamp": datetime.now().isoformat()
-        }
-
-    except Exception as e:
-        logger.error(f"ML analysis error: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Gépi tanulás elemzés hiba: {e}"
-        )
-
-@app.get("/api/scientific/libraries_status")
-async def get_libraries_status():
-    """Telepített tudományos könyvtárak állapota"""
-    return {
-        "scipy_stack": SCIPY_STACK_AVAILABLE,
-        "machine_learning": ML_LIBS_AVAILABLE,
-        "bioinformatics": BIO_LIBS_AVAILABLE,
-        "astronomy": ASTRO_LIBS_AVAILABLE,
-        "geoscience": GEO_LIBS_AVAILABLE,
-        "chemistry": CHEM_LIBS_AVAILABLE,
-        "total_alpha_services": sum(len(services) for services in ALPHA_SERVICES.values()),
-        "enhanced_capabilities": [
-            "Bioinformatika (Biopython, molearn, PySB)",
-            "Csillagászat (Astropy, SunPy, astroquery)",
-            "Földtudomány (PyGIMLi, GemPy, Underworld2)",
-            "Gépi tanulás (scikit-learn, TensorFlow, PyTorch)",
-            "Kémia (Pyrolite, PyCoMo)",
-            "Klímatudomány (Open-Meteo, SuperflexPy)",
-            "Adattudomány (Pandas, NumPy, SciPy)"
-        ]
-    }
-
 async def exa_neural_search(query: str, domains: List[str] = [], exclude_domains: List[str] = [], num_results: int = 20):
     """Speciális neurális keresés tudományos tartalmakhoz"""
     if not exa_client or not EXA_AVAILABLE:
@@ -2311,7 +1417,7 @@ async def exa_neural_search(query: str, domains: List[str] = [], exclude_domains
                 "score": getattr(result, 'score', 0),
                 "published_date": result.published_date,
                 "domain": result.url.split('/')[2] if '/' in result.url else result.url,
-                "text_preview": getattr(result, 'snippet', None) or "Nincs szöveg előnézet"
+                "text_preview": result.text_contents.text[:500] + "..." if result.text_contents else None
             }
             processed_results.append(processed_result)
 
@@ -2443,164 +1549,6 @@ async def protein_structure_lookup(req: ProteinLookupRequest):
 
     except Exception as e:
         logger.error(f"Error in protein lookup: {e}")
-
-
-# --- Valós idejű tudás endpoint ---
-@app.post("/api/real_time_knowledge")
-async def real_time_knowledge(query: str):
-    """Valós idejű tudás lekérése Exa AI-val"""
-    if not exa_client or not EXA_AVAILABLE:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Exa AI nem elérhető"
-        )
-
-    try:
-        # Aktuális információk keresése
-        current_search = exa_client.search(
-            query=f"{query} 2024 2025 latest breaking news recent",
-            type="neural",
-            num_results=10,
-            use_autoprompt=True,
-            start_published_date="2024-01-01",
-            include_domains=[
-                "reuters.com", "bbc.com", "cnn.com", "techcrunch.com",
-                "nature.com", "science.org", "arxiv.org", "pubmed.ncbi.nlm.nih.gov"
-            ]
-        )
-        
-        if not current_search.results:
-            return {
-                "query": query,
-                "real_time_info": "Nem található aktuális információ",
-                "sources": [],
-                "timestamp": datetime.now().isoformat()
-            }
-
-        # Információk feldolgozása
-        real_time_sources = []
-        combined_info = ""
-        
-        for result in current_search.results:
-            source_info = {
-                "title": result.title,
-                "url": result.url,
-                "published_date": result.published_date,
-                "domain": result.url.split('/')[2] if '/' in result.url else result.url
-            }
-            real_time_sources.append(source_info)
-            
-            if result.text_contents and result.text_contents.text:
-                combined_info += f"\n{result.title}: {result.text_contents.text[:500]}...\n"
-
-        # AI összegzés a valós idejű információkból
-        if combined_info and cerebras_client:
-            summary_prompt = f"""
-            Készíts rövid, informatív összefoglalót a következő valós idejű információkból:
-            
-            Kérdés: {query}
-            
-            Aktuális információk:
-            {combined_info[:8000]}
-            
-            Az összefoglaló legyen tömör, lényegre törő és tartalmazza a legfontosabb aktuális fejleményeket.
-            """
-            
-            try:
-                summary_stream = cerebras_client.chat.completions.create(
-                    messages=[{"role": "user", "content": summary_prompt}],
-                    model="llama-4-scout-17b-16e-instruct",
-                    stream=True,
-                    max_completion_tokens=1000,
-                    temperature=0.1
-                )
-                
-                summary_text = ""
-                for chunk in summary_stream:
-                    if chunk.choices[0].delta.content:
-                        summary_text += chunk.choices[0].delta.content
-                        
-            except Exception as e:
-                logger.error(f"Summary generation error: {e}")
-                summary_text = "Hiba az összefoglaló generálása során"
-        else:
-            summary_text = "Nincs elegendő információ az összefoglaláshoz"
-
-        return {
-            "query": query,
-            "real_time_summary": summary_text,
-            "sources": real_time_sources,
-            "total_sources": len(real_time_sources),
-            "timestamp": datetime.now().isoformat(),
-            "status": "success"
-        }
-
-    except Exception as e:
-        logger.error(f"Real-time knowledge error: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Hiba a valós idejű tudás lekérése során: {e}"
-        )
-
-# --- Trendek követése endpoint ---
-@app.get("/api/trending_topics")
-async def get_trending_topics():
-    """Aktuális trendek és hírek lekérése"""
-    if not exa_client or not EXA_AVAILABLE:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Exa AI nem elérhető"
-        )
-
-    try:
-        trending_queries = [
-            "breaking news today",
-            "latest technology 2024",
-            "artificial intelligence breakthrough",
-            "climate change news",
-            "space exploration recent"
-        ]
-        
-        all_trends = []
-        
-        for query in trending_queries:
-            try:
-                trend_search = exa_client.search(
-                    query=query,
-                    type="neural",
-                    num_results=5,
-                    text_contents={"max_characters": 500, "strategy": "comprehensive"},
-                    livecrawl="always",
-                    start_published_date="2024-01-01"
-                )
-                
-                for result in trend_search.results:
-                    all_trends.append({
-                        "category": query,
-                        "title": result.title,
-                        "url": result.url,
-                        "published_date": result.published_date,
-                        "preview": result.text_contents.text[:200] + "..." if result.text_contents else None
-                    })
-                    
-            except Exception as e:
-                logger.error(f"Trend search error for '{query}': {e}")
-                continue
-
-        return {
-            "trending_topics": all_trends,
-            "total_trends": len(all_trends),
-            "timestamp": datetime.now().isoformat(),
-            "status": "success"
-        }
-
-    except Exception as e:
-        logger.error(f"Trending topics error: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Hiba a trendek lekérése során: {e}"
-        )
-
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Hiba a fehérje lekérdezése során: {e}"
@@ -3146,7 +2094,7 @@ async def variant_pathogenicity_analysis(req: VariantPathogenicityRequest):
 @app.post("/api/code/generate")
 async def generate_code(req: CodeGenerationRequest):
     """Kód generálása továbbfejlesztett AI prompt-tal"""
-    if not cerebras_client:
+    if not cerebras_client and not gemini_25_pro and not gemini_model:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Nincs elérhető AI modell"
