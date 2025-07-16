@@ -383,7 +383,7 @@ ALPHA_SERVICES = {
         "AlphaModeling": "Matematikai modellezés",
         "AlphaControl": "Irányítástechnika",
         "AlphaSignal": "Jelfeldolgozás",
-        "AlphaData": "Adatelemzés és big data",
+        "AlphaData": "Adatstruktúra optimalizálás"telemzés és big data",
         "AlphaNetwork": "Hálózati rendszerek",
         "AlphaSecurity": "Kiberbiztonsági elemzés",
         "AlphaCrypto": "Kriptográfiai protokollok",

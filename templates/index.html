@@ -3179,7 +3179,366 @@
                     <label class="block text-sm font-medium text-gray-300 mb-2">Komplexitás</label>
                     <select id="complexitySelect" class="complexity-select">
                         <option value="simple">Egyszerű (20-30 sor)</option>
-                        <option value="medium">Közepes (50-100 sor)</option>
+                        <option value="medium" selected>Közepes (50-100 sor)</option>
+                        <option value="complex">Komplex (100-200 sor)</option>
+                        <option value="enterprise">Vállalati szint (200+ sor)</option>
+                    </select>
+
+                    <label class="block text-sm font-medium text-gray-300 mb-2 mt-4">Kreativitás</label>
+                    <input type="range" id="temperatureRange" class="temperature-range" min="0" max="100" value="70">
+                    <span class="text-sm text-gray-400">Kreativitás: <span id="temperatureValue">70</span>%</span>
+
+                    <label class="block text-sm font-medium text-gray-300 mb-2 mt-4">Kód leírás</label>
+                    <textarea id="codePrompt" class="code-prompt" placeholder="Írja le, milyen kódot szeretne generálni..." rows="4"></textarea>
+                    
+                    <div class="button-group mt-4">
+                        <button id="generateCodeBtn" class="generate-btn haptic-feedback">
+                            <i class="fas fa-code"></i>
+                            Kód generálása
+                        </button>
+                        <button id="copyCodeBtn" class="copy-btn haptic-feedback" style="display: none;">
+                            <i class="fas fa-copy"></i>
+                            Másolás
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="code-output-panel">
+                    <div id="codeOutput" class="code-output"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let elements = {};
+        let currentSection = 'welcomeSection';
+        let alphaServices = {};
+        let isGenerating = false;
+
+        // Hibakezelés
+        window.addEventListener('error', (e) => {
+            console.error('JavaScript hiba:', e.error);
+        });
+
+        // Szekciók kezelése
+        function showSection(sectionId) {
+            // Összes szekció elrejtése
+            elements.sections.forEach(section => {
+                section.style.display = 'none';
+            });
+            
+            // Kiválasztott szekció megjelenítése
+            const targetSection = document.getElementById(sectionId);
+            if (targetSection) {
+                targetSection.style.display = 'block';
+                currentSection = sectionId;
+            }
+            
+            // Menüelemek aktív állapotának frissítése
+            elements.menuItems.forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Megfelelő menüelem aktívvá tétele
+            const activeMenuItem = document.querySelector(`[data-section="${sectionId}"]`);
+            if (activeMenuItem) {
+                activeMenuItem.classList.add('active');
+            }
+        }
+
+        // Alpha szolgáltatások betöltése
+        async function loadAlphaServices() {
+            try {
+                const response = await fetch('/api/alpha_services');
+                if (response.ok) {
+                    alphaServices = await response.json();
+                } else {
+                    console.warn('Alpha szolgáltatások betöltése sikertelen');
+                }
+            } catch (error) {
+                console.error('Alpha szolgáltatások betöltési hiba:', error);
+            }
+        }
+
+        // Event listenerek beállítása
+        function setupEventListeners() {
+            // Menü navigáció
+            elements.menuItems.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const sectionId = item.getAttribute('data-section');
+                    if (sectionId) {
+                        showSection(sectionId);
+                    }
+                });
+            });
+
+            // Üzenet küldés
+            if (elements.sendMessageBtn) {
+                elements.sendMessageBtn.addEventListener('click', sendMessage);
+            }
+
+            if (elements.messageInput) {
+                elements.messageInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage();
+                    }
+                });
+            }
+
+            // Kutatás indítás
+            if (elements.startResearchBtn) {
+                elements.startResearchBtn.addEventListener('click', startResearch);
+            }
+
+            // Kód generálás
+            if (elements.generateCodeBtn) {
+                elements.generateCodeBtn.addEventListener('click', generateCode);
+            }
+
+            // Kód másolás
+            if (elements.copyCodeBtn) {
+                elements.copyCodeBtn.addEventListener('click', copyCode);
+            }
+
+            // Hőmérséklet slider
+            if (elements.temperatureRange) {
+                elements.temperatureRange.addEventListener('input', (e) => {
+                    const temperatureValue = document.getElementById('temperatureValue');
+                    if (temperatureValue) {
+                        temperatureValue.textContent = e.target.value;
+                    }
+                });
+            }
+        }
+
+        // Üzenet küldés
+        async function sendMessage() {
+            if (!elements.messageInput || !elements.chatMessages) return;
+            
+            const message = elements.messageInput.value.trim();
+            if (!message) return;
+
+            try {
+                // Felhasználó üzenet hozzáadása
+                addMessageToChat('user', message);
+                elements.messageInput.value = '';
+
+                // API hívás
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    addMessageToChat('assistant', data.response);
+                } else {
+                    addMessageToChat('assistant', 'Hiba történt az üzenet feldolgozása során.');
+                }
+            } catch (error) {
+                console.error('Üzenet küldési hiba:', error);
+                addMessageToChat('assistant', 'Kapcsolódási hiba történt.');
+            }
+        }
+
+        // Üzenet hozzáadása a chathez
+        function addMessageToChat(sender, message) {
+            if (!elements.chatMessages) return;
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            messageDiv.innerHTML = `
+                <div class="message-content">
+                    ${message}
+                </div>
+                <div class="message-time">
+                    ${new Date().toLocaleTimeString()}
+                </div>
+            `;
+            
+            elements.chatMessages.appendChild(messageDiv);
+            elements.chatMessages.scrollTop = elements.chatMessages.scrollHeight;
+        }
+
+        // Kutatás indítása
+        async function startResearch() {
+            if (!elements.researchQuery) return;
+            
+            const query = elements.researchQuery.value.trim();
+            if (!query) return;
+
+            try {
+                elements.startResearchBtn.disabled = true;
+                elements.startResearchBtn.textContent = 'Kutatás folyamatban...';
+
+                const response = await fetch('/api/deep_research', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ query: query })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    displayResearchResults(data);
+                } else {
+                    showResearchError('Kutatási hiba történt.');
+                }
+            } catch (error) {
+                console.error('Kutatási hiba:', error);
+                showResearchError('Kapcsolódási hiba történt.');
+            } finally {
+                elements.startResearchBtn.disabled = false;
+                elements.startResearchBtn.textContent = 'Kutatás indítása';
+            }
+        }
+
+        // Kutatási eredmények megjelenítése
+        function displayResearchResults(data) {
+            const resultsElement = document.getElementById('researchResults');
+            if (resultsElement) {
+                resultsElement.innerHTML = `
+                    <div class="research-results">
+                        <h3>Kutatási eredmények</h3>
+                        <div class="results-content">
+                            ${data.summary || 'Nincs elérhető eredmény'}
+                        </div>
+                    </div>
+                `;
+                resultsElement.style.display = 'block';
+            }
+        }
+
+        // Kutatási hiba megjelenítése
+        function showResearchError(message) {
+            const resultsElement = document.getElementById('researchResults');
+            if (resultsElement) {
+                resultsElement.innerHTML = `
+                    <div class="error-message">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>${message}</p>
+                    </div>
+                `;
+                resultsElement.style.display = 'block';
+            }
+        }
+
+        // Kód generálása
+        async function generateCode() {
+            if (!elements.codePrompt || !elements.languageSelect || !elements.complexitySelect) return;
+            
+            const prompt = elements.codePrompt.value.trim();
+            if (!prompt) return;
+
+            try {
+                isGenerating = true;
+                elements.generateCodeBtn.disabled = true;
+                elements.generateCodeBtn.textContent = 'Generálás...';
+
+                const response = await fetch('/api/generate_code', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        prompt: prompt,
+                        language: elements.languageSelect.value,
+                        complexity: elements.complexitySelect.value,
+                        temperature: elements.temperatureRange ? elements.temperatureRange.value / 100 : 0.7
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    displayGeneratedCode(data.code);
+                } else {
+                    displayCodeError('Kód generálási hiba történt.');
+                }
+            } catch (error) {
+                console.error('Kód generálási hiba:', error);
+                displayCodeError('Kapcsolódási hiba történt.');
+            } finally {
+                isGenerating = false;
+                elements.generateCodeBtn.disabled = false;
+                elements.generateCodeBtn.textContent = 'Kód generálása';
+            }
+        }
+
+        // Generált kód megjelenítése
+        function displayGeneratedCode(code) {
+            if (elements.codeOutput) {
+                elements.codeOutput.innerHTML = `<pre><code>${code}</code></pre>`;
+                if (elements.copyCodeBtn) {
+                    elements.copyCodeBtn.style.display = 'block';
+                }
+            }
+        }
+
+        // Kód hiba megjelenítése
+        function displayCodeError(message) {
+            if (elements.codeOutput) {
+                elements.codeOutput.innerHTML = `
+                    <div class="error-message">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>${message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Kód másolása
+        function copyCode() {
+            if (!elements.codeOutput) return;
+            
+            const codeElement = elements.codeOutput.querySelector('code');
+            if (codeElement) {
+                navigator.clipboard.writeText(codeElement.textContent).then(() => {
+                    // Vizuális visszajelzés
+                    const originalText = elements.copyCodeBtn.innerHTML;
+                    elements.copyCodeBtn.innerHTML = '<i class="fas fa-check"></i> Másolva!';
+                    setTimeout(() => {
+                        elements.copyCodeBtn.innerHTML = originalText;
+                    }, 2000);
+                });
+            }
+        }
+
+        // Haptikus visszajelzés beállítása
+        function setupHapticFeedback() {
+            document.querySelectorAll('.haptic-feedback').forEach(element => {
+                element.addEventListener('touchstart', () => {
+                    if (navigator.vibrate) {
+                        navigator.vibrate(10);
+                    }
+                });
+            });
+        }
+
+        // Scroll effektek beállítása
+        function setupScrollEffects() {
+            const sections = document.querySelectorAll('.section-content');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('animate-in');
+                    }
+                });
+            }, {
+                threshold: 0.1
+            });
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        }özepes (50-100 sor)</option>
                         <option value="complex">Komplex (100+ sor)</option>
                         <option value="enterprise">Vállalati szint</option>
                     </select>
@@ -3487,13 +3846,42 @@
         }
 
         // Inicializálás
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            // DOM elemek inicializálása
+            elements = {
+                menuItems: document.querySelectorAll('.menu-item'),
+                sections: document.querySelectorAll('.section'),
+                sectionContents: document.querySelectorAll('.section-content'),
+                messageInput: document.getElementById('messageInput'),
+                sendMessageBtn: document.getElementById('sendMessageBtn'),
+                chatMessages: document.getElementById('chatMessages'),
+                researchQuery: document.getElementById('researchQuery'),
+                startResearchBtn: document.getElementById('startResearchBtn'),
+                generateCodeBtn: document.getElementById('generateCodeBtn'),
+                copyCodeBtn: document.getElementById('copyCodeBtn'),
+                codeOutput: document.getElementById('codeOutput'),
+                codePrompt: document.getElementById('codePrompt'),
+                languageSelect: document.getElementById('languageSelect'),
+                complexitySelect: document.getElementById('complexitySelect'),
+                temperatureRange: document.getElementById('temperatureRange')
+            };
+
             // Alapértelmezett szekció megjelenítése
             showSection('welcomeSection');
             
             // Első menüelem aktívvá tétele
             if (elements.menuItems.length > 0) {
                 elements.menuItems[0].classList.add('active');
+            }
+
+            await loadAlphaServices();
+            setupEventListeners();
+            setupHapticFeedback();
+            setupScrollEffects();
+            
+            // Focus csak akkor, ha van messageInput elem
+            if (elements.messageInput) {
+                elements.messageInput.focus();
             }
         });
     </script>
