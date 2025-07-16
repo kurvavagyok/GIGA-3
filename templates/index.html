@@ -1324,9 +1324,15 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 0.5rem;
             position: relative;
             overflow: hidden;
+            min-height: 48px;
+            min-width: 160px;
+            touch-action: manipulation;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         .intro-button::before {
@@ -1592,6 +1598,18 @@
                 --blur-strength: 15px;
             }
 
+            .intro-button {
+                padding: 1rem 2.5rem;
+                font-size: 1rem;
+                min-height: 52px;
+                border-radius: 26px;
+            }
+
+            .intro-button:active {
+                transform: scale(0.95);
+                background: var(--color-glass-strong);
+            }
+
             .sidebar {
                 width: 85%;
                 max-width: 320px;
@@ -1761,16 +1779,23 @@
             }
 
             .service-item {
-                padding: 0.6rem;
-                margin-bottom: 0.4rem;
-                border-radius: 10px;
+                padding: 0.75rem;
+                margin-bottom: 0.5rem;
+                border-radius: 12px;
+                min-height: 48px;
+                touch-action: manipulation;
+            }
+
+            .service-item:active {
+                transform: scale(0.98);
+                background: var(--color-glass-strong);
             }
 
             .service-icon {
-                width: 28px;
-                height: 28px;
-                font-size: 12px;
-                border-radius: 6px;
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+                border-radius: 8px;
             }
 
             .service-title {
@@ -1782,10 +1807,19 @@
             }
 
             .section-header {
-                padding: 0.6rem 0.85rem;
-                font-size: 0.8rem;
-                border-radius: 12px;
-                margin-bottom: 0.6rem;
+                padding: 0.75rem 1rem;
+                font-size: 0.85rem;
+                border-radius: 14px;
+                margin-bottom: 0.75rem;
+                min-height: 48px;
+                touch-action: manipulation;
+            }
+
+            .section-header:active {
+                transform: scale(0.98);
+                background: linear-gradient(135deg, 
+                    rgba(0, 255, 136, 0.9), 
+                    rgba(0, 136, 255, 0.9));
             }
 
             .new-chat-btn {
@@ -3204,23 +3238,8 @@
         let currentUser = 'user_' + Math.random().toString(36).substr(2, 9);
         let isProcessing = false;
 
-        // DOM elemek
-        const elements = {
-            menuItems: document.querySelectorAll('.floating-menu-item'),
-            sectionContents: document.querySelectorAll('.section-content'),
-            messageInput: document.getElementById('messageInput'),
-            sendMessageBtn: document.getElementById('sendMessageBtn'),
-            chatMessages: document.getElementById('chatMessages'),
-            researchQuery: document.getElementById('researchQuery'),
-            startResearchBtn: document.getElementById('startResearchBtn'),
-            generateCodeBtn: document.getElementById('generateCodeBtn'),
-            copyCodeBtn: document.getElementById('copyCodeBtn'),
-            codeOutput: document.getElementById('codeOutput'),
-            codePrompt: document.getElementById('codePrompt'),
-            languageSelect: document.getElementById('languageSelect'),
-            complexitySelect: document.getElementById('complexitySelect'),
-            temperatureRange: document.getElementById('temperatureRange')
-        };
+        // DOM elemek inicializálása DOMContentLoaded után
+        let elements = {};
 
         // Biztonságos event listener hozzáadás
         function safeAddEventListener(element, event, handler) {
@@ -3230,22 +3249,6 @@
                 console.warn('Element not found or invalid:', element);
             }
         }
-
-        // Menü navigáció
-        elements.menuItems.forEach(item => {
-            safeAddEventListener(item, 'click', () => {
-                const targetId = item.dataset.target;
-                if (targetId) {
-                    showSection(targetId);
-                    item.classList.add('active');
-                    elements.menuItems.forEach(otherItem => {
-                        if (otherItem !== item) {
-                            otherItem.classList.remove('active');
-                        }
-                    });
-                }
-            });
-        });
 
         // Szekció megjelenítése
         function showSection(sectionId) {
@@ -3716,11 +3719,33 @@
         const fullscreenOverlay = document.getElementById('fullscreenOverlay');
 
         document.addEventListener('DOMContentLoaded', async () => {
+            // DOM elemek inicializálása
+            elements = {
+                menuItems: document.querySelectorAll('.floating-menu-item'),
+                sectionContents: document.querySelectorAll('.section-content'),
+                messageInput: document.getElementById('messageInput'),
+                sendMessageBtn: document.getElementById('sendMessageBtn'),
+                chatMessages: document.getElementById('chatMessages'),
+                researchQuery: document.getElementById('researchQuery'),
+                startResearchBtn: document.getElementById('startResearchBtn'),
+                generateCodeBtn: document.getElementById('generateCodeBtn'),
+                copyCodeBtn: document.getElementById('copyCodeBtn'),
+                codeOutput: document.getElementById('codeOutput'),
+                codePrompt: document.getElementById('codePrompt'),
+                languageSelect: document.getElementById('languageSelect'),
+                complexitySelect: document.getElementById('complexitySelect'),
+                temperatureRange: document.getElementById('temperatureRange')
+            };
+
             await loadAlphaServices();
             setupEventListeners();
             setupHapticFeedback();
             setupScrollEffects();
-            messageInput.focus();
+            
+            // Focus csak akkor, ha van messageInput elem
+            if (elements.messageInput) {
+                elements.messageInput.focus();
+            }
         });
 
         function setupHapticFeedback() {
@@ -4353,6 +4378,10 @@
 
         function showAppIntroduction() {
             const fullscreenContent = document.getElementById('fullscreenContent');
+            if (!fullscreenContent) {
+                console.error('Fullscreen content not found');
+                return;
+            }
             fullscreenContent.innerHTML = `
                 <div class="presentation-container">
                     <div class="presentation-navigation">
