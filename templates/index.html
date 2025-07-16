@@ -159,9 +159,10 @@
 
         .new-chat-btn {
             width: 100%;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: #000;
-            border: none;
+            background: var(--glass-strong);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            color: var(--text);
             border-radius: var(--radius);
             padding: 12px 16px;
             font-weight: 600;
@@ -172,13 +173,15 @@
             justify-content: center;
             gap: 6px;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 3px 12px rgba(0, 136, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             touch-action: manipulation;
         }
 
         .new-chat-btn:hover, .new-chat-btn:active {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 16px rgba(0, 136, 255, 0.4);
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.15);
+            border-color: var(--primary);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
         }
 
         .sidebar-content {
@@ -191,7 +194,8 @@
         }
 
         .category-header {
-            background: var(--glass);
+            background: var(--glass-strong);
+            backdrop-filter: blur(20px);
             border: 1px solid var(--border);
             border-radius: var(--radius);
             padding: 12px;
@@ -202,12 +206,14 @@
             margin-bottom: 8px;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             touch-action: manipulation;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
         }
 
         .category-header:hover, .category-header:active {
-            background: var(--glass-strong);
+            background: rgba(255, 255, 255, 0.15);
             border-color: var(--primary);
-            transform: translateY(-1px);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
 
         .category-title {
@@ -234,8 +240,9 @@
         }
 
         .service-item {
-            background: var(--glass);
-            border: 1px solid transparent;
+            background: var(--glass-strong);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--border);
             border-radius: 10px;
             padding: 10px;
             margin-bottom: 6px;
@@ -245,12 +252,14 @@
             align-items: center;
             gap: 8px;
             touch-action: manipulation;
+            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.15);
         }
 
         .service-item:hover, .service-item:active {
-            background: var(--glass-strong);
+            background: rgba(255, 255, 255, 0.12);
             border-color: var(--primary);
-            transform: translateX(6px);
+            transform: translateX(6px) translateY(-1px);
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
         }
 
         .service-icon {
@@ -303,7 +312,8 @@
         }
 
         .menu-toggle {
-            background: var(--glass);
+            background: var(--glass-strong);
+            backdrop-filter: blur(20px);
             border: 1px solid var(--border);
             border-radius: 10px;
             padding: 10px;
@@ -317,12 +327,14 @@
             align-items: center;
             justify-content: center;
             touch-action: manipulation;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
         }
 
         .menu-toggle:hover, .menu-toggle:active {
-            background: var(--glass-strong);
+            background: rgba(255, 255, 255, 0.15);
             border-color: var(--primary);
             transform: scale(1.05);
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
         }
 
         .header-title {
@@ -361,19 +373,7 @@
         }
 
         .welcome-logo {
-            width: 100px;
-            height: 100px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            border-radius: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #000;
-            margin: 0 auto 1.5rem;
-            animation: logoFloat 6s ease-in-out infinite;
-            box-shadow: 0 6px 24px rgba(0, 136, 255, 0.3);
+            display: none;
         }
 
         @keyframes logoFloat {
@@ -399,7 +399,8 @@
         }
 
         .start-btn {
-            background: var(--glass);
+            background: var(--glass-strong);
+            backdrop-filter: blur(20px);
             border: 1px solid var(--border);
             border-radius: var(--radius);
             padding: 12px 24px;
@@ -412,12 +413,14 @@
             align-items: center;
             gap: 6px;
             touch-action: manipulation;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
         }
 
         .start-btn:hover, .start-btn:active {
-            background: var(--glass-strong);
+            background: rgba(255, 255, 255, 0.15);
             border-color: var(--primary);
-            transform: translateY(-1px);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 32px rgba(0, 0, 0, 0.4);
         }
 
         .message {
@@ -487,7 +490,8 @@
         }
 
         .action-btn {
-            background: var(--glass);
+            background: var(--glass-strong);
+            backdrop-filter: blur(15px);
             border: 1px solid var(--border);
             border-radius: 6px;
             padding: 6px 10px;
@@ -499,13 +503,15 @@
             align-items: center;
             gap: 4px;
             touch-action: manipulation;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
         }
 
         .action-btn:hover, .action-btn:active {
-            background: var(--glass-strong);
+            background: rgba(255, 255, 255, 0.12);
             color: var(--text);
             border-color: var(--primary);
             transform: translateY(-1px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
         }
 
         .input-area {
@@ -528,7 +534,8 @@
 
         .message-input {
             flex: 1;
-            background: var(--glass);
+            background: var(--glass-strong);
+            backdrop-filter: blur(20px);
             border: 1px solid var(--border);
             border-radius: 16px;
             padding: 12px 16px;
@@ -541,35 +548,39 @@
             max-height: 100px;
             font-family: inherit;
             line-height: 1.4;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
         }
 
         .message-input:focus {
             border-color: var(--primary);
-            background: var(--glass-strong);
-            box-shadow: 0 0 0 2px rgba(0, 136, 255, 0.2);
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
         }
 
         .send-btn {
             width: 44px;
             height: 44px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            border: none;
+            background: var(--glass-strong);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
             border-radius: 50%;
-            color: #000;
+            color: var(--text);
             font-size: 1rem;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 3px 12px rgba(0, 136, 255, 0.3);
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
             touch-action: manipulation;
             flex-shrink: 0;
         }
 
         .send-btn:hover, .send-btn:active {
             transform: scale(1.05);
-            box-shadow: 0 4px 16px rgba(0, 136, 255, 0.4);
+            background: rgba(255, 255, 255, 0.15);
+            border-color: var(--primary);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
         }
 
         .send-btn:disabled {
@@ -660,7 +671,8 @@
         }
 
         .close-btn {
-            background: var(--glass);
+            background: var(--glass-strong);
+            backdrop-filter: blur(15px);
             border: 1px solid var(--border);
             border-radius: 50%;
             width: 32px;
@@ -672,12 +684,14 @@
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             touch-action: manipulation;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
         }
 
         .close-btn:hover, .close-btn:active {
-            background: var(--glass-strong);
+            background: rgba(255, 255, 255, 0.15);
             border-color: var(--primary);
             transform: scale(1.1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
         }
 
         .modal-body {
@@ -693,7 +707,8 @@
         }
 
         .modal-body input, .modal-body textarea {
-            background: var(--glass);
+            background: var(--glass-strong);
+            backdrop-filter: blur(15px);
             border: 1px solid var(--border);
             border-radius: 10px;
             padding: 12px;
@@ -703,12 +718,13 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             font-family: inherit;
             resize: vertical;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
         }
 
         .modal-body input:focus, .modal-body textarea:focus {
             border-color: var(--primary);
-            background: var(--glass-strong);
-            box-shadow: 0 0 0 2px rgba(0, 136, 255, 0.2);
+            background: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
         }
 
         .modal-footer {
@@ -718,9 +734,10 @@
         }
 
         .modal-submit-btn {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: #000;
-            border: none;
+            background: var(--glass-strong);
+            backdrop-filter: blur(20px);
+            color: var(--text);
+            border: 1px solid var(--border);
             border-radius: 10px;
             padding: 12px 20px;
             font-weight: 600;
@@ -728,11 +745,14 @@
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             touch-action: manipulation;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
         }
 
         .modal-submit-btn:hover, .modal-submit-btn:active {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 16px rgba(0, 136, 255, 0.4);
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.15);
+            border-color: var(--primary);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
 
         /* Mobil optimalizációk */
@@ -913,7 +933,6 @@
             <div class="chat-area">
                 <div class="messages-container" id="messagesContainer">
                     <div class="welcome-screen" id="welcomeScreen">
-                        <div class="welcome-logo">J</div>
                         <h1 class="welcome-title">JADED</h1>
                         <p class="welcome-subtitle">
                             Deep Discovery AI Platform - 150+ Alpha szolgáltatás, neurális keresés és fejlett AI elemzés
@@ -1290,7 +1309,6 @@
             newWelcomeScreen.className = 'welcome-screen';
             newWelcomeScreen.id = 'welcomeScreen';
             newWelcomeScreen.innerHTML = `
-                <div class="welcome-logo">J</div>
                 <h1 class="welcome-title">JADED</h1>
                 <p class="welcome-subtitle">Deep Discovery AI Platform</p>
                 <button class="start-btn" onclick="hideWelcome()"><i class="fas fa-rocket"></i> Kezdjük el!</button>
