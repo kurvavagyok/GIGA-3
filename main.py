@@ -25,9 +25,15 @@ try:
     CEREBRAS_AVAILABLE = True
 except ImportError:
     CEREBRAS_AVAILABLE = False
-    logger.warning("Cerebras SDK not available")
+    # Will log after logger is defined
 
 # Gemini API removed for performance optimization
+try:
+    import google.generativeai as genai
+    GEMINI_AVAILABLE = True
+except ImportError:
+    GEMINI_AVAILABLE = False
+    genai = None
 
 # Exa API
 try:
@@ -36,6 +42,10 @@ try:
 except ImportError:
     EXA_AVAILABLE = False
     logger.warning("Exa API not available")
+
+# Naplózás konfigurálása (moved up)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 # Scientific Computing Libraries
 try:
@@ -112,9 +122,7 @@ from pydantic import BaseModel, Field
 # AlphaFold 3 integráció
 sys.path.append(str(pathlib.Path("alphafold3_repo/src")))
 
-# Naplózás konfigurálása
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+
 
 # --- Digitális Ujjlenyomat ---
 DIGITAL_FINGERPRINT = "Jade made by Kollár Sándor"
@@ -1446,7 +1454,7 @@ async def exa_get_contents(req: ExaContentsRequest):
 
         # AI összefoglaló generálása ha kért
         summary = ""
-        if req.summary and (gemini_model or cerebras_client):
+        if req.summary and cerebras_client:
             combined_text = "\n\n".join([c["text"] for c in contents if c["text"]])[:10000]
 
             summary_prompt = f"""
@@ -1458,13 +1466,13 @@ async def exa_get_contents(req: ExaContentsRequest):
             """
 
             try:
-                if gemini_model:
+                if gemini_model and GEMINI_AVAILABLE:
                     response = await gemini_model.generate_content_async(
                         summary_prompt,
                         generation_config=genai.types.GenerationConfig(
                             max_output_tokens=1000,
                             temperature=0.1
-                        )
+                        ) if genai else None
                     )
                     summary = response.text
                 elif cerebras_client:
@@ -2738,7 +2746,7 @@ async def variant_pathogenicity_analysis(req: VariantPathogenicityRequest):
 @app.post("/api/code/generate")
 async def generate_code(req: CodeGenerationRequest):
     """Kód generálása továbbfejlesztett AI prompt-tal"""
-    if not cerebras_client and not gemini_25_pro and not gemini_model:
+    if not cerebras_client:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Nincs elérhető AI modell"
