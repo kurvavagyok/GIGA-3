@@ -756,9 +756,39 @@ async def execute_simple_alpha_service(service_name: str, request: SimpleAlphaRe
         details=request.details
     )
 
+def needs_internet_search(message: str) -> bool:
+    """Automatikusan felismeri, hogy szükség van-e internetes keresésre"""
+    search_keywords = [
+        "mikor", "amikor", "mi történik", "mi a helyzet", "friss", "aktuális", "legújabb",
+        "hírek", "mostani", "jelenlegi", "2024", "2025", "mai", "recent", "latest",
+        "breaking", "news", "esemény", "történés", "fejlemény", "változás",
+        "ár", "árfolyam", "tőzsde", "bitcoin", "cripto", "sport", "eredmény",
+        "időjárás", "weather", "politika", "választás", "kormány", "technológia",
+        "release", "launch", "bejelentés", "announcement"
+    ]
+    
+    current_year_keywords = ["2024", "2025", "idén", "tavaly", "most", "jelenleg"]
+    question_words = ["mikor", "mi", "hol", "ki", "hogyan", "miért", "mennyi"]
+    
+    message_lower = message.lower()
+    
+    # Ha tartalmaz aktuális év referenciát
+    if any(keyword in message_lower for keyword in current_year_keywords):
+        return True
+    
+    # Ha kérdés és tartalmaz keresési kulcsszót
+    if any(q in message_lower for q in question_words) and any(k in message_lower for k in search_keywords):
+        return True
+    
+    # Ha direkt információt kér
+    if any(keyword in message_lower for keyword in search_keywords):
+        return True
+        
+    return False
+
 @app.post("/api/deep_discovery/chat")
 async def deep_discovery_chat(req: ChatRequest):
-    """Optimalizált chat funkcionalitás cache-eléssel és valós idejű tudással"""
+    """Optimalizált chat funkcionalitás cache-eléssel és intelligens internetes kereséssel"""
     if not cerebras_client:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -780,30 +810,54 @@ async def deep_discovery_chat(req: ChatRequest):
 
     history = chat_histories.get(user_id, [])
 
-    # Valós idejű tudás megszerzése Exa AI-val
+    # Automatikus internetes keresés felismerése
+    should_search = needs_internet_search(current_message)
     real_time_context = ""
-    if exa_client and EXA_AVAILABLE:
+    
+    if should_search and exa_client and EXA_AVAILABLE:
         try:
-            # Aktuális információk keresése
+            logger.info(f"Automatikus internetes keresés indítása: {current_message}")
+            
+            # Javított Exa keresés
             current_search = exa_client.search(
                 query=f"{current_message} 2024 2025 latest recent",
                 type="neural",
                 num_results=5,
-                text_contents={"max_characters": 1000, "strategy": "comprehensive"},
-                livecrawl="always",
+                use_autoprompt=True,
                 start_published_date="2024-01-01"
             )
             
+            # Tartalom lekérése külön API hívással
             if current_search.results:
-                real_time_info = []
-                for result in current_search.results:
-                    if result.text_contents and result.text_contents.text:
-                        real_time_info.append(f"- {result.title}: {result.text_contents.text[:300]}...")
-                
-                real_time_context = f"\n\nVALÓS IDEJŰ INFORMÁCIÓK (2024-2025):\n" + "\n".join(real_time_info[:3])
-                logger.info(f"Real-time context added: {len(real_time_context)} characters")
+                result_ids = [result.id for result in current_search.results]
+                try:
+                    contents_response = exa_client.get_contents(
+                        ids=result_ids,
+                        text=True,
+                        highlights={"num_sentences": 3, "highlights_per_url": 3}
+                    )
+                    
+                    real_time_info = []
+                    for content in contents_response.contents:
+                        if content.text:
+                            preview = content.text[:300] + "..." if len(content.text) > 300 else content.text
+                            real_time_info.append(f"- {content.title}: {preview}")
+                    
+                    if real_time_info:
+                        real_time_context = f"\n\nVALÓS IDEJŰ INFORMÁCIÓK (2024-2025):\n" + "\n".join(real_time_info[:3])
+                        logger.info(f"Real-time context added: {len(real_time_context)} characters")
+                        
+                except Exception as contents_error:
+                    logger.error(f"Contents fetch error: {contents_error}")
+                    # Fallback: használjuk az alapértelmezett eredményeket
+                    real_time_info = []
+                    for result in current_search.results[:3]:
+                        real_time_info.append(f"- {result.title}: {result.url}")
+                    real_time_context = f"\n\nTALÁLT FORRÁSOK:\n" + "\n".join(real_time_info)
+                    
         except Exception as e:
             logger.error(f"Real-time search error: {e}")
+            real_time_context = ""
 
     # Optimalizált system message valós idejű kontextussal
     system_message = {
@@ -898,8 +952,7 @@ async def deep_research(req: DeepResearchRequest):
                     type="neural",
                     num_results=50,
                     include_domains=scientific_domains,
-                    text_contents={"max_characters": 3000, "strategy": "comprehensive"},
-                    livecrawl="when_necessary"
+                    use_autoprompt=True
                 )
                 all_results.extend(neural_search.results)
                 logger.info(f"Neural batch {batch+1}/5 completed: {len(neural_search.results)} results")
@@ -922,7 +975,7 @@ async def deep_research(req: DeepResearchRequest):
                     type="keyword",
                     num_results=40,
                     include_domains=scientific_domains,
-                    text_contents={"max_characters": 3000, "strategy": "comprehensive"}
+                    use_autoprompt=True
                 )
                 all_results.extend(keyword_search.results)
                 logger.info(f"Keyword search '{variant}': {len(keyword_search.results)} results")
@@ -938,7 +991,7 @@ async def deep_research(req: DeepResearchRequest):
                     type="neural",
                     num_results=30,
                     start_published_date=f"{year}-01-01",
-                    text_contents={"max_characters": 3000, "strategy": "comprehensive"}
+                    use_autoprompt=True
                 )
                 all_results.extend(recent_search.results)
                 logger.info(f"Time period {year}: {len(recent_search.results)} results")
@@ -953,7 +1006,7 @@ async def deep_research(req: DeepResearchRequest):
                     type="neural",
                     num_results=20,
                     include_domains=[domain],
-                    text_contents={"max_characters": 3000, "strategy": "comprehensive"}
+                    use_autoprompt=True
                 )
                 all_results.extend(domain_search.results)
                 logger.info(f"Domain {domain}: {len(domain_search.results)} results")
@@ -1515,8 +1568,7 @@ async def real_time_knowledge(query: str):
             query=f"{query} 2024 2025 latest breaking news recent",
             type="neural",
             num_results=10,
-            text_contents={"max_characters": 2000, "strategy": "comprehensive"},
-            livecrawl="always",
+            use_autoprompt=True,
             start_published_date="2024-01-01",
             include_domains=[
                 "reuters.com", "bbc.com", "cnn.com", "techcrunch.com",
