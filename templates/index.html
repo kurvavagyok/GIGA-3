@@ -1,12 +1,27 @@
-
-<old_str><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="hu">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jade - Mélytanulási Felfedező AI Platform</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧬</text></svg>">
+    <title>Jade - Deep Discovery AI Platform</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --primary: #00ff88;
+            --secondary: #0088ff;
+            --accent: #8b5cf6;
+            --bg: #000000;
+            --surface: rgba(10, 10, 10, 0.95);
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-strong: rgba(255, 255, 255, 0.12);
+            --border: rgba(255, 255, 255, 0.1);
+            --text: #ffffff;
+            --text-muted: #94a3b8;
+            --radius: 20px;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -14,700 +29,460 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
-            color: #e0e0e0;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
             min-height: 100vh;
-            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .background-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 25% 25%, rgba(0, 255, 136, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 75% 75%, rgba(0, 136, 255, 0.06) 0%, transparent 45%),
+                radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
+            animation: gradientShift 30s ease-in-out infinite;
+            z-index: -1;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { filter: hue-rotate(0deg); }
+            50% { filter: hue-rotate(30deg); }
         }
 
         .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-            padding: 30px 0;
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .header h1 {
-            font-size: 3.5rem;
-            font-weight: 700;
-            margin-bottom: 10px;
-            background: linear-gradient(45deg, #00d4ff, #00ff88, #ff6b6b);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: glow 2s ease-in-out infinite alternate;
-        }
-
-        @keyframes glow {
-            from { filter: brightness(1); }
-            to { filter: brightness(1.2); }
-        }
-
-        .header p {
-            font-size: 1.2rem;
-            color: #a0a0a0;
-            margin-bottom: 20px;
-        }
-
-        .stats {
             display: flex;
-            justify-content: center;
-            gap: 40px;
-            margin-top: 20px;
+            min-height: 100vh;
         }
 
-        .stat-item {
-            text-align: center;
+        .sidebar {
+            width: 320px;
+            background: var(--surface);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
         }
 
-        .stat-number {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #00ff88;
+        .sidebar.open {
+            transform: translateX(0);
         }
 
-        .stat-label {
-            font-size: 0.9rem;
-            color: #888;
+        .sidebar-header {
+            padding: 2rem;
+            border-bottom: 1px solid var(--border);
         }
 
-        .main-content {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin-bottom: 40px;
-        }
-
-        .chat-section, .services-section {
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 20px;
-            padding: 30px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .section-title {
-            font-size: 1.8rem;
-            margin-bottom: 20px;
-            color: #fff;
+        .logo {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
         }
 
-        .chat-container {
-            height: 400px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            overflow-y: auto;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .chat-input-container {
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 16px;
             display: flex;
-            gap: 10px;
-        }
-
-        .chat-input {
-            flex: 1;
-            padding: 15px 20px;
-            border: none;
-            border-radius: 25px;
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
-            font-size: 1rem;
-            outline: none;
-            transition: all 0.3s ease;
-        }
-
-        .chat-input:focus {
-            background: rgba(255, 255, 255, 0.15);
-            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
-        }
-
-        .chat-input::placeholder {
-            color: #888;
-        }
-
-        .send-btn {
-            padding: 15px 25px;
-            background: linear-gradient(45deg, #00d4ff, #00ff88);
-            border: none;
-            border-radius: 25px;
-            color: #000;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
             font-weight: bold;
+            color: #000;
+        }
+
+        .logo-text h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-text p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .new-chat-btn {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #000;
+            border: none;
+            border-radius: 16px;
+            padding: 1rem;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: transform 0.2s ease;
         }
 
-        .send-btn:hover {
+        .new-chat-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(0, 212, 255, 0.4);
         }
 
-        .services-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 15px;
+        .sidebar-content {
+            padding: 1.5rem;
         }
 
         .service-category {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            padding: 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 2rem;
         }
 
-        .service-category:hover {
-            transform: translateY(-5px);
-            background: rgba(255, 255, 255, 0.1);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        .category-header {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            transition: all 0.3s ease;
+        }
+
+        .category-header:hover {
+            background: var(--glass-strong);
+            border-color: var(--primary);
         }
 
         .category-title {
-            font-size: 1.1rem;
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: #00ff88;
-        }
-
-        .category-desc {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 600;
             font-size: 0.9rem;
-            color: #aaa;
-            line-height: 1.4;
         }
 
-        .features-section {
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 20px;
-            padding: 30px;
-            margin-bottom: 40px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        .category-services {
+            display: none;
+            padding-left: 1rem;
         }
 
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
+        .category-services.open {
+            display: block;
         }
 
-        .feature-card {
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 15px;
-            padding: 25px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        .service-item {
+            background: var(--glass);
+            border: 1px solid transparent;
+            border-radius: 12px;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
         }
 
-        .feature-icon {
-            font-size: 2.5rem;
-            margin-bottom: 15px;
+        .service-item:hover {
+            background: var(--glass-strong);
+            border-color: var(--primary);
+            transform: translateX(8px);
         }
 
-        .feature-title {
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: #fff;
-        }
-
-        .feature-desc {
-            color: #aaa;
-            line-height: 1.5;
-        }
-
-        .footer {
-            text-align: center;
-            padding: 30px 0;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            color: #666;
-        }
-
-        .message {
-            margin-bottom: 15px;
-            padding: 10px 15px;
-            border-radius: 10px;
-            max-width: 80%;
-        }
-
-        .user-message {
-            background: linear-gradient(45deg, #00d4ff, #00ff88);
+        .service-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
             color: #000;
-            margin-left: auto;
         }
 
-        .ai-message {
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
+        .service-info h4 {
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
         }
 
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: #00ff88;
-            animation: spin 1s ease-in-out infinite;
+        .service-info p {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            line-height: 1.3;
         }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .main-content {
+            flex: 1;
+            margin-left: 0;
+            display: flex;
+            flex-direction: column;
+            transition: margin-left 0.3s ease;
         }
 
-        @media (max-width: 768px) {
-            .main-content {
-                grid-template-columns: 1fr;
-            }
-            
-            .stats {
-                flex-direction: column;
-                gap: 20px;
-            }
-            
-            .header h1 {
-                font-size: 2.5rem;
-            }
+        .header {
+            padding: 1.5rem 2rem;
+            background: var(--surface);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
-        /* Scroll animációk */
-        .scroll-reveal {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: all 0.6s ease;
+        .menu-toggle {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 0.75rem;
+            color: var(--text);
+            cursor: pointer;
+            display: block;
+            transition: all 0.3s ease;
         }
 
-        .scroll-reveal.revealed {
-            opacity: 1;
-            transform: translateY(0);
+        .menu-toggle:hover {
+            background: var(--glass-strong);
+            border-color: var(--primary);
         }
 
-        /* Hover effektek */
-        .service-category::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(45deg, transparent, rgba(0, 212, 255, 0.1), transparent);
-            border-radius: 15px;
-            opacity: 0;
-            transition: opacity 0.3s ease;
+        .header-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
-        .service-category:hover::before {
-            opacity: 1;
-        }
-
-        .service-category {
-            position: relative;
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
             overflow: hidden;
         }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <header class="header scroll-reveal">
-            <h1>🧬 Jade</h1>
-            <p>Mélytanulási Felfedező AI Platform</p>
-            <div class="stats">
-                <div class="stat-item">
-                    <div class="stat-number">150+</div>
-                    <div class="stat-label">Alpha Szolgáltatás</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">6</div>
-                    <div class="stat-label">Tudományos Kategória</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">∞</div>
-                    <div class="stat-label">Lehetőség</div>
-                </div>
-            </div>
-        </header>
 
-        <main class="main-content">
-            <section class="chat-section scroll-reveal">
-                <h2 class="section-title">💬 AI Asszisztens</h2>
-                <div class="chat-container" id="chatContainer">
-                    <div class="message ai-message">
-                        Üdvözlöm! Jade vagyok, az Ön AI asszisztense. Hogyan segíthetek ma?
-                    </div>
-                </div>
-                <div class="chat-input-container">
-                    <input type="text" class="chat-input" id="chatInput" placeholder="Írja be kérdését...">
-                    <button class="send-btn" onclick="sendMessage()">Küldés</button>
-                </div>
-            </section>
-
-            <section class="services-section scroll-reveal">
-                <h2 class="section-title">🔬 Alpha Szolgáltatások</h2>
-                <div class="services-grid" id="servicesGrid">
-                    <!-- Szolgáltatások dinamikusan töltődnek be -->
-                </div>
-            </section>
-        </main>
-
-        <section class="features-section scroll-reveal">
-            <h2 class="section-title">✨ Kiemelt Funkciók</h2>
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">🧬</div>
-                    <h3 class="feature-title">AlphaFold 3 Integráció</h3>
-                    <p class="feature-desc">Fejlett fehérje szerkezet előrejelzés és molekuláris kölcsönhatások elemzése</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🔍</div>
-                    <h3 class="feature-title">Deep Research</h3>
-                    <p class="feature-desc">1000+ tudományos forrás elemzése egyetlen lekérdezéssel</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🧠</div>
-                    <h3 class="feature-title">Multi-AI Backend</h3>
-                    <p class="feature-desc">Cerebras, Gemini és egyéb fejlett AI modellek integrálása</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">⚡</div>
-                    <h3 class="feature-title">Valós idejű Elemzés</h3>
-                    <p class="feature-desc">Gyors és pontos válaszok optimalizált backend architektúrával</p>
-                </div>
-            </div>
-        </section>
-    </div>
-
-    <footer class="footer">
-        <p>&copy; 2024 Jade AI Platform - Kollár Sándor által fejlesztve</p>
-    </footer>
-
-    <script>
-        // Globális változók
-        let chatHistory = [];
-        let isLoading = false;
-
-        // Chat funkcionalitás
-        async function sendMessage() {
-            if (isLoading) return;
-            
-            const input = document.getElementById('chatInput');
-            const message = input.value.trim();
-            
-            if (!message) return;
-            
-            // Felhasználói üzenet hozzáadása
-            addMessageToChat(message, 'user');
-            input.value = '';
-            
-            // Loading indikátor
-            isLoading = true;
-            const loadingDiv = addMessageToChat('', 'ai', true);
-            
-            try {
-                const response = await fetch('/api/deep_discovery/chat', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        message: message,
-                        user_id: 'user_' + Date.now()
-                    })
-                });
-                
-                const data = await response.json();
-                
-                // Loading eltávolítása és válasz hozzáadása
-                loadingDiv.remove();
-                addMessageToChat(data.response || 'Hiba történt a válasz feldolgozása során.', 'ai');
-                
-            } catch (error) {
-                console.error('Hiba:', error);
-                loadingDiv.remove();
-                addMessageToChat('Hiba történt a kérés feldolgozása során.', 'ai');
-            }
-            
-            isLoading = false;
-        }
-
-        function addMessageToChat(message, sender, isLoading = false) {
-            const chatContainer = document.getElementById('chatContainer');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${sender}-message`;
-            
-            if (isLoading) {
-                messageDiv.innerHTML = '<div class="loading"></div>';
-            } else {
-                messageDiv.textContent = message;
-            }
-            
-            chatContainer.appendChild(messageDiv);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-            
-            return messageDiv;
-        }
-
-        // Enter billentyű támogatása
-        document.getElementById('chatInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        });
-
-        // Szolgáltatások betöltése
-        async function loadServices() {
-            try {
-                const response = await fetch('/api/services');
-                const data = await response.json();
-                
-                const servicesGrid = document.getElementById('servicesGrid');
-                servicesGrid.innerHTML = '';
-                
-                for (const [category, services] of Object.entries(data.categories)) {
-                    const categoryDiv = document.createElement('div');
-                    categoryDiv.className = 'service-category';
-                    categoryDiv.innerHTML = `
-                        <div class="category-title">${getCategoryTitle(category)}</div>
-                        <div class="category-desc">${Object.keys(services).length} szolgáltatás</div>
-                    `;
-                    
-                    categoryDiv.onclick = () => {
-                        alert(`${getCategoryTitle(category)} kategória szolgáltatásai:\n\n${Object.keys(services).join('\n')}`);
-                    };
-                    
-                    servicesGrid.appendChild(categoryDiv);
-                }
-            } catch (error) {
-                console.error('Szolgáltatások betöltési hiba:', error);
-            }
-        }
-
-        function getCategoryTitle(category) {
-            const titles = {
-                'biologiai_orvosi': '🧬 Biológiai & Orvosi',
-                'kemiai_anyagtudomanyi': '⚗️ Kémiai & Anyagtudományi',
-                'kornyezeti_fenntarthato': '🌍 Környezeti & Fenntartható',
-                'fizikai_asztrofizikai': '🌌 Fizikai & Asztrofizikai',
-                'technologiai_melymu': '🤖 Technológiai & ML',
-                'tarsadalmi_gazdasagi': '📊 Társadalmi & Gazdasági'
-            };
-            return titles[category] || category;
-        }
-
-        // Scroll animációk
-        function revealOnScroll() {
-            const reveals = document.querySelectorAll('.scroll-reveal');
-            
-            for (let i = 0; i < reveals.length; i++) {
-                const windowHeight = window.innerHeight;
-                const elementTop = reveals[i].getBoundingClientRect().top;
-                const elementVisible = 150;
-                
-                if (elementTop < windowHeight - elementVisible) {
-                    reveals[i].classList.add('revealed');
-                }
-            }
-        }
-
-        // Oldal betöltés eseménykezelők
-        document.addEventListener('DOMContentLoaded', function() {
-            loadServices();
-            revealOnScroll();
-        });
-
-        window.addEventListener('scroll', revealOnScroll);
-
-        // Smooth scroll effekt
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }
-            });
-        });
-    </script>
-</body>
-</html></old_str>
-<new_str><!DOCTYPE html>
-<html lang="hu">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Jade - Mélytanulási Felfedező AI Platform 150+ Alpha szolgáltatással">
-    <meta name="keywords" content="AI, mesterséges intelligencia, AlphaFold, kutatás, biológia, tudományos elemzés">
-    <meta name="author" content="Kollár Sándor">
-    <title>Jade - Mélytanulási Felfedező AI Platform</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧬</text></svg>">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧬</text></svg>">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #000000;
-            color: #e0e0e0;
-            min-height: 100vh;
-            line-height: 1.6;
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
             scroll-behavior: smooth;
         }
 
-        .container {
-            max-width: 1200px;
+        .welcome-screen {
+            text-align: center;
+            max-width: 600px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 4rem 2rem;
         }
 
-        header.main-header {
-            text-align: center;
-            margin-bottom: 40px;
-            padding: 30px 0;
-            background: rgba(20, 20, 20, 0.8);
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        h1.main-title {
-            font-size: 3.5rem;
-            font-weight: 700;
-            margin-bottom: 10px;
-            background: linear-gradient(45deg, #00d4ff, #00ff88, #ff6b6b);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: glow 2s ease-in-out infinite alternate;
-        }
-
-        @keyframes glow {
-            from { filter: brightness(1); }
-            to { filter: brightness(1.2); }
-        }
-
-        .subtitle {
-            font-size: 1.2rem;
-            color: #a0a0a0;
-            margin-bottom: 20px;
-        }
-
-        .stats-container {
-            display: flex;
-            justify-content: center;
-            gap: 40px;
-            margin-top: 20px;
-        }
-
-        .stat-item {
-            text-align: center;
-        }
-
-        .stat-number {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #00ff88;
-        }
-
-        .stat-label {
-            font-size: 0.9rem;
-            color: #888;
-        }
-
-        main.main-content {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin-bottom: 40px;
-        }
-
-        section.chat-section, section.services-section {
-            background: rgba(20, 20, 20, 0.8);
-            border-radius: 20px;
-            padding: 30px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        h2.section-title {
-            font-size: 1.8rem;
-            margin-bottom: 20px;
-            color: #fff;
+        .welcome-logo {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 30px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            justify-content: center;
+            font-size: 3rem;
+            font-weight: bold;
+            color: #000;
+            margin: 0 auto 2rem;
+            animation: logoFloat 6s ease-in-out infinite;
         }
 
-        .chat-container {
-            height: 400px;
-            background: rgba(0, 0, 0, 0.6);
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            overflow-y: auto;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+        @keyframes logoFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
         }
 
-        .chat-input-container {
+        .welcome-title {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .welcome-subtitle {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            margin-bottom: 3rem;
+            line-height: 1.6;
+        }
+
+        .start-btn {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1rem 2rem;
+            color: var(--text);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .start-btn:hover {
+            background: var(--glass-strong);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .message {
+            margin-bottom: 1.5rem;
+            animation: messageSlide 0.5s ease;
+        }
+
+        @keyframes messageSlide {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
             display: flex;
-            gap: 10px;
+            justify-content: flex-end;
         }
 
-        .chat-input {
-            flex: 1;
-            padding: 15px 20px;
-            border: none;
-            border-radius: 25px;
-            background: rgba(255, 255, 255, 0.1);
+        .user-bubble {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #000;
+            padding: 1rem 1.5rem;
+            border-radius: 20px 20px 8px 20px;
+            max-width: 70%;
+            font-weight: 500;
+        }
+
+        .ai-message {
+            display: flex;
+            flex-direction: column;
+            max-width: 85%;
+        }
+
+        .ai-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .ai-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent), var(--secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             color: #fff;
+        }
+
+        .ai-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .ai-content {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 20px 20px 20px 8px;
+            padding: 1.5rem;
+            line-height: 1.6;
+            backdrop-filter: blur(20px);
+        }
+
+        .message-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .action-btn {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.5rem 0.75rem;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .action-btn:hover {
+            background: var(--glass-strong);
+            color: var(--text);
+            border-color: var(--primary);
+        }
+
+        .input-area {
+            padding: 2rem;
+            background: var(--surface);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border);
+        }
+
+        .input-wrapper {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+        }
+
+        .message-input {
+            flex: 1;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 1rem 1.5rem;
+            color: var(--text);
             font-size: 1rem;
+            resize: none;
             outline: none;
             transition: all 0.3s ease;
+            min-height: 56px;
+            max-height: 120px;
         }
 
-        .chat-input:focus {
-            background: rgba(255, 255, 255, 0.15);
-            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
-        }
-
-        .chat-input::placeholder {
-            color: #888;
+        .message-input:focus {
+            border-color: var(--primary);
+            background: var(--glass-strong);
         }
 
         .send-btn {
-            padding: 15px 25px;
-            background: linear-gradient(45deg, #00d4ff, #00ff88);
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
             border: none;
-            border-radius: 25px;
+            border-radius: 50%;
             color: #000;
-            font-weight: bold;
+            font-size: 1.2rem;
             cursor: pointer;
             transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .send-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(0, 212, 255, 0.4);
+            transform: scale(1.1);
         }
 
         .send-btn:disabled {
@@ -716,466 +491,500 @@
             transform: none;
         }
 
-        .services-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 15px;
+        .typing-indicator {
+            display: flex;
+            gap: 0.5rem;
+            padding: 1rem;
+            background: var(--glass);
+            border-radius: 20px 20px 20px 8px;
+            max-width: 200px;
         }
 
-        .service-category {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            padding: 20px;
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: scale(0.8); opacity: 0.5; }
+            30% { transform: scale(1.2); opacity: 1; }
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.show {
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            backdrop-filter: blur(20px);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .close-btn {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text);
             cursor: pointer;
             transition: all 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            position: relative;
-            overflow: hidden;
         }
 
-        .service-category:hover {
-            transform: translateY(-5px);
-            background: rgba(255, 255, 255, 0.1);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        .close-btn:hover {
+            background: var(--glass-strong);
+            border-color: var(--primary);
         }
 
-        .category-title {
-            font-size: 1.1rem;
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: #00ff88;
-        }
-
-        .category-desc {
-            font-size: 0.9rem;
-            color: #aaa;
-            line-height: 1.4;
-        }
-
-        section.features-section {
-            background: rgba(20, 20, 20, 0.8);
-            border-radius: 20px;
-            padding: 30px;
-            margin-bottom: 40px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .feature-card {
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 15px;
-            padding: 25px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: transform 0.3s ease;
-        }
-
-        .feature-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .feature-icon {
-            font-size: 2.5rem;
-            margin-bottom: 15px;
-        }
-
-        .feature-title {
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: #fff;
-        }
-
-        .feature-desc {
-            color: #aaa;
-            line-height: 1.5;
-        }
-
-        footer.main-footer {
-            text-align: center;
-            padding: 30px 0;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            color: #666;
-            margin-top: 40px;
-        }
-
-        .message {
-            margin-bottom: 15px;
-            padding: 10px 15px;
-            border-radius: 10px;
-            max-width: 80%;
-            word-wrap: break-word;
-        }
-
-        .user-message {
-            background: linear-gradient(45deg, #00d4ff, #00ff88);
-            color: #000;
-            margin-left: auto;
-        }
-
-        .ai-message {
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
-        }
-
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: #00ff88;
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Scroll animációk */
-        .scroll-reveal {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: all 0.6s ease;
-        }
-
-        .scroll-reveal.revealed {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        /* Responsive design */
-        @media (max-width: 768px) {
-            main.main-content {
-                grid-template-columns: 1fr;
-            }
-            
-            .stats-container {
-                flex-direction: column;
-                gap: 20px;
-            }
-            
-            h1.main-title {
-                font-size: 2.5rem;
+        /* Responsive Design */
+        @media (min-width: 768px) {
+            .sidebar {
+                position: relative;
+                transform: translateX(0);
             }
 
-            .features-grid {
-                grid-template-columns: 1fr;
+            .main-content {
+                margin-left: 320px;
             }
 
-            .container {
-                padding: 15px;
+            .menu-toggle {
+                display: none;
             }
         }
 
-        /* Akadálymentesítés */
-        .visually-hidden {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            padding: 0;
-            margin: -1px;
-            overflow: hidden;
-            clip: rect(0, 0, 0, 0);
-            white-space: nowrap;
-            border: 0;
-        }
+        @media (max-width: 767px) {
+            .welcome-title {
+                font-size: 2rem;
+            }
 
-        /* Focus jelzések */
-        button:focus,
-        input:focus {
-            outline: 2px solid #00ff88;
-            outline-offset: 2px;
+            .welcome-logo {
+                width: 80px;
+                height: 80px;
+                font-size: 2rem;
+            }
+
+            .header {
+                padding: 1rem;
+            }
+
+            .messages-container {
+                padding: 1rem;
+            }
+
+            .input-area {
+                padding: 1rem;
+            }
+
+            .user-bubble {
+                max-width: 85%;
+            }
+
+            .ai-message {
+                max-width: 95%;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header class="main-header scroll-reveal">
-            <h1 class="main-title">🧬 Jade</h1>
-            <p class="subtitle">Mélytanulási Felfedező AI Platform</p>
-            <div class="stats-container">
-                <div class="stat-item">
-                    <div class="stat-number">150+</div>
-                    <div class="stat-label">Alpha Szolgáltatás</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">6</div>
-                    <div class="stat-label">Tudományos Kategória</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">∞</div>
-                    <div class="stat-label">Lehetőség</div>
-                </div>
-            </div>
-        </header>
+    <div class="background-gradient"></div>
 
-        <main class="main-content">
-            <section class="chat-section scroll-reveal">
-                <h2 class="section-title">💬 AI Asszisztens</h2>
-                <div class="chat-container" id="chatContainer" role="log" aria-live="polite" aria-label="Beszélgetési terület">
-                    <div class="message ai-message">
-                        Üdvözlöm! Jade vagyok, az Ön AI asszisztense. Hogyan segíthetek ma?
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon">J</div>
+                    <div class="logo-text">
+                        <h1>Jade</h1>
+                        <p>Deep Discovery AI</p>
                     </div>
                 </div>
-                <div class="chat-input-container">
-                    <label for="chatInput" class="visually-hidden">Üzenet írása</label>
-                    <input type="text" class="chat-input" id="chatInput" placeholder="Írja be kérdését..." maxlength="10000" aria-describedby="chat-help">
-                    <small id="chat-help" class="visually-hidden">Maximum 10000 karakter hosszú üzenet</small>
-                    <button class="send-btn" onclick="sendMessage()" aria-label="Üzenet küldése">Küldés</button>
-                </div>
-            </section>
-
-            <section class="services-section scroll-reveal">
-                <h2 class="section-title">🔬 Alpha Szolgáltatások</h2>
-                <div class="services-grid" id="servicesGrid" role="region" aria-label="Szolgáltatási kategóriák">
-                    <!-- Szolgáltatások dinamikusan töltődnek be -->
-                </div>
-            </section>
-        </main>
-
-        <section class="features-section scroll-reveal">
-            <h2 class="section-title">✨ Kiemelt Funkciók</h2>
-            <div class="features-grid">
-                <article class="feature-card">
-                    <div class="feature-icon" aria-hidden="true">🧬</div>
-                    <h3 class="feature-title">AlphaFold 3 Integráció</h3>
-                    <p class="feature-desc">Fejlett fehérje szerkezet előrejelzés és molekuláris kölcsönhatások elemzése</p>
-                </article>
-                <article class="feature-card">
-                    <div class="feature-icon" aria-hidden="true">🔍</div>
-                    <h3 class="feature-title">Deep Research</h3>
-                    <p class="feature-desc">1000+ tudományos forrás elemzése egyetlen lekérdezéssel</p>
-                </article>
-                <article class="feature-card">
-                    <div class="feature-icon" aria-hidden="true">🧠</div>
-                    <h3 class="feature-title">Multi-AI Backend</h3>
-                    <p class="feature-desc">Cerebras, Gemini és egyéb fejlett AI modellek integrálása</p>
-                </article>
-                <article class="feature-card">
-                    <div class="feature-icon" aria-hidden="true">⚡</div>
-                    <h3 class="feature-title">Valós idejű Elemzés</h3>
-                    <p class="feature-desc">Gyors és pontos válaszok optimalizált backend architektúrával</p>
-                </article>
+                <button class="new-chat-btn" onclick="newChat()">
+                    <i class="fas fa-plus"></i>
+                    Új beszélgetés
+                </button>
             </div>
-        </section>
+
+            <div class="sidebar-content">
+                <div class="service-category">
+                    <div class="category-header" onclick="toggleCategory('biological')">
+                        <div class="category-title">
+                            <i class="fas fa-dna"></i>
+                            <span>Biológiai & Orvosi</span>
+                        </div>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="category-services" id="biological-services">
+                        <div class="service-item" onclick="selectService('AlphaFold3', 'Fehérje szerkezet előrejelzés')">
+                            <div class="service-icon"><i class="fas fa-cube"></i></div>
+                            <div class="service-info">
+                                <h4>AlphaFold 3</h4>
+                                <p>Fehérje szerkezet előrejelzés</p>
+                            </div>
+                        </div>
+                        <div class="service-item" onclick="selectService('AlphaMissense', 'Mutációs patogenitás elemzés')">
+                            <div class="service-icon"><i class="fas fa-exchange-alt"></i></div>
+                            <div class="service-info">
+                                <h4>AlphaMissense</h4>
+                                <p>Mutációs patogenitás elemzés</p>
+                            </div>
+                        </div>
+                        <div class="service-item" onclick="selectService('AlphaGenome', 'Genom szekvencia elemzés')">
+                            <div class="service-icon"><i class="fas fa-code-branch"></i></div>
+                            <div class="service-info">
+                                <h4>AlphaGenome</h4>
+                                <p>Genom szekvencia elemzés</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="service-category">
+                    <div class="category-header" onclick="toggleCategory('chemical')">
+                        <div class="category-title">
+                            <i class="fas fa-atom"></i>
+                            <span>Kémiai & Anyagtudományi</span>
+                        </div>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="category-services" id="chemical-services">
+                        <div class="service-item" onclick="selectService('AlphaCatalyst', 'Katalizátor tervezés')">
+                            <div class="service-icon"><i class="fas fa-flask"></i></div>
+                            <div class="service-info">
+                                <h4>AlphaCatalyst</h4>
+                                <p>Katalizátor tervezés</p>
+                            </div>
+                        </div>
+                        <div class="service-item" onclick="selectService('AlphaPolymer', 'Polimer tulajdonságok')">
+                            <div class="service-icon"><i class="fas fa-link"></i></div>
+                            <div class="service-info">
+                                <h4>AlphaPolymer</h4>
+                                <p>Polimer tulajdonságok</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="service-category">
+                    <div class="category-header" onclick="toggleCategory('research')">
+                        <div class="category-title">
+                            <i class="fas fa-search"></i>
+                            <span>Kutatási Funkciók</span>
+                        </div>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="category-services" id="research-services">
+                        <div class="service-item" onclick="startDeepResearch()">
+                            <div class="service-icon"><i class="fas fa-microscope"></i></div>
+                            <div class="service-info">
+                                <h4>Deep Research</h4>
+                                <p>Mélyreható kutatási elemzés</p>
+                            </div>
+                        </div>
+                        <div class="service-item" onclick="openCodeGenerator()">
+                            <div class="service-icon"><i class="fas fa-code"></i></div>
+                            <div class="service-info">
+                                <h4>Kód Generátor</h4>
+                                <p>AI-powered kódolás</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="header">
+                <button class="menu-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1 class="header-title">Jade AI Platform</h1>
+                <div></div>
+            </header>
+
+            <div class="chat-area">
+                <div class="messages-container" id="messagesContainer">
+                    <div class="welcome-screen" id="welcomeScreen">
+                        <div class="welcome-logo">J</div>
+                        <h1 class="welcome-title">Jade</h1>
+                        <p class="welcome-subtitle">
+                            Deep Discovery AI Platform - 150+ Alpha szolgáltatás, neurális keresés és fejlett AI elemzés
+                        </p>
+                        <button class="start-btn" onclick="hideWelcome()">
+                            <i class="fas fa-rocket"></i>
+                            Kezdjük el!
+                        </button>
+                    </div>
+                </div>
+
+                <div class="input-area">
+                    <div class="input-wrapper">
+                        <textarea 
+                            class="message-input" 
+                            id="messageInput" 
+                            placeholder="Kérdezz bármit, vagy válassz egy Alpha szolgáltatást..."
+                            rows="1"
+                        ></textarea>
+                        <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
 
-    <footer class="main-footer">
-        <p>&copy; 2024 Jade AI Platform - Kollár Sándor által fejlesztve</p>
-    </footer>
+    <!-- Service Modal -->
+    <div class="modal" id="serviceModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Alpha Szolgáltatás</h2>
+                <button class="close-btn" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="modalContent">
+                <!-- Modal content will be populated here -->
+            </div>
+        </div>
+    </div>
 
     <script>
         // Globális változók
-        let chatHistory = [];
-        let isLoading = false;
-        let userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        let currentUser = 'user_' + Math.random().toString(36).substr(2, 9);
+        let isTyping = false;
 
-        // Chat funkcionalitás
-        async function sendMessage() {
-            if (isLoading) return;
-            
-            const input = document.getElementById('chatInput');
-            const sendBtn = document.querySelector('.send-btn');
-            const message = input.value.trim();
-            
-            if (!message) {
-                input.focus();
-                return;
-            }
-
-            if (message.length > 10000) {
-                alert('Az üzenet túl hosszú! Maximum 10000 karakter engedélyezett.');
-                return;
-            }
-            
-            // UI frissítése
-            isLoading = true;
-            sendBtn.disabled = true;
-            sendBtn.textContent = 'Küldés...';
-            
-            // Felhasználói üzenet hozzáadása
-            addMessageToChat(message, 'user');
-            input.value = '';
-            
-            // Loading indikátor
-            const loadingDiv = addMessageToChat('', 'ai', true);
-            
-            try {
-                const response = await fetch('/api/deep_discovery/chat', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        message: message,
-                        user_id: userId
-                    })
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                
-                const data = await response.json();
-                
-                // Loading eltávolítása és válasz hozzáadása
-                loadingDiv.remove();
-                addMessageToChat(data.response || 'Hiba történt a válasz feldolgozása során.', 'ai');
-                
-            } catch (error) {
-                console.error('Chat hiba:', error);
-                loadingDiv.remove();
-                
-                let errorMessage = 'Hiba történt a kérés feldolgozása során.';
-                if (error.message.includes('503')) {
-                    errorMessage = 'A szolgáltatás jelenleg nem elérhető. Kérjük, próbálja meg később.';
-                } else if (error.message.includes('400')) {
-                    errorMessage = 'Érvénytelen kérés. Kérjük, ellenőrizze az üzenetet.';
-                }
-                
-                addMessageToChat(errorMessage, 'ai');
-            } finally {
-                // UI visszaállítása
-                isLoading = false;
-                sendBtn.disabled = false;
-                sendBtn.textContent = 'Küldés';
-                input.focus();
-            }
-        }
-
-        function addMessageToChat(message, sender, isLoading = false) {
-            const chatContainer = document.getElementById('chatContainer');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${sender}-message`;
-            messageDiv.setAttribute('role', sender === 'ai' ? 'status' : 'log');
-            
-            if (isLoading) {
-                messageDiv.innerHTML = '<div class="loading" aria-label="Válasz betöltése"></div>';
-            } else {
-                messageDiv.textContent = message;
-            }
-            
-            chatContainer.appendChild(messageDiv);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-            
-            return messageDiv;
-        }
-
-        // Billentyűzet kezelése
-        document.getElementById('chatInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-            }
-        });
-
-        // Szolgáltatások betöltése
-        async function loadServices() {
-            try {
-                const response = await fetch('/api/services');
-                
-                if (!response.ok) {
-                    throw new Error('Nem sikerült betölteni a szolgáltatásokat');
-                }
-                
-                const data = await response.json();
-                const servicesGrid = document.getElementById('servicesGrid');
-                servicesGrid.innerHTML = '';
-                
-                for (const [category, services] of Object.entries(data.categories)) {
-                    const categoryDiv = document.createElement('div');
-                    categoryDiv.className = 'service-category';
-                    categoryDiv.setAttribute('role', 'button');
-                    categoryDiv.setAttribute('tabindex', '0');
-                    categoryDiv.setAttribute('aria-label', `${getCategoryTitle(category)} kategória, ${Object.keys(services).length} szolgáltatás`);
-                    
-                    categoryDiv.innerHTML = `
-                        <div class="category-title">${getCategoryTitle(category)}</div>
-                        <div class="category-desc">${Object.keys(services).length} szolgáltatás</div>
-                    `;
-                    
-                    const showServices = () => {
-                        const servicesList = Object.entries(services).map(([name, desc]) => `• ${name}: ${desc}`).join('\n\n');
-                        alert(`${getCategoryTitle(category)} kategória szolgáltatásai:\n\n${servicesList}`);
-                    };
-                    
-                    categoryDiv.addEventListener('click', showServices);
-                    categoryDiv.addEventListener('keypress', function(e) {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            showServices();
-                        }
-                    });
-                    
-                    servicesGrid.appendChild(categoryDiv);
-                }
-            } catch (error) {
-                console.error('Szolgáltatások betöltési hiba:', error);
-                const servicesGrid = document.getElementById('servicesGrid');
-                servicesGrid.innerHTML = '<p style="color: #ff6b6b;">Hiba a szolgáltatások betöltése során.</p>';
-            }
-        }
-
-        function getCategoryTitle(category) {
-            const titles = {
-                'biologiai_orvosi': '🧬 Biológiai & Orvosi',
-                'kemiai_anyagtudomanyi': '⚗️ Kémiai & Anyagtudományi',
-                'kornyezeti_fenntarthato': '🌍 Környezeti & Fenntartható',
-                'fizikai_asztrofizikai': '🌌 Fizikai & Asztrofizikai',
-                'technologiai_melymu': '🤖 Technológiai & ML',
-                'tarsadalmi_gazdasagi': '📊 Társadalmi & Gazdasági'
-            };
-            return titles[category] || category;
-        }
-
-        // Scroll animációk
-        function revealOnScroll() {
-            const reveals = document.querySelectorAll('.scroll-reveal');
-            
-            for (let i = 0; i < reveals.length; i++) {
-                const windowHeight = window.innerHeight;
-                const elementTop = reveals[i].getBoundingClientRect().top;
-                const elementVisible = 150;
-                
-                if (elementTop < windowHeight - elementVisible) {
-                    reveals[i].classList.add('revealed');
-                }
-            }
-        }
+        // DOM elemek
+        const sidebar = document.getElementById('sidebar');
+        const messagesContainer = document.getElementById('messagesContainer');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const serviceModal = document.getElementById('serviceModal');
 
         // Inicializálás
         document.addEventListener('DOMContentLoaded', function() {
-            loadServices();
-            revealOnScroll();
-            
-            // Fokusz a chat input-ra
-            document.getElementById('chatInput').focus();
+            setupEventListeners();
+            messageInput.focus();
         });
 
-        // Scroll esemény
-        window.addEventListener('scroll', revealOnScroll);
+        function setupEventListeners() {
+            // Enter küldés
+            messageInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
 
-        // Hibakezelés
-        window.addEventListener('error', function(e) {
-            console.error('JavaScript hiba:', e.error);
-        });
+            // Auto-resize textarea
+            messageInput.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+            });
 
-        // Offline állapot kezelése
-        window.addEventListener('online', function() {
-            console.log('Kapcsolat helyreállt');
-        });
+            // Escape modal bezárás
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeModal();
+                }
+            });
 
-        window.addEventListener('offline', function() {
-            console.log('Nincs internetkapcsolat');
-            addMessageToChat('Nincs internetkapcsolat. Kérjük, ellenőrizze a kapcsolatot.', 'ai');
-        });
-    </script>
-</body>
-</html></old_str>
+            // Modal overlay click bezárás
+            serviceModal.addEventListener('click', function(e) {
+                if (e.target === serviceModal) {
+                    closeModal();
+                }
+            });
+        }
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('open');
+        }
+
+        function toggleCategory(categoryId) {
+            const services = document.getElementById(categoryId + '-services');
+            const header = services.previousElementSibling;
+            const chevron = header.querySelector('.fas.fa-chevron-down');
+
+            services.classList.toggle('open');
+            chevron.style.transform = services.classList.contains('open') ? 'rotate(180deg)' : 'rotate(0deg)';
+        }
+
+        function hideWelcome() {
+            welcomeScreen.style.display = 'none';
+            messageInput.focus();
+        }
+
+        function newChat() {
+            messagesContainer.innerHTML = `
+                <div class="welcome-screen" id="welcomeScreen">
+                    <div class="welcome-logo">J</div>
+                    <h1 class="welcome-title">Jade</h1>
+                    <p class="welcome-subtitle">
+                        Deep Discovery AI Platform - 150+ Alpha szolgáltatás, neurális keresés és fejlett AI elemzés
+                    </p>
+                    <button class="start-btn" onclick="hideWelcome()">
+                        <i class="fas fa-rocket"></i>
+                        Kezdjük el!
+                    </button>
+                </div>
+            `;
+            messageInput.value = '';
+            messageInput.focus();
+        }
+
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message || isTyping) return;
+
+            // UI frissítés
+            addUserMessage(message);
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+            hideWelcome();
+            showTypingIndicator();
+
+            try {
+                const response = await fetch('/api/deep_discovery/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        message: message, 
+                        user_id: currentUser 
+                    })
+                });
+
+                const data = await response.json();
+                hideTypingIndicator();
+
+                if (data.status === 'success') {
+                    addAiMessage(data.response, data.model_used);
+                } else {
+                    addAiMessage('Hiba történt a válasz feldolgozása során.', 'Error');
+                }
+            } catch (error) {
+                hideTypingIndicator();
+                addAiMessage(`Hiba történt: ${error.message}`, 'Error');
+            }
+
+            messageInput.focus();
+        }
+
+        function addUserMessage(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message user-message';
+            messageDiv.innerHTML = `
+                <div class="user-bubble">${escapeHtml(message)}</div>
+            `;
+
+            messagesContainer.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        function addAiMessage(message, model = 'Jade AI') {
+            const messageId = 'msg_' + Date.now();
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ai-message';
+            messageDiv.innerHTML = `
+                <div class="ai-header">
+                    <div class="ai-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="ai-name">${model}</div>
+                </div>
+                <div class="ai-content" id="${messageId}">
+                    ${formatMessage(message)}
+                </div>
+                <div class="message-actions">
+                    <button class="action-btn" onclick="copyMessage('${messageId}')">
+                        <i class="fas fa-copy"></i> Másolás
+                    </button>
+                    <button class="action-btn" onclick="regenerateMessage('${messageId}')">
+                        <i class="fas fa-redo"></i> Újragenerálás
+                    </button>
+                </div>
+            `;
+
+            messagesContainer.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        function showTypingIndicator() {
+            isTyping = true;
+            sendBtn.disabled = true;
+
+            const indicator = document.createElement('div');
+            indicator.id = 'typingIndicator';
+            indicator.className = 'message ai-message';
+            indicator.innerHTML = `
+                <div class="ai-header">
+                    <div class="ai-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="ai-name">Jade AI</div>
+                </div>
+                <div class="typing-indicator">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            `;
+
+            messagesContainer.appendChild(indicator);
+            scrollToBottom();
+        }
+
+        function hideTypingIndicator() {
+            isTyping = false;
+            sendBtn.disabled = false;
+
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) {([^`]+)
