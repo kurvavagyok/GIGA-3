@@ -1,0 +1,31 @@
+Hibák és javítások az index.html fájlban
+1.  Hiányzó DOCTYPE deklaráció:
+	•  Az eredeti fájl nem tartalmaz <!DOCTYPE html> deklarációt, ami szükséges a modern böngészők helyes rendereléséhez.
+	•  Javítás: Hozzáadom a <!DOCTYPE html> deklarációt a fájl elejére.
+2.  Hiányzó <html>, <head>, és <body> tag-ek:
+	•  Az eredeti fájl nem tartalmazza a szabványos HTML struktúrát (html, head, body tag-eket), ami érvénytelen HTML-t eredményez.
+	•  Javítás: Hozzáadom a megfelelő HTML5 struktúrát, beleértve a lang="hu" attribútumot a magyar nyelvhez.
+3.  Nem használt vagy hibás attribútumok:
+	•  Az <input> elemek value attribútumai nem szükségesek üres formában, és az id="jade" attribútum redundáns, ha nincs hozzá JavaScript funkcionalitás.
+	•  Javítás: Eltávolítom a felesleges value attribútumokat, és az id="jade"-t csak akkor tartom meg, ha valóban használják.
+4.  Hiányzó meta tag-ek:
+	•  A fájl nem tartalmaz meta tag-eket a karakterkódoláshoz (charset) vagy a reszponzív dizájnhoz (viewport).
+	•  Javítás: Hozzáadom a <meta charset="UTF-8"> és <meta name="viewport" content="width=device-width, initial-scale=1.0"> tag-eket.
+5.  Redundáns vagy nem definiált CSS osztályok:
+	•  Az osztályok, mint például container, header, chat-container, stb., nincsenek definiálva az eredeti fájlban, és feltételezem, hogy egy külső CSS fájlra hivatkoznak. Azonban az eredeti fájl nem tartalmaz linket CSS fájlhoz.
+	•  Javítás: Hozzáadok egy alapértelmezett <link> tag-et egy feltételezett styles.css fájlhoz, amely a dizájnt biztosítja. Ha nincs ilyen fájl, akkor a dizájn fenntartásához inline CSS-t vagy egy alapértelmezett külső CSS fájlt kell biztosítani.
+6.  Hiányzó JavaScript integráció:
+	•  A fájlban van egy <script> tag, amely feltételezhetően a frontend funkcionalitást biztosítaná, de üres vagy nem létezik. Az eredeti JavaScript kód a main.py fájlban van megemlítve, de nem része a backendnek.
+	•  Javítás: Hozzáadok egy üres <script> tag-et, amely később JavaScript kóddal tölthető fel, vagy hivatkozhat egy külső script.js fájlra.
+7.  Nem szabványos vagy redundáns HTML elemek:
+	•  A többszörös egymásba ágyazott <div> tag-ek (container, header, stb.) redundánsak, és a szerkezet egyszerűsíthető anélkül, hogy a dizájn sérülne.
+	•  Javítás: Optimalizálom a HTML szerkezetet, hogy kevesebb felesleges <div> legyen, miközben a vizuális elrendezés változatlan marad.
+8.  Hiányzó szemantikus elemek:
+	•  Az eredeti fájl nem használ szemantikus HTML5 elemeket, például <header>, <main>, <section>, vagy <footer>, amelyek jobb hozzáférhetőséget és SEO-t biztosítanak.
+	•  Javítás: Ahol lehetséges, szemantikus elemeket használok a jobb struktzor struktúra érdekében.
+9.  Hiányzó alt attribútumok:
+	•  Az <img src="jade-icon.png" alt=""> esetében az alt attribútum üres, ami nem felel meg az akadálymentesítési követelményeknek.
+	•  Javítás: Hozzáadok egy leíró alt attribútumot, például alt="Jade logó".
+10.  Hiányzó favicon és cím:
+	•  Az eredeti fájl nem tartalmaz <title> tag-et vagy favicon-t, ami a professzionális megjelenéshez szükséges.
+	•  Javítás: Hozzáadok egy <title> tag-et és egy favicon hivatkozást.
