@@ -454,14 +454,14 @@ async def select_backend_model(prompt: str, service_name: str = None):
             # Tesztelés céljából egy egyszerű próbálkozás
             test_stream = cerebras_client.chat.completions.create(
                 messages=[{"role": "user", "content": "test"}],
-                model="llama-3.1-70b",
+                model="llama-4-scout-17b-16e-instruct",
                 stream=True,
                 max_completion_tokens=1,
                 temperature=0.1
             )
             # Ha sikeres, használjuk a Cerebras-t
             selected_model = cerebras_client
-            model_name = "llama-3.1-70b"
+            model_name = "llama-4-scout-17b-16e-instruct"
             return {"model": selected_model, "name": model_name}
         except Exception as e:
             logger.warning(f"Cerebras client not responding, falling back: {e}")
@@ -512,7 +512,7 @@ async def execute_model(model_info: Dict[str, Any], prompt: str):
         elif model == cerebras_client:
             stream = cerebras_client.chat.completions.create(
                 messages=[{"role": "user", "content": prompt}],
-                model="llama-3.1-70b",
+                model="llama-4-scout-17b-16e-instruct",
                 stream=True,
                 max_completion_tokens=4096,
                 temperature=0.05,
@@ -855,7 +855,7 @@ async def deep_discovery_chat(req: ChatRequest):
         if cerebras_client:
             stream = cerebras_client.chat.completions.create(
                 messages=messages_for_llm,
-                model="llama-3.1-70b",
+                model="llama-4-scout-17b-16e-instruct",
                 stream=True,
                 max_completion_tokens=4096,
                 temperature=0.05,
@@ -1345,7 +1345,7 @@ async def exa_get_contents(req: ExaContentsRequest):
                 elif cerebras_client:
                     stream = cerebras_client.chat.completions.create(
                         messages=[{"role": "user", "content": summary_prompt}],
-                        model="llama-3.1-70b",
+                        model="llama-4-scout-17b-16e-instruct",
                         stream=True,
                         max_completion_tokens=1000,
                         temperature=0.1
