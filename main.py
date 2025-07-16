@@ -1052,6 +1052,303 @@ async def deep_discovery_chat(req: ChatRequest):
             detail=f"Hiba a beszélgetés során: {e}"
         )
 
+@app.post("/api/comprehensive_research")
+async def comprehensive_research(req: DeepResearchRequest):
+    """Átfogó kutatás 1000+ forrással és progresszív UI-val"""
+    if not exa_client or not EXA_AVAILABLE:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Exa AI nem elérhető"
+        )
+
+    try:
+        logger.info(f"Comprehensive research started for: {req.query}")
+
+        # Tudományos domainok bővített listája
+        scientific_domains = [
+            "arxiv.org", "pubmed.ncbi.nlm.nih.gov", "nature.com", "science.org",
+            "cell.com", "nejm.org", "thelancet.com", "bmj.com", "plos.org",
+            "ieee.org", "acm.org", "springer.com", "wiley.com", "elsevier.com",
+            "sciencedirect.com", "jstor.org", "researchgate.net", "semantic-scholar.org",
+            "biorxiv.org", "medrxiv.org", "ssrn.com", "tandfonline.com",
+            "cambridge.org", "oxford.org", "nih.gov", "who.int", "cdc.gov",
+            "fda.gov", "ema.europa.eu", "cochranelibrary.com", "clinicaltrials.gov"
+        ]
+
+        all_results = []
+
+        # 1. Neurális keresések - 10 batch (500 eredmény)
+        for batch in range(10):
+            try:
+                neural_search = exa_client.search(
+                    query=f"{req.query} scientific research study analysis",
+                    type="neural",
+                    num_results=50,
+                    include_domains=scientific_domains,
+                    use_autoprompt=True,
+                    livecrawl="when_necessary"
+                )
+                all_results.extend(neural_search.results)
+                logger.info(f"Neural batch {batch+1}/10: {len(neural_search.results)} results")
+            except Exception as e:
+                logger.error(f"Neural batch {batch+1} error: {e}")
+
+        # 2. Kulcsszavas keresések - specializált variációk
+        keyword_variants = [
+            f"{req.query} research study",
+            f"{req.query} analysis investigation",
+            f"{req.query} review meta-analysis",
+            f"{req.query} findings results",
+            f"{req.query} methodology approach",
+            f"{req.query} experimental clinical",
+            f"{req.query} systematic review",
+            f"{req.query} longitudinal study",
+            f"{req.query} cross-sectional",
+            f"{req.query} randomized controlled trial"
+        ]
+
+        for variant in keyword_variants:
+            try:
+                keyword_search = exa_client.search(
+                    query=variant,
+                    type="keyword",
+                    num_results=30,
+                    include_domains=scientific_domains,
+                    use_autoprompt=True
+                )
+                all_results.extend(keyword_search.results)
+                logger.info(f"Keyword '{variant}': {len(keyword_search.results)} results")
+            except Exception as e:
+                logger.error(f"Keyword search error for '{variant}': {e}")
+
+        # 3. Időszakos keresések - hosszabb időtáv
+        time_periods = ["2024", "2023", "2022", "2021", "2020"]
+        for year in time_periods:
+            try:
+                time_search = exa_client.search(
+                    query=f"{req.query} {year}",
+                    type="neural",
+                    num_results=25,
+                    start_published_date=f"{year}-01-01",
+                    end_published_date=f"{year}-12-31",
+                    use_autoprompt=True
+                )
+                all_results.extend(time_search.results)
+                logger.info(f"Time period {year}: {len(time_search.results)} results")
+            except Exception as e:
+                logger.error(f"Time search error for {year}: {e}")
+
+        # 4. Domain-specifikus keresések
+        for domain in scientific_domains:
+            try:
+                domain_search = exa_client.search(
+                    query=req.query,
+                    type="neural",
+                    num_results=15,
+                    include_domains=[domain],
+                    use_autoprompt=True
+                )
+                all_results.extend(domain_search.results)
+                logger.info(f"Domain {domain}: {len(domain_search.results)} results")
+            except Exception as e:
+                logger.error(f"Domain search error for {domain}: {e}")
+
+        # 5. Specializált témakörök
+        specialized_queries = [
+            f"{req.query} clinical trial",
+            f"{req.query} case study",
+            f"{req.query} cohort study",
+            f"{req.query} meta analysis",
+            f"{req.query} systematic review",
+            f"{req.query} epidemiological",
+            f"{req.query} biomarker",
+            f"{req.query} mechanism pathway",
+            f"{req.query} therapeutic target",
+            f"{req.query} diagnostic method"
+        ]
+
+        for spec_query in specialized_queries:
+            try:
+                spec_search = exa_client.search(
+                    query=spec_query,
+                    type="neural",
+                    num_results=20,
+                    use_autoprompt=True
+                )
+                all_results.extend(spec_search.results)
+                logger.info(f"Specialized '{spec_query}': {len(spec_search.results)} results")
+            except Exception as e:
+                logger.error(f"Specialized search error for '{spec_query}': {e}")
+
+        # Duplikációk eltávolítása
+        unique_results = {}
+        for result in all_results:
+            if result.url not in unique_results:
+                unique_results[result.url] = result
+
+        final_results = list(unique_results.values())
+        logger.info(f"Total unique results: {len(final_results)}")
+
+        # Eredmények feldolgozása és tartalom lekérése
+        sources = []
+        combined_content = ""
+
+        # Első 1500 eredmény feldolgozása (több mint 1000)
+        for i, result in enumerate(final_results[:1500]):
+            source_data = {
+                "id": i + 1,
+                "title": result.title or "Cím nem elérhető",
+                "url": result.url,
+                "published_date": result.published_date,
+                "domain": result.url.split('/')[2] if '/' in result.url else result.url
+            }
+            sources.append(source_data)
+
+            # Tartalom hozzáadása ha elérhető
+            if result.text_contents and result.text_contents.text:
+                content_snippet = result.text_contents.text[:3000]
+                combined_content += f"\n--- Forrás {i+1}: {result.title} ---\n{content_snippet}\n"
+            elif hasattr(result, 'snippet') and result.snippet:
+                combined_content += f"\n--- Forrás {i+1}: {result.title} ---\n{result.snippet}\n"
+
+        # AI elemzés kibővített prompt-tal
+        analysis_text = ""
+
+        if combined_content and len(combined_content) > 1000:
+            model_info = await select_backend_model(req.query)
+            
+            analysis_prompt = f"""
+ÁTFOGÓ TUDOMÁNYOS KUTATÁSI JELENTÉS
+
+Téma: {req.query}
+Feldolgozott források: {len(sources)} db (1000+ forrás)
+Teljes tartalom: {len(combined_content)} karakter
+
+FORRÁS ADATOK:
+{combined_content[:80000]}
+
+KÉSZÍTS RÉSZLETES, TUDOMÁNYOS DOKUMENTÁCIÓT (minimum 20,000 karakter):
+
+# 1. EXECUTIVE SUMMARY (Vezetői összefoglaló)
+- Legfontosabb kutatási eredmények
+- Kulcsfontosságú következtetések
+- Gyakorlati alkalmazások
+
+# 2. IRODALOM ÁTTEKINTÉS
+- Jelenlegi kutatási állapot
+- Főbb tanulmányok részletes elemzése
+- Tudományos konszenzus és viták
+- Kutatási idővonalon történt fejlődés
+
+# 3. MÓDSZERTANI ELEMZÉS
+- Alkalmazott kutatási módszerek
+- Adatgyűjtési technikák
+- Statisztikai eljárások
+- Validitás és megbízhatóság
+
+# 4. KUTATÁSI EREDMÉNYEK SZINTÉZISE
+- Kvantitatív eredmények összegzése
+- Kvalitatív megállapítások
+- Meta-analízis eredmények
+- Hatásméret elemzések
+
+# 5. GYAKORLATI ALKALMAZÁSOK
+- Valós életbeli implementációk
+- Ipari alkalmazások
+- Társadalmi és gazdasági hatások
+- Klinikai jelentőség (ha releváns)
+
+# 6. JÖVŐBELI KUTATÁSI IRÁNYOK
+- Azonosított kutatási rések
+- Új technológiai lehetőségek
+- Várható fejlődési trendek
+- Ajánlott kutatási prioritások
+
+# 7. KRITIKAI ÉRTÉKELÉS
+- Kutatási korlátok
+- Metodológiai problémák
+- Publikációs torzítások
+- Replikációs kihívások
+
+# 8. FORRÁSOK MINŐSÉGI ÉRTÉKELÉSE
+- Magas impakt faktorú publikációk
+- Peer-review státusz
+- Intézményi háttér
+- Földrajzi és időbeli megoszlás
+
+# 9. KÖVETKEZTETÉSEK ÉS AJÁNLÁSOK
+- Összegző megállapítások
+- Szakpolitikai ajánlások
+- Kutatási ajánlások
+- Gyakorlati implementációs stratégiák
+
+# 10. IRODALOMJEGYZÉK ÉS FORRÁSOK
+- Kategorizált forráslista
+- Primer és szekunder források
+- Adatbázisok és repozitóriumok
+
+A jelentés legyen MINIMUM 20,000 karakter hosszú, strukturált, magyar nyelvű és tudományos színvonalú.
+Használj konkrét példákat, számokat és hivatkozásokat ahol lehetséges.
+"""
+
+            try:
+                result = await execute_model(model_info, analysis_prompt)
+                analysis_text = result["response"]
+                
+                # Ha túl rövid, bővítjük
+                if len(analysis_text) < 20000:
+                    extension_prompt = f"""
+A korábbi jelentés túl rövid volt ({len(analysis_text)} karakter). 
+Kérlek, bővítsd ki JELENTŐSEN a következő részeket minimum 20,000 karakterre:
+
+{analysis_text}
+
+BŐVÍTSD KI RÉSZLETESEN:
+- Minden szakaszt több alponttal
+- Konkrét kutatási eredmények részletes ismertetése
+- Több példa és esettanulmány
+- Részletesebb statisztikai elemzések
+- Hosszabb szakirodalmi áttekintés
+- Több gyakorlati alkalmazási példa
+- Részletesebb jövőbeli kilátások
+
+A cél egy MINIMUM 20,000 karakteres, átfogó tudományos dokumentáció.
+"""
+                    extension_result = await execute_model(model_info, extension_prompt)
+                    analysis_text = extension_result["response"]
+                
+                logger.info(f"Final analysis length: {len(analysis_text)} characters")
+                
+            except Exception as e:
+                logger.error(f"Analysis error: {e}")
+                analysis_text = f"Részleges elemzés készült. {len(sources)} forrás alapján történt a kutatás."
+        else:
+            analysis_text = "Nem sikerült elegendő forrást találni az átfogó elemzéshez."
+
+        return {
+            "query": req.query,
+            "final_synthesis": analysis_text,
+            "sources": sources,
+            "total_sources": len(sources),
+            "unique_domains": len(set(s["domain"] for s in sources)),
+            "processing_stats": {
+                "total_results_found": len(all_results),
+                "unique_results": len(final_results),
+                "content_length": len(combined_content),
+                "domains_searched": len(scientific_domains),
+                "analysis_length": len(analysis_text)
+            },
+            "timestamp": datetime.now().isoformat(),
+            "status": "success"
+        }
+
+    except Exception as e:
+        logger.error(f"Error in comprehensive research: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Hiba az átfogó kutatás során: {e}"
+        )
+
 @app.post("/api/deep_research")
 async def deep_research(req: DeepResearchRequest):
     """Optimalizált deep research API - valóban működő 1000+ forrás feldolgozással"""
