@@ -186,7 +186,26 @@
 
         .sidebar-content {
             padding: 16px;
-            padding-bottom: 30px;
+            padding-bottom: 10px;
+        }
+
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid var(--border);
+            position: sticky;
+            bottom: 0;
+            background: var(--surface);
+            backdrop-filter: blur(30px);
+        }
+
+        .made-by {
+            font-size: 0.7rem;
+            color: #0088ff;
+            text-align: center;
+            font-weight: 300;
+            margin: 0;
+            opacity: 0.8;
+            letter-spacing: 0.5px;
         }
 
         .service-category {
@@ -917,6 +936,10 @@
 
             <div class="sidebar-content" id="sidebarContent">
                 <!-- A szolgáltatások dinamikusan töltődnek be ide -->
+            </div>
+            
+            <div class="sidebar-footer">
+                <p class="made-by">JADED made by sándor kollár</p>
             </div>
         </aside>
 
