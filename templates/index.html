@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>JADE - Deep Discovery AI Platform</title>
-    <link rel="stylesheet" href="[https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css](https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css)">
-    <link rel="stylesheet" href="[https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css](https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css)">
-    <script src="[https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js](https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js)"></script>
-    <script src="[https://cdn.jsdelivr.net/npm/marked/marked.min.js](https://cdn.jsdelivr.net/npm/marked/marked.min.js)"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
     <style>
         /* --- Alap stílusok és változók --- */
-        @import url('[https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap](https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap)');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
         :root {
             --primary: #990c58;
@@ -969,7 +969,7 @@
             showResearchIndicator(query); // Töltésjelző megjelenítése
 
             try {
-                // EGYETLEN API HÍVÁS a robusztus backend végpontra
+                // Valós backend API hívás
                 const data = await fetchAPI('/deep_research', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -980,8 +980,8 @@
                 AppState.researchState = {
                     query: data.query,
                     documentContent: data.final_synthesis,
-                    sources: data.sources,
-                    totalSources: data.total_sources_found
+                    sources: data.sources || [],
+                    totalSources: data.total_sources_found || 0
                 };
                 
                 getEl('researchIndicator')?.remove(); // Töltésjelző eltávolítása
@@ -989,7 +989,6 @@
 
             } catch (error) {
                 getEl('researchIndicator')?.remove();
-                // A hibaüzenetet már az fetchAPI() megjeleníti.
                 console.error("Deep Research hiba:", error);
             }
         }
