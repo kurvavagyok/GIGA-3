@@ -840,7 +840,7 @@ async def deep_discovery_chat(req: ChatRequest):
     # Optimalizált system message
     system_message = {
         "role": "system",
-        "content": f"Te JADED vagy, egy fejlett AI asszisztens magyarul. Szakértő vagy tudományos és technológiai területeken. Segítőkész, részletes és pontos válaszokat adsz. {CREATOR_INFO} Ha kérdezik a készítőről, mindig említsd meg, hogy Kollár Sándor készítette ezt az alkalmazást."
+        "content": "Te JADED vagy, egy fejlett AI asszisztens magyarul. Szakértő vagy tudományos és technológiai területeken. Segítőkész, részletes és pontos válaszokat adsz. Ha konkrétan a készítőről vagy fejlesztőről kérdeznek, akkor említsd meg, hogy Kollár Sándor készítette ezt az alkalmazást."
     }
 
     # Csak az utolsó 10 üzenetet használjuk a kontextushoz
