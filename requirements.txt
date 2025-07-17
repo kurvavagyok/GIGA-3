@@ -13,7 +13,7 @@ openai>=1.0.0
 
 # Bioinformatics & Molecular Biology
 biopython>=1.83
-pyMBE>=0.7.0
+# pyMBE>=0.7.0  # Csomag nem elérhető, kikommentezve
 molearn>=2.0.0
 PySB>=1.14.0
 
