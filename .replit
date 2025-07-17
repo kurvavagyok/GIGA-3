@@ -31,5 +31,9 @@ args = "python main.py"
 localPort = 5000
 externalPort = 80
 
+[[ports]]
+localPort = 8000
+externalPort = 8000
+
 [objectStorage]
 defaultBucketID = "replit-objstore-2916ec0f-ce77-4c58-9438-dcf2dc5eca13"

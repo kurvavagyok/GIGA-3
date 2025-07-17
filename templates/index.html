@@ -3,30 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Jade - Deep Discovery AI Platform</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- highlight.js a kód színezéséhez -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <!-- marked.js a Markdown rendereléshez -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <title>JADE - Deep Discovery AI Platform</title>
+    <link rel="stylesheet" href="[https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css](https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css)">
+    <link rel="stylesheet" href="[https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css](https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css)">
+    <script src="[https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js](https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js)"></script>
+    <script src="[https://cdn.jsdelivr.net/npm/marked/marked.min.js](https://cdn.jsdelivr.net/npm/marked/marked.min.js)"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        /* --- Alap stílusok és változók --- */
+        @import url('[https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap](https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap)');
 
         :root {
             --primary: #990c58;
             --secondary: #e51284;
-            --accent: #0021f3;
-            --bg: #000000;
-            --surface: rgba(10, 10, 10, 0.95);
-            --glass: rgba(255, 255, 255, 0.05);
-            --glass-strong: rgba(255, 255, 255, 0.12);
+            --accent: #0077ff;
+            --bg: #05020a;
+            --surface: rgba(10, 10, 10, 0.8);
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-strong: rgba(255, 255, 255, 0.07);
             --border: rgba(255, 255, 255, 0.1);
-            --text: #ffffff;
+            --border-glow: rgba(229, 18, 132, 0.5);
+            --text: #f0f0f0;
             --text-muted: #94a3b8;
             --radius: 12px;
-            --shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            --transition-curve: cubic-bezier(0.25, 0.8, 0.25, 1);
         }
 
         * {
@@ -34,6 +35,15 @@
             padding: 0;
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
+        }
+        
+        /* Egyedi, finom görgetősáv */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb {
+            background: var(--glass-strong);
+            border-radius: 10px;
+            border: 1px solid var(--border);
         }
 
         body {
@@ -44,1140 +54,508 @@
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
-            touch-action: manipulation;
         }
-
-        .background-gradient {
+        
+        /* Dinamikus, animált háttér */
+        .aurora-background {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
             pointer-events: none;
-            background: linear-gradient(270deg, rgba(153,12,88,0.1), rgba(229,18,132,0.1), rgba(0,33,243,0.1), rgba(5,1,74,0.1));
-            background-size: 800% 800%;
-            animation: gradientShift 20s ease infinite;
             z-index: -1;
+            overflow: hidden;
         }
-
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        .aurora-background .aurora {
+            position: absolute;
+            border-radius: 50%;
+            mix-blend-mode: screen;
+            filter: blur(80px);
+            opacity: 0.2;
         }
-
-        .container {
-            display: flex;
-            min-height: 100vh;
-            position: relative;
+        .aurora.one {
+            width: 80vw; height: 80vw; top: -40vw; left: -40vw;
+            background: var(--primary);
+            animation: move-one 25s infinite alternate;
         }
+        .aurora.two {
+            width: 70vw; height: 70vw; top: -30vw; right: -30vw;
+            background: var(--secondary);
+            animation: move-two 20s infinite alternate;
+        }
+        .aurora.three {
+            width: 60vw; height: 60vw; bottom: -30vw; left: 10vw;
+            background: var(--accent);
+            animation: move-three 22s infinite alternate;
+        }
+        @keyframes move-one { to { transform: translate(40vw, 30vh) rotate(180deg); } }
+        @keyframes move-two { to { transform: translate(-30vw, 20vh) rotate(-180deg); } }
+        @keyframes move-three { to { transform: translate(20vw, -40vh) rotate(90deg); } }
 
+        /* --- Fő elrendezés --- */
+        .container { display: flex; min-height: 100vh; position: relative; }
+
+        /* --- Oldalsáv (Sidebar) --- */
         .sidebar {
             width: 300px;
             background: var(--surface);
-            backdrop-filter: blur(30px);
+            backdrop-filter: blur(40px) saturate(180%);
             border-right: 1px solid var(--border);
             overflow-y: auto;
             position: fixed;
             height: 100vh;
             z-index: 1000;
             transform: translateX(-100%);
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: var(--shadow);
-            -webkit-overflow-scrolling: touch;
+            transition: transform 0.4s var(--transition-curve);
+            display: flex;
+            flex-direction: column;
         }
-
-        .sidebar.open {
-            transform: translateX(0);
-        }
+        .sidebar.open { transform: translateX(0); }
 
         .sidebar-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
             background: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(10px);
             z-index: 999;
             opacity: 0;
             visibility: hidden;
-            transition: all 0.3s ease;
+            transition: all 0.4s ease;
         }
-
-        .sidebar-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
+        .sidebar-overlay.active { opacity: 1; visibility: visible; }
 
         .sidebar-header {
             padding: 20px 16px;
             border-bottom: 1px solid var(--border);
-            position: sticky;
-            top: 0;
-            background: var(--surface);
-            backdrop-filter: blur(30px);
-            z-index: 10;
         }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 16px;
-        }
-
+        .logo { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
         .logo-icon {
-            width: 44px;
-            height: 44px;
+            width: 44px; height: 44px;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             border-radius: var(--radius);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.4rem;
-            font-weight: bold;
-            color: #000;
-            box-shadow: 0 3px 12px rgba(0, 136, 255, 0.3);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; font-weight: 800; color: #fff;
+            box-shadow: 0 4px 15px rgba(229, 18, 132, 0.3);
+            transition: transform 0.3s var(--transition-curve);
         }
-
+        .logo:hover .logo-icon { transform: rotate(-10deg) scale(1.1); }
         .logo-text h1 {
-            font-size: 1.4rem;
-            font-weight: 700;
+            font-size: 1.5rem; font-weight: 800;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            line-height: 1.2;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            line-height: 1.1;
         }
-
-        .logo-text p {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-top: 2px;
-        }
+        .logo-text p { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; font-weight: 500; }
 
         .new-chat-btn {
             width: 100%;
             background: var(--glass-strong);
-            backdrop-filter: blur(20px);
             border: 1px solid var(--border);
             color: var(--text);
             border-radius: var(--radius);
             padding: 12px 16px;
-            font-weight: 600;
-            font-size: 0.9rem;
+            font-weight: 600; font-size: 0.9rem;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            touch-action: manipulation;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: all 0.3s var(--transition-curve);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
-
         .new-chat-btn:hover, .new-chat-btn:active {
             transform: translateY(-2px);
-            background: rgba(255, 255, 255, 0.15);
-            border-color: var(--primary);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+            border-color: var(--border-glow);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4), 0 0 15px var(--border-glow);
         }
 
-        .sidebar-content {
-            padding: 16px;
-            padding-bottom: 10px;
-        }
+        .sidebar-content { padding: 16px; flex-grow: 1; overflow-y: auto; }
+        .sidebar-footer { padding: 16px; border-top: 1px solid var(--border); }
+        .made-by { font-size: 0.75rem; color: var(--text-muted); text-align: center; }
 
-        .sidebar-footer {
-            padding: 16px;
-            border-top: 1px solid var(--border);
-            position: sticky;
-            bottom: 0;
-            background: var(--surface);
-            backdrop-filter: blur(30px);
-        }
-
-        .made-by {
-            font-size: 0.7rem;
-            color: #0088ff;
-            text-align: center;
-            font-weight: 300;
-            margin: 0;
-            opacity: 0.8;
-            letter-spacing: 0.5px;
-        }
-
-        .service-category {
-            margin-bottom: 20px;
-        }
-
+        .service-category { margin-bottom: 20px; }
         .category-header {
-            background: var(--glass-strong);
-            backdrop-filter: blur(20px);
+            background: var(--glass);
             border: 1px solid var(--border);
             border-radius: var(--radius);
-            padding: 12px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            padding: 12px; cursor: pointer;
+            display: flex; align-items: center; justify-content: space-between;
             margin-bottom: 8px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            touch-action: manipulation;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s var(--transition-curve);
         }
-
+        .category-header .fa-chevron-down { transition: transform 0.3s var(--transition-curve); }
         .category-header:hover, .category-header:active {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: var(--primary);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        }
-
-        .category-title {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 600;
-            font-size: 0.85rem;
-        }
-
-        .category-services {
-            display: none;
-            padding-left: 12px;
-            animation: slideDown 0.3s ease;
-        }
-
-        .category-services.open {
-            display: block;
-        }
-
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .service-item {
             background: var(--glass-strong);
-            backdrop-filter: blur(15px);
-            border: 1px solid var(--border);
+            border-color: var(--border-glow);
+            transform: translateY(-2px);
+        }
+        .category-title { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 0.9rem; }
+        .category-title i { color: var(--accent); }
+        .category-services {
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows 0.4s ease-out;
+        }
+        .category-services > div { overflow: hidden; }
+        .category-services.open { grid-template-rows: 1fr; }
+        
+        .service-item {
+            background: transparent;
+            border: 1px solid transparent;
             border-radius: 10px;
-            padding: 10px;
-            margin-bottom: 6px;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            touch-action: manipulation;
-            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.15);
+            padding: 10px; margin-bottom: 6px; cursor: pointer;
+            transition: all 0.3s var(--transition-curve);
+            display: flex; align-items: center; gap: 10px;
+            margin-left: 12px; border-left: 2px solid var(--border);
         }
-
         .service-item:hover, .service-item:active {
-            background: rgba(255, 255, 255, 0.12);
-            border-color: var(--primary);
-            transform: translateX(6px) translateY(-1px);
-            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+            background: var(--glass-strong);
+            border-color: transparent transparent transparent var(--primary);
+            transform: translateX(6px);
+            color: #fff;
         }
-
         .service-icon {
-            width: 30px;
-            height: 30px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            width: 32px; height: 32px;
+            background: linear-gradient(135deg, var(--glass-strong), var(--glass));
+            border: 1px solid var(--border);
             border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.8rem;
-            color: #000;
-            flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.9rem; color: var(--accent); flex-shrink: 0;
+            transition: all 0.3s var(--transition-curve);
         }
+        .service-item:hover .service-icon { transform: scale(1.1); color: var(--secondary); border-color: var(--secondary); }
+        .service-info h4 { font-size: 0.85rem; font-weight: 600; margin-bottom: 2px; }
+        .service-info p { font-size: 0.75rem; color: var(--text-muted); }
 
-        .service-info h4 {
-            font-size: 0.8rem;
-            font-weight: 600;
-            margin-bottom: 2px;
-            line-height: 1.3;
-        }
-
-        .service-info p {
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            line-height: 1.4;
-        }
-
+        /* --- Fő tartalom --- */
         .main-content {
-            flex: 1;
-            margin-left: 0;
-            display: flex;
-            flex-direction: column;
-            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            flex: 1; margin-left: 0;
+            display: flex; flex-direction: column;
+            transition: margin-left 0.4s var(--transition-curve);
             min-height: 100vh;
         }
-
         .header {
             padding: 16px 20px;
-            background: var(--surface);
-            backdrop-filter: blur(30px);
+            background: rgba(10, 10, 10, 0.5);
+            backdrop-filter: blur(30px) saturate(150%);
             border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+            display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 100;
         }
-
         .menu-toggle {
             background: var(--glass-strong);
-            backdrop-filter: blur(20px);
             border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 10px;
-            color: var(--text);
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            font-size: 1rem;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            touch-action: manipulation;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            border-radius: 10px; padding: 10px;
+            color: var(--text); cursor: pointer;
+            transition: all 0.3s var(--transition-curve);
+            font-size: 1rem; width: 40px; height: 40px;
+            display: flex; align-items: center; justify-content: center;
         }
-
         .menu-toggle:hover, .menu-toggle:active {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: var(--primary);
+            background: var(--glass-strong);
+            border-color: var(--border-glow);
             transform: scale(1.05);
-            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
         }
-
         .header-title {
-            font-size: 1.2rem;
-            font-weight: 600;
+            font-size: 1.2rem; font-weight: 700;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(229, 18, 132, 0.5);
         }
 
-        .chat-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .messages-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px;
-            scroll-behavior: smooth;
-            -webkit-overflow-scrolling: touch;
-        }
+        /* --- Chat terület --- */
+        .chat-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .messages-container { flex: 1; overflow-y: auto; padding: 24px; scroll-behavior: smooth; }
 
         .welcome-screen {
-            text-align: center;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 40px 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
+            text-align: center; max-width: 600px;
+            margin: 0 auto; padding: 40px 20px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100%; animation: fadeIn 1s var(--transition-curve);
         }
-
-        .welcome-logo {
-            display: none;
-        }
-
-        @keyframes logoFloat {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-8px); }
-        }
-
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .welcome-title {
-            font-size: 2.2rem;
-            font-weight: 700;
-            margin-bottom: 0.8rem;
+            font-size: 3rem; font-weight: 800; margin-bottom: 1rem;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            line-height: 1.2;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(229, 18, 132, 0.6);
         }
-
-        .welcome-subtitle {
-            font-size: 1rem;
-            color: var(--text-muted);
-            margin-bottom: 2.5rem;
-            line-height: 1.6;
-        }
-
+        .welcome-subtitle { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 2.5rem; line-height: 1.6; }
         .start-btn {
             background: var(--glass-strong);
-            backdrop-filter: blur(20px);
             border: 1px solid var(--border);
             border-radius: var(--radius);
-            padding: 12px 24px;
-            color: var(--text);
-            font-weight: 600;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            touch-action: manipulation;
-            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
+            padding: 14px 28px; color: var(--text);
+            font-weight: 600; font-size: 1rem; cursor: pointer;
+            transition: all 0.3s var(--transition-curve);
+            display: inline-flex; align-items: center; gap: 8px;
         }
-
         .start-btn:hover, .start-btn:active {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: var(--primary);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 32px rgba(0, 0, 0, 0.4);
+            background: var(--glass-strong);
+            border-color: var(--border-glow);
+            transform: translateY(-3px) scale(1.05);
         }
 
-        .message {
-            margin-bottom: 16px;
-            animation: messageSlide 0.5s ease;
-        }
+        .message { margin-bottom: 20px; animation: messageSlideIn 0.5s var(--transition-curve); }
+        @keyframes messageSlideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        @keyframes messageSlide {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .user-message {
-            display: flex;
-            justify-content: flex-end;
-        }
-
+        .user-message { display: flex; justify-content: flex-end; }
         .user-bubble {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: #000;
-            padding: 12px 16px;
-            border-radius: 16px 16px 6px 16px;
-            max-width: 80%;
-            font-weight: 500;
-            font-size: 0.9rem;
-            line-height: 1.4;
-            box-shadow: 0 3px 12px rgba(0, 136, 255, 0.2);
+            color: #fff; padding: 12px 18px;
+            border-radius: 18px 18px 6px 18px;
+            max-width: 80%; font-weight: 500; font-size: 0.95rem; line-height: 1.5;
+            box-shadow: 0 5px 20px rgba(229, 18, 132, 0.3);
         }
-
-        .ai-message {
-            display: flex;
-            flex-direction: column;
-            max-width: 90%;
-        }
-
+        .ai-message { display: flex; flex-direction: column; max-width: 95%; }
         .ai-content {
-            background: transparent;
-            border: none;
-            border-radius: 0;
-            padding: 16px 0;
-            line-height: 1.6;
-            font-size: 0.9rem;
-            color: var(--text);
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 18px 18px 18px 6px;
+            padding: 16px 20px; line-height: 1.7; font-size: 0.95rem;
         }
-
         .ai-content pre {
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            background: rgba(0,0,0,0.4);
-            border-radius: 6px;
-            padding: 12px;
-            margin: 12px 0;
-            font-size: 0.8rem;
-            overflow-x: auto;
+            background: rgba(0,0,0,0.4); border: 1px solid var(--border);
+            border-radius: 8px; padding: 16px; margin: 16px 0;
+            font-size: 0.85rem; overflow-x: auto;
         }
+        .ai-content code { font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace; font-size: 0.85rem; }
 
-        .ai-content code {
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 0.8rem;
-        }
-
-        .message-actions {
-            display: flex;
-            gap: 6px;
-            margin-top: 8px;
-            flex-wrap: wrap;
-        }
-
+        .message-actions { display: flex; gap: 8px; margin-top: 12px; margin-left: 12px; }
         .action-btn {
-            background: var(--glass-strong);
-            backdrop-filter: blur(15px);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 6px 10px;
-            color: var(--text-muted);
-            font-size: 0.75rem;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            touch-action: manipulation;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+            background: var(--glass); border: 1px solid var(--border);
+            border-radius: 8px; padding: 6px 12px; color: var(--text-muted);
+            font-size: 0.8rem; cursor: pointer;
+            transition: all 0.3s var(--transition-curve);
+            display: flex; align-items: center; gap: 5px;
         }
-
         .action-btn:hover, .action-btn:active {
-            background: rgba(255, 255, 255, 0.12);
-            color: var(--text);
-            border-color: var(--primary);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+            background: var(--glass-strong); color: var(--text);
+            border-color: var(--accent); transform: translateY(-2px);
         }
-
+        
+        /* --- Beviteli mező --- */
         .input-area {
-            padding: 16px;
-            background: var(--surface);
-            backdrop-filter: blur(30px);
+            padding: 16px 24px;
+            background: rgba(10, 10, 10, 0.5);
+            backdrop-filter: blur(30px) saturate(150%);
             border-top: 1px solid var(--border);
-            position: sticky;
-            bottom: 0;
-            z-index: 50;
+            position: sticky; bottom: 0; z-index: 50;
         }
-
-        .input-wrapper {
-            max-width: 1000px;
-            margin: 0 auto;
-            display: flex;
-            gap: 8px;
-            align-items: flex-end;
-        }
-
+        .input-wrapper { max-width: 1000px; margin: 0 auto; display: flex; gap: 12px; align-items: flex-end; }
         .message-input {
-            flex: 1;
-            background: var(--glass-strong);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 12px 16px;
-            color: var(--text);
-            font-size: 0.9rem;
-            resize: none;
-            outline: none;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            min-height: 44px;
-            max-height: 100px;
-            font-family: inherit;
-            line-height: 1.4;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            flex: 1; background: var(--glass-strong);
+            border: 1px solid var(--border); border-radius: 16px;
+            padding: 14px 20px; color: var(--text); font-size: 1rem;
+            resize: none; outline: none;
+            transition: all 0.3s var(--transition-curve);
+            min-height: 50px; max-height: 150px;
+            font-family: inherit; line-height: 1.5;
         }
-
         .message-input:focus {
-            border-color: var(--primary);
-            background: rgba(255, 255, 255, 0.15);
-            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
+            border-color: var(--accent);
+            box-shadow: 0 0 15px rgba(0, 119, 255, 0.4);
         }
-
         .send-btn {
-            width: 44px;
-            height: 44px;
-            background: var(--glass-strong);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--border);
-            border-radius: 50%;
-            color: var(--text);
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
-            touch-action: manipulation;
+            width: 50px; height: 50px;
+            background: var(--accent); border: 1px solid var(--accent);
+            border-radius: 50%; color: #fff; font-size: 1.2rem;
+            cursor: pointer; transition: all 0.3s var(--transition-curve);
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 15px rgba(0, 119, 255, 0.4);
             flex-shrink: 0;
         }
-
-        .send-btn:hover, .send-btn:active {
-            transform: scale(1.05);
-            background: rgba(255, 255, 255, 0.15);
-            border-color: var(--primary);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-        }
-
+        .send-btn:hover, .send-btn:active { transform: scale(1.1); box-shadow: 0 8px 25px rgba(0, 119, 255, 0.6); }
         .send-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
+            opacity: 0.5; cursor: not-allowed; transform: none;
+            background: var(--glass-strong); border-color: var(--border);
+            box-shadow: none;
         }
 
-        .typing-indicator {
-            display: flex;
-            gap: 6px;
-            padding: 12px 0;
-            background: transparent;
-            border-radius: 0;
-            max-width: 150px;
-        }
-
+        /* --- Töltés és Visszajelzés --- */
+        .typing-indicator { display: flex; gap: 8px; }
         .typing-dot {
-            width: 6px;
-            height: 6px;
-            background: var(--primary);
-            border-radius: 50%;
-            animation: typing 1.4s infinite ease-in-out;
+            width: 8px; height: 8px;
+            background: var(--primary); border-radius: 50%;
+            animation: typing-bounce 1.4s infinite ease-in-out;
         }
-
         .typing-dot:nth-child(2) { animation-delay: 0.2s; }
         .typing-dot:nth-child(3) { animation-delay: 0.4s; }
-
-        @keyframes typing {
-            0%, 60%, 100% { transform: scale(0.8); opacity: 0.5; }
-            30% { transform: scale(1.2); opacity: 1; }
+        @keyframes typing-bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
         }
-
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(10px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            padding: 16px;
-        }
-
-        .modal.show {
-            opacity: 1;
-            display: flex;
-        }
-
-        .modal-content {
-            background: var(--surface);
+        
+        /* Deep Research Töltésjelző */
+        .research-indicator {
+            background: var(--glass);
             border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 24px;
-            max-width: 500px;
-            width: 100%;
-            max-height: 80vh;
-            overflow-y: auto;
-            backdrop-filter: blur(30px);
-            transform: scale(0.9);
-            transition: transform 0.3s ease;
-            box-shadow: var(--shadow);
+            border-radius: 16px; padding: 24px;
+            display: flex; flex-direction: column; align-items: center; gap: 16px;
         }
-
-        .modal.show .modal-content {
-            transform: scale(1);
-        }
-
-        .modal-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-
-        .modal-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .close-btn {
-            background: var(--glass-strong);
-            backdrop-filter: blur(15px);
-            border: 1px solid var(--border);
+        .research-indicator .spinner {
+            width: 40px; height: 40px;
+            border: 4px solid var(--border);
+            border-top-color: var(--accent);
             border-radius: 50%;
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text);
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            touch-action: manipulation;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+            animation: spin 1s linear infinite;
         }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .research-indicator h4 { font-weight: 600; color: var(--text); }
+        .research-indicator p { font-size: 0.9rem; color: var(--text-muted); text-align: center; }
 
-        .close-btn:hover, .close-btn:active {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: var(--primary);
-            transform: scale(1.1);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-        }
-
-        .modal-body {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .modal-body label {
-            font-weight: 500;
-            color: var(--text-muted);
-            font-size: 0.8rem;
-        }
-
-        .modal-body input, .modal-body textarea {
-            background: var(--glass-strong);
+        /* --- Modális ablak (Modal) --- */
+        .modal {
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8);
             backdrop-filter: blur(15px);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 12px;
-            color: var(--text);
-            font-size: 0.9rem;
-            outline: none;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            font-family: inherit;
-            resize: vertical;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+            display: none; align-items: center; justify-content: center;
+            z-index: 2000; opacity: 0;
+            transition: opacity 0.3s ease; padding: 16px;
         }
-
-        .modal-body input:focus, .modal-body textarea:focus {
-            border-color: var(--primary);
-            background: rgba(255, 255, 255, 0.12);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+        .modal.show { display: flex; opacity: 1; }
+        .modal-content {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 20px; padding: 28px;
+            max-width: 550px; width: 100%;
+            max-height: 90vh; overflow-y: auto;
+            backdrop-filter: blur(40px) saturate(180%);
+            transform: scale(0.95) translateY(20px);
+            transition: transform 0.4s var(--transition-curve);
         }
-
-        .modal-footer {
-            margin-top: 20px;
-            display: flex;
-            justify-content: flex-end;
+        .modal.show .modal-content { transform: scale(1) translateY(0); }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+        .modal-title {
+            font-size: 1.4rem; font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
-
+        .close-btn {
+            background: var(--glass-strong); border: 1px solid var(--border);
+            border-radius: 50%; width: 36px; height: 36px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text); cursor: pointer;
+            transition: all 0.3s var(--transition-curve);
+        }
+        .close-btn:hover, .close-btn:active { transform: scale(1.1) rotate(90deg); }
+        .modal-body { display: flex; flex-direction: column; gap: 16px; }
+        .modal-body label { font-weight: 500; color: var(--text-muted); font-size: 0.9rem; }
+        .modal-body input, .modal-body textarea {
+            background: var(--glass-strong); border: 1px solid var(--border);
+            border-radius: 10px; padding: 14px; color: var(--text);
+            font-size: 1rem; outline: none;
+            transition: all 0.3s var(--transition-curve);
+            font-family: inherit; resize: vertical;
+        }
+        .modal-body input:focus, .modal-body textarea:focus { border-color: var(--accent); }
+        .modal-footer { margin-top: 24px; display: flex; justify-content: flex-end; }
         .modal-submit-btn {
-            background: var(--glass-strong);
-            backdrop-filter: blur(20px);
-            color: var(--text);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 12px 20px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            touch-action: manipulation;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            background: var(--accent); color: #fff;
+            border: none; border-radius: 10px;
+            padding: 12px 24px; font-weight: 600; font-size: 0.9rem;
+            cursor: pointer; transition: all 0.3s var(--transition-curve);
         }
-
-        .modal-submit-btn:hover, .modal-submit-btn:active {
-            transform: translateY(-2px);
-            background: rgba(255, 255, 255, 0.15);
-            border-color: var(--primary);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        .modal-submit-btn:hover, .modal-submit-btn:active { transform: translateY(-2px); }
+        
+        /* --- Kutatási Eredmények és Dokumentumok --- */
+        .research-complete, .research-error {
+            background: var(--glass); border: 1px solid var(--border);
+            border-radius: 16px; padding: 24px; margin: 16px 0;
+            backdrop-filter: blur(10px);
         }
-
-        .sources-list {
-            max-height: 200px;
-            overflow-y: auto;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            padding: 1rem;
-            background: rgba(0, 0, 0, 0.2);
+        .completion-stats h3, .error-text h3 {
+            font-weight: 700; margin-bottom: 16px;
+            color: var(--text); font-size: 1.2rem;
+            display: flex; align-items: center; gap: 10px;
         }
-
-        /* Progress bar stílusok */
-        .progress-container {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin: 1rem 0;
-        }
-
-        .progress-title {
-            font-weight: 600;
-            margin-bottom: 1rem;
-            color: var(--text-primary);
-        }
-
-        .progress-bar-container {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            height: 20px;
-            margin-bottom: 1rem;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .progress-bar {
-            background: linear-gradient(90deg, #00d4ff, #0099cc);
-            height: 100%;
-            width: 0%;
-            border-radius: 10px;
-            transition: width 0.8s ease-in-out;
-            position: relative;
-        }
-
-        .progress-bar::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            right: 0;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            animation: shimmer 2s infinite;
-        }
-
-        @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-
-        .progress-text {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            margin-bottom: 1rem;
-        }
-
-        .progress-details {
-            max-height: 150px;
-            overflow-y: auto;
-        }
-
-        .progress-step {
-            padding: 0.5rem 0;
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-            border-left: 2px solid #00d4ff;
-            padding-left: 1rem;
-            margin-bottom: 0.5rem;
-            opacity: 0;
-            animation: fadeInStep 0.5s ease-in-out forwards;
-        }
-
-        @keyframes fadeInStep {
-            ```html
-            from { opacity: 0; transform: translateX(-10px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        /* Kutatás befejezve stílusok */
-        .research-complete {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin: 1rem 0;
-        }
-
-        .completion-stats h3 {
-            color: #00ff88;
-            margin-bottom: 1rem;
-            font-size: 1.2rem;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .stat-item {
-            text-align: center;
-            background: rgba(0, 0, 0, 0.4);
-            padding: 1rem;
-            border-radius: 8px;
-        }
-
-        .stat-number {
-            display: block;
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #00d4ff;
-        }
-
-        .stat-label {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-        }
-
+        .completion-stats h3 { color: var(--secondary); }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .stat-item { text-align: center; background: rgba(0, 0, 0, 0.2); padding: 16px; border-radius: 12px; }
+        .stat-number { display: block; font-size: 1.8rem; font-weight: 700; color: var(--accent); }
+        .stat-label { font-size: 0.8rem; color: var(--text-muted); }
+        
         .document-preview {
-            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(0, 153, 204, 0.1));
-            border: 1px solid rgba(0, 212, 255, 0.3);
-            border-radius: 12px;
-            padding: 1.5rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
+            background: linear-gradient(135deg, rgba(0, 119, 255, 0.1), rgba(0, 119, 255, 0.05));
+            border: 1px solid var(--accent); border-radius: 12px;
+            padding: 20px; cursor: pointer; transition: all 0.3s ease;
+            display: flex; align-items: center; gap: 16px;
         }
-
         .document-preview:hover {
-            background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(0, 153, 204, 0.2));
-            border-color: rgba(0, 212, 255, 0.5);
-            transform: translateY(-2px);
+            background: linear-gradient(135deg, rgba(0, 119, 255, 0.2), rgba(0, 119, 255, 0.1));
+            transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0, 119, 255, 0.2);
         }
+        .document-icon { font-size: 2.5rem; color: var(--accent); flex-shrink: 0; }
+        .document-info h4 { margin: 0 0 4px 0; color: var(--text); font-weight: 600; }
+        .document-info p { margin: 0; color: var(--text-muted); font-size: 0.9rem; }
+        .document-arrow { font-size: 1.5rem; color: var(--accent); margin-left: auto; flex-shrink: 0; transition: transform 0.3s ease; }
+        .document-preview:hover .document-arrow { transform: translateX(5px); }
+        
+        .research-error { border-color: #ff3b30; }
+        .error-text h3 { color: #ff453a; }
+        .error-icon { font-size: 1.2rem; }
 
-        .document-icon {
-            font-size: 2.5rem;
-            flex-shrink: 0;
-        }
-
-        .document-info h4 {
-            margin: 0 0 0.5rem 0;
-            color: var(--text-primary);
-        }
-
-        .document-info p {
-            margin: 0;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-
-        .document-arrow {
-            font-size: 1.5rem;
-            color: #00d4ff;
-            margin-left: auto;
-            flex-shrink: 0;
-        }
-
-        /* Dokumentum megjelenítő */
         .document-viewer {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--bg-primary);
-            z-index: 10000;
-            display: flex;
-            flex-direction: column;
-            animation: slideInFromRight 0.3s ease-out;
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: var(--bg); z-index: 10000;
+            display: none; flex-direction: column;
+            animation: slideInFromRight 0.5s var(--transition-curve);
         }
-
-        @keyframes slideInFromRight {
-            from { transform: translateX(100%); }
-            to { transform: translateX(0); }
-        }
-
+        @keyframes slideInFromRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .document-viewer.show { display: flex; }
         .document-header {
-            background: rgba(0, 0, 0, 0.5);
-            padding: 1rem 2rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            flex-wrap: wrap;
+            background: rgba(10, 10, 10, 0.7); backdrop-filter: blur(30px);
+            padding: 1rem 2rem; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
         }
-
-        .back-button {
-            background: rgba(0, 212, 255, 0.2);
-            border: 1px solid rgba(0, 212, 255, 0.5);
-            color: #00d4ff;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-size: 0.9rem;
-        }
-
-        .back-button:hover {
-            background: rgba(0, 212, 255, 0.3);
-            transform: translateX(-2px);
-        }
-
-        .document-header h2 {
-            flex: 1;
-            margin: 0;
-            color: var(--text-primary);
-        }
-
-        .document-actions {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .action-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: var(--text-primary);
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-size: 0.85rem;
-        }
-
-        .action-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .document-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 2rem;
-        }
-
-        .document-section {
-            margin-bottom: 3rem;
-        }
-
+        .document-header h2 { flex: 1; margin: 0; font-weight: 700; }
+        .document-content { flex: 1; overflow-y: auto; padding: 2rem; }
+        .document-section { margin-bottom: 3rem; }
         .document-section h3 {
-            color: #00d4ff;
-            border-bottom: 2px solid rgba(0, 212, 255, 0.3);
-            padding-bottom: 0.5rem;
-            margin-bottom: 1.5rem;
+            color: var(--accent); border-bottom: 2px solid var(--accent);
+            padding-bottom: 0.5rem; margin-bottom: 1.5rem; font-weight: 700;
         }
-
-        .synthesis-content {
-            line-height: 1.8;
-            color: var(--text-primary);
-            background: rgba(0, 0, 0, 0.2);
-            padding: 1.5rem;
-            border-radius: 8px;
-            border-left: 4px solid #00d4ff;
-        }
-
+        .synthesis-content { line-height: 1.8; background: var(--glass); padding: 1.5rem; border-radius: 8px; border-left: 4px solid var(--accent); }
         .source-item {
-            display: flex;
-            gap: 1rem;
-            padding: 1rem;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            border-left: 3px solid rgba(0, 212, 255, 0.5);
+            display: flex; gap: 1rem; padding: 1rem;
+            background: var(--glass); border-radius: 8px;
+            margin-bottom: 1rem; border-left: 3px solid var(--border);
+            transition: all 0.3s ease;
         }
-
-        .source-number {
-            color: #00d4ff;
-            font-weight: bold;
-            flex-shrink: 0;
-        }
-
-        .source-content h4 {
-            margin: 0 0 0.5rem 0;
-            color: var(--text-primary);
-            font-size: 1rem;
-        }
-
-        .source-content a {
-            color: #00d4ff;
-            text-decoration: none;
-            font-size: 0.85rem;
-            word-break: break-all;
-        }
-
-        .source-content a:hover {
-            text-decoration: underline;
-        }
-
-        .source-date {
-            display: block;
-            color: var(--text-secondary);
-            font-size: 0.8rem;
-            margin-top: 0.5rem;
-        }
-
-        .stats-table {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .stat-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 1rem 1.5rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .stat-row:last-child {
-            border-bottom: none;
-        }
-
-        .stat-label {
-            color: var(--text-secondary);
-        }
-
-        .stat-value {
-            color: var(--text-primary);
-            font-weight: 600;
-        }
-
-        /* Hiba üzenet */
-        .research-error {
-            background: rgba(255, 0, 0, 0.1);
-            border: 1px solid rgba(255, 0, 0, 0.3);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin: 1rem 0;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .error-icon {
-            font-size: 2rem;
-            flex-shrink: 0;
-        }
-
-        .error-text h3 {
-            margin: 0 0 0.5rem 0;
-            color: #ff6b6b;
-        }
-
-        .error-text p {
-            margin: 0;
-            color: var(--text-secondary);
-        }
-
-        /* Mobil optimalizálás */
+        .source-item:hover { border-left-color: var(--accent); transform: translateX(5px); }
+        .source-number { color: var(--accent); font-weight: bold; flex-shrink: 0; }
+        .source-content h4 { margin: 0 0 0.5rem 0; font-size: 1rem; }
+        .source-content a { color: var(--accent); text-decoration: none; font-size: 0.85rem; word-break: break-all; }
+        .source-content a:hover { text-decoration: underline; }
+        .source-date { display: block; color: var(--text-muted); font-size: 0.8rem; margin-top: 0.5rem; }
+        
+        /* Mobil nézet optimalizációk */
         @media (max-width: 768px) {
-            .document-header {
-                padding: 1rem;
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .document-header h2 {
-                text-align: center;
-                margin: 1rem 0;
-            }
-
-            .document-actions {
-                justify-content: center;
-            }
-
-            .document-content {
-                padding: 1rem;
-            }
-
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .source-item {
-                flex-direction: column;
-                gap: 0.5rem;
-            }
-
-            .stat-row {
-                flex-direction: column;
-                gap: 0.5rem;
-            }
+            .sidebar { width: 280px; }
+            .header-title { font-size: 1rem; }
+            .messages-container, .input-area { padding: 16px; }
+            .document-header { padding: 1rem; flex-direction: column; align-items: stretch; }
+            .document-header h2 { text-align: center; margin: 1rem 0; }
+            .document-content { padding: 1rem; }
         }
     </style>
 </head>
 <body>
-    <div class="background-gradient"></div>
+    <div class="aurora-background">
+        <div class="aurora one"></div>
+        <div class="aurora two"></div>
+        <div class="aurora three"></div>
+    </div>
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <div class="container">
-        <!-- Sidebar -->
-        <aside class="sidebar" id="sidebar">
+        <!-- Oldalsáv (Sidebar) -->
+        <aside class="sidebar" id="sidebar" role="navigation">
             <div class="sidebar-header">
                 <div class="logo">
                     <div class="logo-icon">J</div>
                     <div class="logo-text">
-                        <h1>JADED</h1>
+                        <h1>JADE</h1>
                         <p>Deep Discovery AI</p>
                     </div>
                 </div>
@@ -1186,30 +564,28 @@
                     Új beszélgetés
                 </button>
             </div>
-
             <div class="sidebar-content" id="sidebarContent">
                 <!-- A szolgáltatások dinamikusan töltődnek be ide -->
             </div>
-
             <div class="sidebar-footer">
-                <p class="made-by">JADED made by Sándor Kollár</p>
+                <p class="made-by">JADE v2.5 by Sándor Kollár</p>
             </div>
         </aside>
 
-        <!-- Main Content -->
+        <!-- Fő tartalom -->
         <main class="main-content" id="mainContent">
             <header class="header">
-                <button class="menu-toggle" onclick="toggleSidebar()">
+                <button class="menu-toggle" onclick="toggleSidebar()" aria-label="Menü megnyitása/bezárása">
                     <i class="fas fa-bars"></i>
                 </button>
-                <h1 class="header-title">JADED AI Platform</h1>
-                <div></div>
+                <h1 class="header-title">JADE AI Platform</h1>
+                <div></div> <!-- Spacer -->
             </header>
 
             <div class="chat-area">
-                <div class="messages-container" id="messagesContainer">
+                <div class="messages-container" id="messagesContainer" aria-live="polite">
                     <div class="welcome-screen" id="welcomeScreen">
-                        <h1 class="welcome-title">JADED</h1>
+                        <h1 class="welcome-title">JADE</h1>
                         <p class="welcome-subtitle">
                             Deep Discovery AI Platform - 150+ Alpha szolgáltatás, neurális keresés és fejlett AI elemzés
                         </p>
@@ -1225,10 +601,11 @@
                         <textarea 
                             class="message-input" 
                             id="messageInput" 
-                            placeholder="Kérdezz bármit"
+                            placeholder="Kérdezz bármit..."
                             rows="1"
+                            aria-label="Üzenet beviteli mező"
                         ></textarea>
-                        <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+                        <button class="send-btn" id="sendBtn" onclick="sendMessage()" aria-label="Üzenet küldése">
                             <i class="fas fa-paper-plane"></i>
                         </button>
                     </div>
@@ -1237,359 +614,126 @@
         </main>
     </div>
 
-    <!-- Service Modal -->
-    <div class="modal" id="serviceModal">
+    <!-- Szolgáltatás Modális Ablak -->
+    <div class="modal" id="serviceModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title" id="modalTitle">Szolgáltatás</h2>
-                <button class="close-btn" onclick="closeModal()">
+                <button class="close-btn" onclick="closeModal()" aria-label="Bezárás">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <div class="modal-body" id="modalBody">
-                <!-- A modális ablak tartalma dinamikusan generálódik -->
-            </div>
-            <div class="modal-footer" id="modalFooter">
-                 <!-- A modális ablak lábléce dinamikusan generálódik -->
-            </div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer" id="modalFooter"></div>
         </div>
     </div>
 
-    <!-- Document Viewer -->
-    <div class="document-viewer" id="documentViewer" style="display: none;">
+    <!-- Dokumentum Megjelenítő -->
+    <div class="document-viewer" id="documentViewer" role="document" aria-hidden="true">
         <div class="document-header">
-            <button class="back-button" onclick="closeDocumentViewer()">
+            <button class="action-btn back-button" onclick="closeDocumentViewer()">
                 <i class="fas fa-arrow-left"></i> Vissza
             </button>
-            <h2>Kutatási Dokumentum</h2>
+            <h2 id="documentTitle">Kutatási Dokumentum</h2>
             <div class="document-actions">
                 <button class="action-btn"><i class="fas fa-download"></i> Letöltés</button>
                 <button class="action-btn"><i class="fas fa-share-alt"></i> Megosztás</button>
             </div>
         </div>
-        <div class="document-content" id="documentContent">
-            <!-- Dokumentum tartalma ide töltődik -->
-        </div>
+        <div class="document-content" id="documentContent"></div>
     </div>
 
     <script>
-        // --- Globális Változók és Konfiguráció ---
-        let isTyping = false;
-        let userId = 'user_' + Math.random().toString(36).substr(2, 9);
-        const API_BASE_URL = '/api';
+        // --- Globális Állapot és Konfiguráció ---
+        const AppState = {
+            isTyping: false,
+            userId: 'user_' + Math.random().toString(36).substr(2, 9),
+            researchState: null // Itt tároljuk a Deep Research eredményeit
+        };
+        const API_BASE_URL = '/api'; // A backend API címe
 
-        // Mobil detektálás
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        // --- DOM Elemek Gyors Elérése ---
+        const getEl = (id) => document.getElementById(id);
+        const sidebar = getEl('sidebar'), sidebarOverlay = getEl('sidebarOverlay'),
+              sidebarContent = getEl('sidebarContent'), mainContent = getEl('mainContent'),
+              messagesContainer = getEl('messagesContainer'), messageInput = getEl('messageInput'),
+              sendBtn = getEl('sendBtn'), serviceModal = getEl('serviceModal'),
+              modalTitle = getEl('modalTitle'), modalBody = getEl('modalBody'),
+              modalFooter = getEl('modalFooter'), documentViewer = getEl('documentViewer'),
+              documentContent = getEl('documentContent'), documentTitle = getEl('documentTitle');
+        let welcomeScreen = getEl('welcomeScreen');
 
-        // Haptic feedback támogatás
-        const supportsHaptics = 'vibrate' in navigator;
-
-        // Touch gesztusok
-        let touchStartX = 0;
-        let touchStartY = 0;
-        let touchEndX = 0;
-        let touchEndY = 0;
-
-        // --- DOM Elemek ---
-        const sidebar = document.getElementById('sidebar');
-        const sidebarOverlay = document.getElementById('sidebarOverlay');
-        const sidebarContent = document.getElementById('sidebarContent');
-        const mainContent = document.getElementById('mainContent');
-        const messagesContainer = document.getElementById('messagesContainer');
-        const messageInput = document.getElementById('messageInput');
-        const sendBtn = document.getElementById('sendBtn');
-        let welcomeScreen = document.getElementById('welcomeScreen');
-        const serviceModal = document.getElementById('serviceModal');
-        const modalTitle = document.getElementById('modalTitle');
-        const modalBody = document.getElementById('modalBody');
-        const modalFooter = document.getElementById('modalFooter');
-        const documentViewer = document.getElementById('documentViewer');
-        const documentContent = document.getElementById('documentContent');
-
-        // --- Haptic Feedback Funkciók ---
-        function triggerHapticFeedback(type = 'light') {
-            if (!supportsHaptics) return;
-
-            switch(type) {
-                case 'light':
-                    navigator.vibrate(10);
-                    break;
-                case 'medium':
-                    navigator.vibrate(50);
-                    break;
-                case 'heavy':
-                    navigator.vibrate(100);
-                    break;
-                case 'selection':
-                    navigator.vibrate([10, 10, 10]);
-                    break;
-                case 'success':
-                    navigator.vibrate([50, 50, 100]);
-                    break;
-                case 'error':
-                    navigator.vibrate([100, 50, 100, 50, 100]);
-                    break;
-            }
-        }
-
-        // --- Touch Gesztusok ---
-        function setupTouchGestures() {
-            document.addEventListener('touchstart', handleTouchStart, { passive: false });
-            document.addEventListener('touchmove', handleTouchMove, { passive: false });
-            document.addEventListener('touchend', handleTouchEnd, { passive: false });
-        }
-
-        function handleTouchStart(e) {
-            touchStartX = e.touches[0].clientX;
-            touchStartY = e.touches[0].clientY;
-        }
-
-        function handleTouchMove(e) {
-            if (!touchStartX || !touchStartY) return;
-
-            touchEndX = e.touches[0].clientX;
-            touchEndY = e.touches[0].clientY;
-
-            const diffX = touchStartX - touchEndX;
-            const diffY = touchStartY - touchEndY;
-
-            // Horizontális swipe detektálás
-            if (Math.abs(diffX) > Math.abs(diffY)) {
-                if (Math.abs(diffX) > 50) { // Minimum swipe távolság
-                    if (diffX > 0) {
-                        // Balra swipe - sidebar bezárás
-                        if (sidebar.classList.contains('open')) {
-                            e.preventDefault();
-                        }
-                    } else {
-                        // Jobbra swipe - sidebar megnyitás
-                        if (!sidebar.classList.contains('open') && touchStartX < 50) {
-                            e.preventDefault();
-                        }
-                    }
-                }
-            }
-        }
-
-        function handleTouchEnd(e) {
-            if (!touchStartX || !touchStartY) return;
-
-            const diffX = touchStartX - touchEndX;
-            const diffY = touchStartY - touchEndY;
-
-            // Horizontális swipe végrehajtás
-            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 100) {
-                if (diffX > 0) {
-                    // Balra swipe - sidebar bezárás
-                    if (sidebar.classList.contains('open')) {
-                        closeSidebar();
-                        triggerHapticFeedback('light');
-                    }
-                } else {
-                    // Jobbra swipe - sidebar megnyitás
-                    if (!sidebar.classList.contains('open') && touchStartX < 50) {
-                        openSidebar();
-                        triggerHapticFeedback('light');
-                    }
-                }
-            }
-
-            // Reset
-            touchStartX = 0;
-            touchStartY = 0;
-            touchEndX = 0;
-            touchEndY = 0;
-        }
-
-        // --- Inicializálás ---
+        // --- Alkalmazás Inicializálása ---
         document.addEventListener('DOMContentLoaded', () => {
             setupEventListeners();
-            setupTouchGestures();
             loadServices();
             messageInput.focus();
-
-            // iOS specifikus optimalizációk
-            if (isIOS) {
-                document.body.style.webkitUserSelect = 'none';
-                document.body.style.webkitTouchCallout = 'none';
-            }
+            // A marked.js beállítása a biztonságosabb renderelésért
+            marked.setOptions({ gfm: true, breaks: true, sanitize: true });
         });
 
         function setupEventListeners() {
             messageInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
-                    if (!sendBtn.disabled) {
-                        sendMessage();
-                        triggerHapticFeedback('light');
-                    }
+                    if (!sendBtn.disabled) sendMessage();
                 }
             });
-
-            messageInput.addEventListener('input', function() {
-                this.style.height = 'auto';
-                this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+            messageInput.addEventListener('input', () => {
+                messageInput.style.height = 'auto';
+                messageInput.style.height = `${Math.min(messageInput.scrollHeight, 150)}px`;
             });
-
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
-                    closeModal();
-                    closeSidebar();
-                    closeDocumentViewer();
+                    if (serviceModal.classList.contains('show')) closeModal();
+                    else if (sidebar.classList.contains('open')) closeSidebar();
+                    else if (documentViewer.classList.contains('show')) closeDocumentViewer();
                 }
             });
-
+            sidebarOverlay.addEventListener('click', closeSidebar);
             serviceModal.addEventListener('click', (e) => {
                 if (e.target === serviceModal) closeModal();
             });
-
-            sidebarOverlay.addEventListener('click', () => {
-                closeSidebar();
-                triggerHapticFeedback('light');
-            });
-
-            // Gomb interakciók haptic feedback-del
-            document.addEventListener('click', (e) => {
-                if (e.target.matches('button, .service-item, .category-header, .action-btn')) {
-                    triggerHapticFeedback('light');
-                    e.target.classList.add('pulse');
-                    setTimeout(() => e.target.classList.remove('pulse'), 200);
-                }
-            });
         }
 
-        // --- API Hívások ---
+        // --- API Kommunikáció ---
         async function fetchAPI(endpoint, options = {}) {
             try {
                 const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
                 if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+                    const errorData = await response.json().catch(() => ({ detail: `HTTP hiba: ${response.status}` }));
+                    throw new Error(errorData.detail || errorData.message);
                 }
                 return await response.json();
             } catch (error) {
-                console.error('API Error:', error);
-                addAiMessage(`Hiba történt a szerverrel való kommunikáció során: ${error.message}`, 'Hiba');
-                hideTypingIndicator();
-                triggerHapticFeedback('error');
+                console.error('API Hiba:', error);
+                // A hibát a felhasználói felületen is megjelenítjük
+                displayResearchError(error.message);
                 throw error;
             }
         }
 
-        // --- Sidebar Funkciók ---
-        function openSidebar() {
-            sidebar.classList.add('open');
-            sidebarOverlay.classList.add('active');
-            document.body.style.overflow = 'hidden';
+        // --- UI Kezelő Függvények (Sidebar, Modal, stb.) ---
+        function openSidebar() { sidebar.classList.add('open'); sidebarOverlay.classList.add('active'); }
+        function closeSidebar() { sidebar.classList.remove('open'); sidebarOverlay.classList.remove('active'); }
+        function toggleSidebar() { sidebar.classList.contains('open') ? closeSidebar() : openSidebar(); }
+        
+        function openModal() {
+            serviceModal.style.display = 'flex';
+            setTimeout(() => serviceModal.classList.add('show'), 10);
+        }
+        function closeModal() {
+            serviceModal.classList.remove('show');
+            setTimeout(() => { serviceModal.style.display = 'none'; }, 300);
         }
 
-        function closeSidebar() {
-            sidebar.classList.remove('open');
-            sidebarOverlay.classList.remove('active');
-            document.body.style.overflow = '';
+        function openDocumentViewer() {
+            documentViewer.classList.add('show');
+            documentViewer.setAttribute('aria-hidden', 'false');
         }
-
-        function toggleSidebar() {
-            if (sidebar.classList.contains('open')) {
-                closeSidebar();
-            } else {
-                openSidebar();
-            }
-            triggerHapticFeedback('light');
-        }
-
-        // --- Szolgáltatások Betöltése ---
-        async function loadServices() {
-            try {
-                const { categories } = await fetchAPI('/services');
-                sidebarContent.innerHTML = '';
-
-                const categoryIcons = {
-                    biologiai_orvosi: 'fa-dna',
-                    kemiai_anyagtudomanyi: 'fa-atom',
-                    kornyezeti_fenntarthato: 'fa-leaf',
-                    fizikai_asztrofizikai: 'fa-satellite-dish',
-                    technologiai_melymu: 'fa-microchip',
-                    tarsadalmi_gazdasagi: 'fa-chart-line'
-                };
-
-                const categoryNames = {
-                    biologiai_orvosi: 'Biológiai & Orvosi',
-                    kemiai_anyagtudomanyi: 'Kémiai & Anyagtudományi',
-                    kornyezeti_fenntarthato: 'Környezeti & Fenntartható',
-                    fizikai_asztrofizikai: 'Fizikai & Asztrofizikai',
-                    technologiai_melymu: 'Technológiai & Mélyműszaki',
-                    tarsadalmi_gazdasagi: 'Társadalmi & Gazdasági'
-                };
-
-                for (const categoryId in categories) {
-                    const category = categories[categoryId];
-                    const categoryDiv = document.createElement('div');
-                    categoryDiv.className = 'service-category';
-
-                    let servicesHTML = '';
-                    for (const serviceName in category) {
-                        const serviceDescription = category[serviceName];
-                        servicesHTML += `
-                            <div class="service-item" onclick="selectService('${serviceName}', '${serviceDescription}')">
-                                <div class="service-icon"><i class="fas fa-flask"></i></div>
-                                <div class="service-info">
-                                    <h4>${serviceName}</h4>
-                                    <p>${serviceDescription}</p>
-                                </div>
-                            </div>
-                        `;
-                    }
-
-                    categoryDiv.innerHTML = `
-                        <div class="category-header" onclick="toggleCategory(this)">
-                            <div class="category-title">
-                                <i class="fas ${categoryIcons[categoryId] || 'fa-star'}"></i>
-                                <span>${categoryNames[categoryId] || categoryId}</span>
-                            </div>
-                            <i class="fas fa-chevron-down"></i>
-                        </div>
-                        <div class="category-services">${servicesHTML}</div>
-                    `;
-                    sidebarContent.appendChild(categoryDiv);
-                }
-
-                // Deep Research & Code Generator hozzáadása
-                const researchCategory = document.createElement('div');
-                researchCategory.className = 'service-category';
-                researchCategory.innerHTML = `
-                    <div class="category-header" onclick="toggleCategory(this)">
-                        <div class="category-title"><i class="fas fa-search"></i><span>Kutatási Funkciók</span></div>
-                        <i class="fas fa-chevron-down"></i>
-                    </div>
-                    <div class="category-services">
-                        <div class="service-item" onclick="startDeepResearch()">
-                            <div class="service-icon"><i class="fas fa-microscope"></i></div>
-                            <div class="service-info"><h4>Deep Research</h4><p>Mélyreható kutatási elemzés</p></div>
-                        </div>
-                        <div class="service-item" onclick="openCodeGenerator()">
-                            <div class="service-icon"><i class="fas fa-code"></i></div>
-                            <div class="service-info"><h4>Kód Generátor</h4><p>AI-powered kódolás</p></div>
-                        </div>
-                    </div>
-                `;
-                sidebarContent.appendChild(researchCategory);
-
-                triggerHapticFeedback('success');
-            } catch (error) {
-                sidebarContent.innerHTML = '<p style="padding: 1rem; color: var(--text-muted);">Szolgáltatások betöltése sikertelen.</p>';
-                triggerHapticFeedback('error');
-            }
-        }
-
-        // --- UI Kezelés ---
-        function toggleCategory(headerElement) {
-            const services = headerElement.nextElementSibling;
-            const chevron = headerElement.querySelector('.fas.fa-chevron-down');
-            services.classList.toggle('open');
-            chevron.style.transform = services.classList.contains('open') ? 'rotate(180deg)' : 'rotate(0deg)';
-            triggerHapticFeedback('selection');
+        function closeDocumentViewer() {
+            documentViewer.classList.remove('show');
+            documentViewer.setAttribute('aria-hidden', 'true');
         }
 
         function hideWelcome() {
@@ -1600,417 +744,336 @@
         }
 
         function newChat() {
-            messagesContainer.innerHTML = '';
+            messagesContainer.innerHTML = ''; // Törli a korábbi üzeneteket
             const newWelcomeScreen = document.createElement('div');
             newWelcomeScreen.className = 'welcome-screen';
             newWelcomeScreen.id = 'welcomeScreen';
             newWelcomeScreen.innerHTML = `
-                <h1 class="welcome-title">JADED</h1>
-                <p class="welcome-subtitle">Deep Discovery AI Platform</p>
-                <button class="start-btn" onclick="hideWelcome()"><i class="fas fa-rocket"></i> Kezdjük el!</button>
+                <h1 class="welcome-title">JADE</h1>
+                <p class="welcome-subtitle">Készen állok a következő feladatra. Válassz egy szolgáltatást, vagy kérdezz bármit!</p>
             `;
             messagesContainer.appendChild(newWelcomeScreen);
-            welcomeScreen = document.getElementById('welcomeScreen');
+            welcomeScreen = getEl('welcomeScreen');
             messageInput.value = '';
             messageInput.focus();
-            triggerHapticFeedback('light');
+            closeSidebar();
         }
 
-        function openModal() {
-            serviceModal.style.display = 'flex';
-            setTimeout(() => serviceModal.classList.add('show'), 10);
-            document.body.style.overflow = 'hidden';
-        }
+        // --- Szolgáltatások Betöltése és Kezelése ---
+        async function loadServices() {
+            try {
+                const { categories } = await fetchAPI('/services');
+                sidebarContent.innerHTML = ''; // Előző menü törlése
 
-        function closeModal() {
-            serviceModal.classList.remove('show');
-            setTimeout(() => {
-                serviceModal.style.display = 'none';
-                document.body.style.overflow = '';
-            }, 300);
-            triggerHapticFeedback('light');
-        }
+                // Kategória ikonok és nevek
+                const categoryMeta = {
+                    biologiai_orvosi: { name: 'Biológiai & Orvosi', icon: 'fa-dna' },
+                    kemiai_anyagtudomanyi: { name: 'Kémiai & Anyagtudományi', icon: 'fa-atom' },
+                    kornyezeti_fenntarthato: { name: 'Környezeti & Fenntartható', icon: 'fa-leaf' },
+                    fizikai_asztrofizikai: { name: 'Fizikai & Asztrofizikai', icon: 'fa-satellite-dish' },
+                    technologiai_melymu: { name: 'Technológiai & Mélyműszaki', icon: 'fa-microchip' },
+                    tarsadalmi_gazdasagi: { name: 'Társadalmi & Gazdasági', icon: 'fa-chart-line' }
+                };
 
-        function openDocumentViewer() {
-            documentViewer.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-        }
+                // Szolgáltatások menü felépítése
+                for (const categoryId in categories) {
+                    const category = categories[categoryId];
+                    const meta = categoryMeta[categoryId] || { name: categoryId, icon: 'fa-star' };
+                    
+                    const categoryDiv = document.createElement('div');
+                    categoryDiv.className = 'service-category';
+                    
+                    let servicesHTML = '';
+                    for (const serviceName in category) {
+                        servicesHTML += `
+                            <div class="service-item" onclick="selectService('${serviceName}', '${escapeHtml(category[serviceName])}')">
+                                <div class="service-icon"><i class="fas fa-flask"></i></div>
+                                <div class="service-info">
+                                    <h4>${escapeHtml(serviceName)}</h4>
+                                    <p>${escapeHtml(category[serviceName])}</p>
+                                </div>
+                            </div>`;
+                    }
 
-        function closeDocumentViewer() {
-            documentViewer.style.display = 'none';
-            document.body.style.overflow = '';
+                    categoryDiv.innerHTML = `
+                        <div class="category-header" onclick="toggleCategory(this)">
+                            <div class="category-title">
+                                <i class="fas ${meta.icon}"></i>
+                                <span>${meta.name}</span>
+                            </div>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="category-services"><div>${servicesHTML}</div></div>`;
+                    sidebarContent.appendChild(categoryDiv);
+                }
+
+                // Speciális funkciók hozzáadása a menühöz
+                const researchCategory = document.createElement('div');
+                researchCategory.className = 'service-category';
+                researchCategory.innerHTML = `
+                    <div class="category-header" onclick="toggleCategory(this)">
+                        <div class="category-title"><i class="fas fa-search-plus" style="color: var(--secondary)"></i><span>Kutatási Funkciók</span></div>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="category-services"><div>
+                        <div class="service-item" onclick="startDeepResearch()">
+                            <div class="service-icon" style="color: var(--secondary);"><i class="fas fa-microscope"></i></div>
+                            <div class="service-info"><h4>Deep Research</h4><p>Mélyreható kutatási elemzés</p></div>
+                        </div>
+                        <div class="service-item" onclick="openCodeGenerator()">
+                            <div class="service-icon" style="color: var(--secondary);"><i class="fas fa-code"></i></div>
+                            <div class="service-info"><h4>Kód Generátor</h4><p>AI-alapú kódolás</p></div>
+                        </div>
+                    </div></div>`;
+                sidebarContent.appendChild(researchCategory);
+            } catch (error) {
+                sidebarContent.innerHTML = '<p style="padding: 1rem; color: var(--text-muted);">Szolgáltatások betöltése sikertelen.</p>';
+            }
+        }
+        
+        function toggleCategory(headerElement) {
+            const services = headerElement.nextElementSibling;
+            const chevron = headerElement.querySelector('.fa-chevron-down');
+            const isOpen = services.classList.toggle('open');
+            chevron.style.transform = isOpen ? 'rotate(180deg)' : 'rotate(0deg)';
         }
 
         // --- Üzenetküldés és Feldolgozás ---
         async function sendMessage() {
             const message = messageInput.value.trim();
-            if (!message || isTyping) return;
+            if (!message || AppState.isTyping) return;
 
             hideWelcome();
             addUserMessage(message);
             messageInput.value = '';
             messageInput.style.height = 'auto';
             showTypingIndicator();
-            triggerHapticFeedback('light');
 
             try {
                 const data = await fetchAPI('/deep_discovery/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: message, user_id: userId })
+                    body: JSON.stringify({ message: message, user_id: AppState.userId })
                 });
                 hideTypingIndicator();
                 addAiMessage(data.response, data.model_used);
-                triggerHapticFeedback('success');
             } catch (error) {
-                hideTypingIndicator();
-                triggerHapticFeedback('error');
+                hideTypingIndicator(); // Hiba esetén is el kell tüntetni a "gépel" jelzést
             }
         }
 
         function addUserMessage(message) {
             const messageDiv = document.createElement('div');
             messageDiv.className = 'message user-message';
-            messageDiv.innerHTML = `<div class="user-bubble">${escapeHtml(message)}</div>`;
+            const bubble = document.createElement('div');
+            bubble.className = 'user-bubble';
+            bubble.textContent = message;
+            messageDiv.appendChild(bubble);
             messagesContainer.appendChild(messageDiv);
             scrollToBottom();
         }
 
-        function addAiMessage(content, model = 'JADED AI', sources = []) {
+        function addAiMessage(content, model = 'JADE AI') {
             const messageId = 'msg_' + Date.now();
             const messageDiv = document.createElement('div');
             messageDiv.className = 'message ai-message';
-
+            
             messageDiv.innerHTML = `
                 <div class="ai-content" id="${messageId}"></div>
                 <div class="message-actions">
-                    <button class="action-btn" onclick="copyMessage('${messageId}')"><i class="fas fa-copy"></i> Másolás</button>
-                </div>
-            `;
+                    <button class="action-btn" onclick="copyMessage(event, '${messageId}')"><i class="fas fa-copy"></i> Másolás</button>
+                </div>`;
             messagesContainer.appendChild(messageDiv);
-
-            // Live typing effect
-            typeWriterEffect(messageId, content, sources);
+            
+            const contentElement = getEl(messageId);
+            // A marked() alakítja át a Markdown szöveget HTML-lé
+            contentElement.innerHTML = marked.parse(content);
+            
+            // A kódblokkok szintaxis-kiemelése a highlight.js segítségével
+            contentElement.querySelectorAll('pre code').forEach(hljs.highlightElement);
             scrollToBottom();
         }
 
-        function typeWriterEffect(messageId, content, sources = []) {
-            const element = document.getElementById(messageId);
-            let formattedContent = marked.parse(content);
-
-            if (sources && sources.length > 0) {
-                let sourcesHtml = '<div class="source-list"><h4>Források:</h4>';
-                sources.forEach(source => {
-                    sourcesHtml += `<div class="source-item"><a href="${source.url}" target="_blank" rel="noopener noreferrer">${source.title || source.url}</a></div>`;
-                });
-                sourcesHtml += '</div>';
-                formattedContent += sourcesHtml;
-            }
-
-            let i = 0;
-            const speed = 15; // karakterek per másodperc
-
-            function typeChar() {
-                if (i < formattedContent.length) {
-                    element.innerHTML = formattedContent.substring(0, i + 1);
-                    i++;
-                    setTimeout(typeChar, speed);
-                    scrollToBottom();
-                } else {
-                    // Kódblokkok színezése a végén
-                    element.querySelectorAll('pre code').forEach((block) => {
-                        hljs.highlightElement(block);
-                    });
-                }
-            }
-            typeChar();
-        }
-
         function showTypingIndicator() {
-            isTyping = true;
+            AppState.isTyping = true;
             sendBtn.disabled = true;
             const indicator = document.createElement('div');
             indicator.id = 'typingIndicator';
             indicator.className = 'message ai-message';
             indicator.innerHTML = `
-                <div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>
-            `;
+                <div class="ai-content" style="padding: 18px 20px; width: min-content;">
+                    <div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>
+                </div>`;
             messagesContainer.appendChild(indicator);
             scrollToBottom();
         }
 
         function hideTypingIndicator() {
-            isTyping = false;
+            AppState.isTyping = false;
             sendBtn.disabled = false;
-            const indicator = document.getElementById('typingIndicator');
-            if (indicator) indicator.remove();
+            getEl('typingIndicator')?.remove();
         }
 
-        // --- Speciális Funkciók ---
+        // --- Speciális Funkciók (Alpha Services, Deep Research, Code Gen) ---
+
         function selectService(serviceName, description) {
             modalTitle.innerText = serviceName;
             modalBody.innerHTML = `
                 <p style="color: var(--text-muted); line-height: 1.6;">${description}</p>
                 <label for="serviceQuery">Kérdés vagy feladat:</label>
-                <textarea id="serviceQuery" rows="4" placeholder="Adja meg a ${serviceName} szolgáltatáshoz kapcsolódó kérését..."></textarea>
-            `;
+                <textarea id="serviceQuery" rows="4" placeholder="Adja meg a ${serviceName} szolgáltatáshoz kapcsolódó kérését..."></textarea>`;
             modalFooter.innerHTML = `<button class="modal-submit-btn" onclick="submitSimpleService('${serviceName}')">Elemzés indítása</button>`;
             openModal();
         }
 
         async function submitSimpleService(serviceName) {
-            const query = document.getElementById('serviceQuery').value;
+            const query = getEl('serviceQuery').value;
             if (!query) return;
 
             closeModal();
             hideWelcome();
             addUserMessage(`Kérés a(z) ${serviceName} szolgáltatáshoz: ${query}`);
             showTypingIndicator();
-            triggerHapticFeedback('light');
 
             try {
                 const data = await fetchAPI(`/alpha/simple/${serviceName}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        query: query, 
-                        details: "" 
-                    })
+                    body: JSON.stringify({ query, details: "" })
                 });
                 hideTypingIndicator();
                 addAiMessage(data.analysis, data.model_used);
-                triggerHapticFeedback('success');
             } catch (error) {
                 hideTypingIndicator();
-                triggerHapticFeedback('error');
             }
         }
-
-       let researchState = {
-            query: null,
-            steps: [],
-            currentStepIndex: 0,
-            sources: [],
-            totalSources: 0,
-            startTime: null,
-            endTime: null,
-            error: null,
-            documentContent: null
-        };
-
+        
+        // --- ÁTÍRT DEEP RESEARCH FUNKCIÓ ---
+        
         function startDeepResearch() {
             modalTitle.innerText = 'Deep Research';
             modalBody.innerHTML = `
                 <label for="researchQuery">Kutatási téma:</label>
-                <input type="text" id="researchQuery" placeholder="Adja meg a kutatási témát...">
-            `;
+                <input type="text" id="researchQuery" placeholder="Pl. 'A grafén felhasználása az akkumulátor technológiában'">`;
             modalFooter.innerHTML = `<button class="modal-submit-btn" onclick="submitDeepResearchQuery()">Kutatás indítása</button>`;
             openModal();
         }
 
         async function submitDeepResearchQuery() {
-            const query = document.getElementById('researchQuery').value;
+            const query = getEl('researchQuery').value;
             if (!query) return;
 
             closeModal();
             hideWelcome();
             addUserMessage(`Deep Research indítva: ${query}`);
-            showTypingIndicator();
-            triggerHapticFeedback('light');
-
-            // Reset research state
-            researchState = {
-                query: query,
-                steps: [],
-                currentStepIndex: 0,
-                sources: [],
-                totalSources: 0,
-                startTime: new Date(),
-                endTime: null,
-                error: null,
-                documentContent: null
-            };
+            showResearchIndicator(query); // Töltésjelző megjelenítése
 
             try {
-                // Initial API call to start the research
-                const data = await fetchAPI('/deep_research/start', {
+                // EGYETLEN API HÍVÁS a robusztus backend végpontra
+                const data = await fetchAPI('/deep_research', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query, user_id: userId })
-                });
-                hideTypingIndicator();
-
-                // Initialize research
-                researchState.steps = data.steps;
-                researchState.totalSources = data.total_sources;
-                startResearchProgress();
-
-            } catch (error) {
-                hideTypingIndicator();
-                triggerHapticFeedback('error');
-                displayResearchError(error.message);
-            }
-        }
-
-        function startResearchProgress() {
-            displayResearchProgress();
-            processNextResearchStep();
-        }
-
-        async function processNextResearchStep() {
-            if (researchState.currentStepIndex < researchState.steps.length) {
-                const step = researchState.steps[researchState.currentStepIndex];
-                const stepIndex = researchState.currentStepIndex;
-                try {
-                    // Simulate API call for each step
-                    const data = await fetchAPI(`/deep_research/process_step`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ step_index: stepIndex, query: researchState.query, user_id: userId })
-                    });
-
-                    // Update research state
-                    researchState.sources = [...researchState.sources, ...data.sources];
-                    researchState.currentStepIndex++;
-                    displayResearchProgress();
-                    processNextResearchStep(); // Process the next step
-                } catch (error) {
-                    console.error("Error processing research step:", error);
-                    displayResearchError(error.message);
-                }
-            } else {
-                // Research completed
-                completeResearch();
-            }
-        }
-
-        async function completeResearch() {
-            try {
-                // Final synthesis
-                const data = await fetchAPI('/deep_research/synthesize', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query: researchState.query, user_id: userId, sources: researchState.sources })
+                    body: JSON.stringify({ query, user_id: AppState.userId })
                 });
 
-                researchState.endTime = new Date();
-                researchState.documentContent = data.final_synthesis;
-                displayResearchCompletion();
+                // A válasz megérkezett, elmentjük az állapotba
+                AppState.researchState = {
+                    query: data.query,
+                    documentContent: data.final_synthesis,
+                    sources: data.sources,
+                    totalSources: data.total_sources_found
+                };
+                
+                getEl('researchIndicator')?.remove(); // Töltésjelző eltávolítása
+                displayResearchCompletion(); // Eredmény megjelenítése
 
             } catch (error) {
-                console.error("Error during final synthesis:", error);
-                displayResearchError(error.message);
+                getEl('researchIndicator')?.remove();
+                // A hibaüzenetet már az fetchAPI() megjeleníti.
+                console.error("Deep Research hiba:", error);
             }
         }
 
-        function displayResearchProgress() {
-            const messageId = 'researchProgress_' + Date.now();
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'message ai-message';
-            messageDiv.id = messageId;
-
-            const progressPercent = (researchState.currentStepIndex / researchState.steps.length) * 100;
-            let progressStepsHtml = '';
-            for (let i = 0; i < researchState.currentStepIndex; i++) {
-                progressStepsHtml += `<div class="progress-step">${researchState.steps[i]}</div>`;
-            }
-
-            messageDiv.innerHTML = `
-                <div class="progress-container">
-                    <h3 class="progress-title">Mélyreható kutatás: ${researchState.query}</h3>
-                    <div class="progress-bar-container">
-                        <div class="progress-bar" style="width: ${progressPercent}%"></div>
-                    </div>
-                    <p class="progress-text">Folyamatban... (${researchState.currentStepIndex}/${researchState.steps.length} lépés)</p>
-                    <div class="progress-details">
-                        ${progressStepsHtml}
-                    </div>
-                </div>
-            `;
-            messagesContainer.appendChild(messageDiv);
+        function showResearchIndicator(query) {
+            const indicatorDiv = document.createElement('div');
+            indicatorDiv.className = 'message ai-message';
+            indicatorDiv.id = 'researchIndicator';
+            indicatorDiv.innerHTML = `
+                <div class="research-indicator">
+                    <div class="spinner"></div>
+                    <h4>Mélyreható kutatás folyamatban...</h4>
+                    <p>A rendszer több tucat tudományos forrást elemez a témában: <strong>"${escapeHtml(query)}"</strong>. Ez több percig is eltarthat.</p>
+                </div>`;
+            messagesContainer.appendChild(indicatorDiv);
             scrollToBottom();
         }
 
         function displayResearchCompletion() {
-             const messageId = 'researchComplete_' + Date.now();
+            const { researchState } = AppState;
+            if (!researchState) return;
+
             const messageDiv = document.createElement('div');
             messageDiv.className = 'message ai-message';
-            messageDiv.id = messageId;
-
-            const duration = (researchState.endTime.getTime() - researchState.startTime.getTime()) / 1000;
-
             messageDiv.innerHTML = `
                 <div class="research-complete">
                     <div class="completion-stats">
-                        <h3>Kutatás befejezve!</h3>
+                        <h3><i class="fas fa-check-circle"></i> Kutatás befejezve!</h3>
                         <div class="stats-grid">
                             <div class="stat-item">
-                                <span class="stat-number">${researchState.steps.length}</span>
-                                <span class="stat-label">Lépések</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-number">${researchState.sources.length}</span>
-                                <span class="stat-label">Források</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-number">${duration.toFixed(1)}s</span>
-                                <span class="stat-label">Időtartam</span>
+                                <span class="stat-number">${researchState.totalSources}</span>
+                                <span class="stat-label">Forrás</span>
                             </div>
                         </div>
                     </div>
-                    <div class="document-preview" onclick="showDocument('${researchState.documentContent}')">
+                    <div class="document-preview" onclick="showDocument()">
                         <i class="fas fa-file-alt document-icon"></i>
                         <div class="document-info">
-                            <h4>Végső dokumentum</h4>
-                            <p>Kattintson a megtekintéshez</p>
+                            <h4>Kutatási jelentés megtekintése</h4>
+                            <p>Kattintson a teljes, AI által generált szintézis elolvasásához.</p>
                         </div>
                         <i class="fas fa-arrow-right document-arrow"></i>
                     </div>
-                </div>
-            `;
+                </div>`;
             messagesContainer.appendChild(messageDiv);
             scrollToBottom();
         }
-
+        
         function displayResearchError(errorMessage) {
-            const messageId = 'researchError_' + Date.now();
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'message ai-message';
-            messageDiv.id = messageId;
-
-            messageDiv.innerHTML = `
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'message ai-message';
+            errorDiv.innerHTML = `
                 <div class="research-error">
-                    <i class="fas fa-exclamation-triangle error-icon"></i>
                     <div class="error-text">
-                        <h3>Hiba történt a kutatás során!</h3>
-                        <p>${errorMessage}</p>
+                        <h3><i class="fas fa-exclamation-triangle error-icon"></i> Hiba történt</h3>
+                        <p>${escapeHtml(errorMessage)}</p>
                     </div>
-                </div>
-            `;
-            messagesContainer.appendChild(messageDiv);
+                </div>`;
+            messagesContainer.appendChild(errorDiv);
             scrollToBottom();
         }
 
-        function showDocument(content) {
+        function showDocument() {
+            const { researchState } = AppState;
+            if (!researchState || !researchState.documentContent) return;
+            
+            documentTitle.textContent = `Kutatási jelentés: ${researchState.query}`;
             documentContent.innerHTML = `
                 <div class="document-section">
-                    <h3>Szintézis</h3>
-                    <div class="synthesis-content">${content}</div>
+                    <h3>AI Által Generált Szintézis</h3>
+                    <div class="synthesis-content">${marked.parse(researchState.documentContent)}</div>
                 </div>
                 <div class="document-section">
-                    <h3>Források</h3>
+                    <h3>Felhasznált Források (${researchState.sources.length})</h3>
                     ${researchState.sources.map((source, index) => `
                         <div class="source-item">
                             <span class="source-number">${index + 1}.</span>
                             <div class="source-content">
-                                <h4>${source.title || 'Nincs cím'}</h4>
-                                <a href="${source.url}" target="_blank" rel="noopener noreferrer">${source.url}</a>
-                                <span class="source-date">${source.date || 'Nincs dátum'}</span>
+                                <h4>${escapeHtml(source.title || 'Nincs cím')}</h4>
+                                <a href="${source.url}" target="_blank" rel="noopener noreferrer">${escapeHtml(source.url)}</a>
+                                <span class="source-date">${escapeHtml(source.date || 'Nincs dátum')}</span>
                             </div>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
+                        </div>`).join('')}
+                </div>`;
             openDocumentViewer();
         }
 
@@ -2020,22 +1083,20 @@
                 <label for="codePrompt">Leírás:</label>
                 <textarea id="codePrompt" rows="4" placeholder="Írja le, milyen kódot szeretne generálni..."></textarea>
                 <label for="codeLang">Nyelv:</label>
-                <input type="text" id="codeLang" value="python">
-            `;
+                <input type="text" id="codeLang" value="python">`;
             modalFooter.innerHTML = `<button class="modal-submit-btn" onclick="submitCodeGeneration()">Kód generálása</button>`;
             openModal();
         }
 
         async function submitCodeGeneration() {
-            const prompt = document.getElementById('codePrompt').value;
-            const language = document.getElementById('codeLang').value;
+            const prompt = getEl('codePrompt').value;
+            const language = getEl('codeLang').value;
             if (!prompt) return;
 
             closeModal();
             hideWelcome();
             addUserMessage(`Kód generálási kérés (${language}): ${prompt}`);
             showTypingIndicator();
-            triggerHapticFeedback('light');
 
             try {
                 const data = await fetchAPI('/code/generate', {
@@ -2046,19 +1107,16 @@
                 hideTypingIndicator();
                 const codeMessage = "```" + language + "\n" + data.generated_code + "\n```";
                 addAiMessage(codeMessage, data.model_used);
-                triggerHapticFeedback('success');
             } catch(error) {
                 hideTypingIndicator();
-                triggerHapticFeedback('error');
             }
         }
 
         // --- Segédfüggvények ---
-        function scrollToBottom() {
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
+        function scrollToBottom() { messagesContainer.scrollTop = messagesContainer.scrollHeight; }
 
         function escapeHtml(unsafe) {
+            if (typeof unsafe !== 'string') return '';
             return unsafe
                 .replace(/&/g, "&amp;")
                 .replace(/</g, "&lt;")
@@ -2067,27 +1125,25 @@
                 .replace(/'/g, "&#039;");
         }
 
-        function copyMessage(messageId) {
-            const messageElement = document.getElementById(messageId);
-            if (messageElement) {
-                const codeContent = messageElement.querySelector('pre code');
-                const textToCopy = codeContent ? codeContent.innerText : messageElement.innerText;
+        function copyMessage(event, messageId) {
+            const messageElement = getEl(messageId);
+            if (!messageElement) return;
 
-                navigator.clipboard.writeText(textToCopy).then(() => {
-                    triggerHapticFeedback('success');
-                    const copyBtn = event.target.closest('.action-btn');
-                    if(copyBtn) {
-                        const originalText = copyBtn.innerHTML;
-                        copyBtn.innerHTML = '<i class="fas fa-check"></i> Másolva';
-                        setTimeout(() => {
-                            copyBtn.innerHTML = originalText;
-                        }, 2000);
-                    }
-                }).catch(err => {
-                    console.error('A szöveg másolása sikertelen: ', err);
-                    triggerHapticFeedback('error');
-                });
-            }
+            const codeContent = messageElement.querySelector('pre code');
+            const textToCopy = codeContent ? codeContent.innerText : messageElement.innerText;
+
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                const copyBtn = event.target.closest('.action-btn');
+                if (copyBtn) {
+                    const originalText = copyBtn.innerHTML;
+                    copyBtn.innerHTML = '<i class="fas fa-check"></i> Másolva';
+                    copyBtn.disabled = true;
+                    setTimeout(() => {
+                        copyBtn.innerHTML = originalText;
+                        copyBtn.disabled = false;
+                    }, 2000);
+                }
+            }).catch(err => console.error('A másolás sikertelen: ', err));
         }
     </script>
 </body>
