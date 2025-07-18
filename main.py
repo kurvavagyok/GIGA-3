@@ -25,7 +25,6 @@ try:
     CEREBRAS_AVAILABLE = True
 except ImportError:
     CEREBRAS_AVAILABLE = False
-    logger.warning("Cerebras SDK not available")
 
 # Gemini API
 try:
@@ -33,7 +32,6 @@ try:
     GEMINI_AVAILABLE = True
 except ImportError:
     GEMINI_AVAILABLE = False
-    logger.warning("Gemini API not available")
 
 # Exa API
 try:
@@ -41,7 +39,6 @@ try:
     EXA_AVAILABLE = True
 except ImportError:
     EXA_AVAILABLE = False
-    logger.warning("Exa API not available")
 
 # FastAPI
 from fastapi import FastAPI, HTTPException, status, Request, Response
@@ -272,6 +269,30 @@ class CodeGenerationRequest(BaseModel):
 chat_histories: Dict[str, List[Message]] = {}
 response_cache: Dict[str, Dict[str, Any]] = {}
 CACHE_EXPIRY = 300  # 5 perc cache
+MAX_CHAT_HISTORY = 50  # Maximum beszélgetések száma
+MAX_HISTORY_LENGTH = 100  # Maximum üzenetek száma beszélgetésenként
+
+def cleanup_memory():
+    """Memória tisztítás túl sok adatnál"""
+    current_time = time.time()
+    
+    # Cache tisztítás
+    expired_keys = [key for key, value in response_cache.items() 
+                   if current_time - value['timestamp'] > CACHE_EXPIRY]
+    for key in expired_keys:
+        del response_cache[key]
+    
+    # Chat history limit
+    if len(chat_histories) > MAX_CHAT_HISTORY:
+        # Legrégebbi beszélgetések törlése
+        sorted_users = sorted(chat_histories.keys())
+        for user_id in sorted_users[:len(chat_histories) - MAX_CHAT_HISTORY]:
+            del chat_histories[user_id]
+    
+    # Beszélgetések hosszának limitálása
+    for user_id in chat_histories:
+        if len(chat_histories[user_id]) > MAX_HISTORY_LENGTH:
+            chat_histories[user_id] = chat_histories[user_id][-MAX_HISTORY_LENGTH:]
 
 # --- Alpha Services definíciója ---
 ALPHA_SERVICES = {
@@ -451,15 +472,7 @@ async def select_backend_model(prompt: str, service_name: str = None):
     # CEREBRAS ELSŐ PRIORITÁS a sebességért
     if cerebras_client and CEREBRAS_AVAILABLE:
         try:
-            # Tesztelés céljából egy egyszerű próbálkozás
-            test_stream = cerebras_client.chat.completions.create(
-                messages=[{"role": "user", "content": "test"}],
-                model="llama-4-scout-17b-16e-instruct",
-                stream=True,
-                max_completion_tokens=1,
-                temperature=0.1
-            )
-            # Ha sikeres, használjuk a Cerebras-t
+            # Egyszerű elérhetőség ellenőrzés teszt nélkül
             selected_model = cerebras_client
             model_name = "llama-4-scout-17b-16e-instruct"
             return {"model": selected_model, "name": model_name}
@@ -896,6 +909,10 @@ async def deep_discovery_chat(req: ChatRequest):
             history = history[-20:]
 
         chat_histories[user_id] = history
+        
+        # Rendszeres memória tisztítás
+        if len(response_cache) > 1000 or len(chat_histories) > MAX_CHAT_HISTORY:
+            cleanup_memory()
 
         result = {
             'response': response_text,
@@ -2182,4 +2199,5 @@ Csak a kódot add vissza, magyarázó szöveg nélkül. A kód legyen közvetlen
 # Adding FastAPI application execution to the end of the file.
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
