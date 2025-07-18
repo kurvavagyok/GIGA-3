@@ -11,69 +11,23 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         /* --- Alap stílusok és változók --- */
-        @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
         :root {
             --primary: #990c58;
             --secondary: #e51284;
             --accent: #0077ff;
-            --accent-gradient: linear-gradient(135deg, #0077ff 0%, #00a3ff 50%, #0077ff 100%);
             --bg: #05020a;
-            --surface: rgba(10, 10, 10, 0.85);
-            --surface-elevated: rgba(15, 15, 15, 0.95);
-            --glass: rgba(255, 255, 255, 0.04);
-            --glass-strong: rgba(255, 255, 255, 0.08);
-            --glass-ultra: rgba(255, 255, 255, 0.12);
-            --border: rgba(255, 255, 255, 0.12);
-            --border-glow: rgba(229, 18, 132, 0.6);
+            --surface: rgba(10, 10, 10, 0.8);
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-strong: rgba(255, 255, 255, 0.07);
+            --border: rgba(255, 255, 255, 0.1);
+            --border-glow: rgba(229, 18, 132, 0.5);
             --text: #f0f0f0;
             --text-muted: #94a3b8;
-            --radius: 16px;
-            --radius-large: 24px;
-            --shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-            --shadow-elevated: 0 16px 64px rgba(0, 0, 0, 0.8);
-            --shadow-apple: 0 4px 24px rgba(0, 119, 255, 0.15);
+            --radius: 12px;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
             --transition-curve: cubic-bezier(0.25, 0.8, 0.25, 1);
-            --spring-curve: cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            --apple-curve: cubic-bezier(0.4, 0.0, 0.2, 1);
-            --blur-strength: 20px;
-            --blur-strong: 40px;
-        }
-
-        /* Light theme */
-        [data-theme="light"] {
-            --bg: #f8f9fa;
-            --surface: rgba(255, 255, 255, 0.9);
-            --surface-elevated: rgba(255, 255, 255, 0.95);
-            --glass: rgba(255, 255, 255, 0.6);
-            --glass-strong: rgba(255, 255, 255, 0.8);
-            --glass-ultra: rgba(255, 255, 255, 0.95);
-            --border: rgba(0, 0, 0, 0.08);
-            --border-glow: rgba(229, 18, 132, 0.3);
-            --text: #1a1a1a;
-            --text-muted: #6b7280;
-            --shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            --shadow-elevated: 0 16px 64px rgba(0, 0, 0, 0.15);
-            --shadow-apple: 0 4px 24px rgba(0, 119, 255, 0.1);
-        }
-
-        /* System theme detection */
-        @media (prefers-color-scheme: light) {
-            :root:not([data-theme]) {
-                --bg: #f8f9fa;
-                --surface: rgba(255, 255, 255, 0.9);
-                --surface-elevated: rgba(255, 255, 255, 0.95);
-                --glass: rgba(255, 255, 255, 0.6);
-                --glass-strong: rgba(255, 255, 255, 0.8);
-                --glass-ultra: rgba(255, 255, 255, 0.95);
-                --border: rgba(0, 0, 0, 0.08);
-                --border-glow: rgba(229, 18, 132, 0.3);
-                --text: #1a1a1a;
-                --text-muted: #6b7280;
-                --shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-                --shadow-elevated: 0 16px 64px rgba(0, 0, 0, 0.15);
-                --shadow-apple: 0 4px 24px rgba(0, 119, 255, 0.1);
-            }
         }
 
         * {
@@ -92,7 +46,7 @@
         }
 
         body {
-            font-family: 'SF Pro Display', 'Inter', system-ui, -apple-system, sans-serif;
+            font-family: 'Inter', sans-serif;
             background: var(--bg);
             color: var(--text);
             min-height: 100vh;
@@ -100,8 +54,6 @@
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
-            transition: background-color 0.3s var(--apple-curve), color 0.3s var(--apple-curve);
-            letter-spacing: -0.01em;
         }
 
         /* iPhone safe area támogatás */
@@ -166,47 +118,11 @@
             position: relative; 
         }
 
-        /* SVG Icon Animations */
-        .animated-icon {
-            transition: all 0.3s var(--spring-curve);
-            transform-origin: center;
-        }
-        
-        .animated-icon:hover {
-            transform: scale(1.1) rotate(-5deg);
-        }
-        
-        .animated-icon.active {
-            animation: fillAnimation 0.6s var(--spring-curve);
-        }
-        
-        @keyframes fillAnimation {
-            0% { 
-                transform: scale(1); 
-                filter: brightness(1);
-            }
-            50% { 
-                transform: scale(1.2); 
-                filter: brightness(1.3) drop-shadow(0 0 8px currentColor);
-            }
-            100% { 
-                transform: scale(1.05); 
-                filter: brightness(1.1);
-            }
-        }
-        
-        .icon-gradient {
-            background: var(--accent-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
         /* --- Oldalsáv (Sidebar) --- */
         .sidebar {
-            width: 280px;
+            width: 260px;
             background: var(--surface);
-            backdrop-filter: blur(var(--blur-strong)) saturate(180%);
+            backdrop-filter: blur(40px) saturate(180%);
             border-right: 1px solid var(--border);
             overflow-y: auto;
             position: fixed;
@@ -214,15 +130,11 @@
             height: -webkit-fill-available;
             z-index: 1000;
             transform: translateX(-100%);
-            transition: transform 0.5s var(--spring-curve);
+            transition: transform 0.4s var(--transition-curve);
             display: flex;
             flex-direction: column;
-            box-shadow: var(--shadow-elevated);
         }
-        .sidebar.open { 
-            transform: translateX(0);
-            box-shadow: var(--shadow-elevated), 0 0 40px rgba(0, 0, 0, 0.3);
-        }
+        .sidebar.open { transform: translateX(0); }
 
         .sidebar-overlay {
             position: fixed;
@@ -260,117 +172,23 @@
         }
         .logo-text p { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; font-weight: 500; }
 
-        /* Dynamic Island Style Notifications */
-        .dynamic-island {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%) scale(0);
-            background: var(--surface-elevated);
-            backdrop-filter: blur(var(--blur-strong)) saturate(180%);
-            border-radius: 25px;
-            padding: 8px 16px;
-            color: var(--text);
-            font-weight: 600;
-            font-size: 0.85rem;
-            box-shadow: var(--shadow-elevated);
-            z-index: 10000;
-            transition: transform 0.4s var(--spring-curve);
-            border: 1px solid var(--border);
-        }
-        
-        .dynamic-island.show {
-            transform: translateX(-50%) scale(1);
-        }
-        
-        .dynamic-island.success {
-            background: linear-gradient(135deg, #34d399, #10b981);
-            color: white;
-        }
-        
-        .dynamic-island.error {
-            background: linear-gradient(135deg, #f87171, #ef4444);
-            color: white;
-        }
-
-        /* Floating Action Button */
-        .fab {
-            position: fixed;
-            bottom: 80px;
-            right: 20px;
-            width: 56px;
-            height: 56px;
-            background: var(--accent-gradient);
-            border: none;
-            border-radius: 50%;
-            color: white;
-            font-size: 1.2rem;
-            cursor: pointer;
-            box-shadow: 
-                var(--shadow-apple),
-                0 8px 32px rgba(0, 119, 255, 0.4);
-            transition: all 0.3s var(--spring-curve);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .fab:hover {
-            transform: scale(1.1) translateY(-2px);
-            box-shadow: 
-                var(--shadow-apple),
-                0 12px 40px rgba(0, 119, 255, 0.5);
-        }
-        
-        .fab:active {
-            transform: scale(0.95);
-        }
-
         .new-chat-btn {
             width: 100%;
-            background: var(--glass-ultra);
+            background: var(--glass-strong);
             border: 1px solid var(--border);
             color: var(--text);
-            border-radius: var(--radius);
-            padding: 12px 16px;
-            font-weight: 600; 
-            font-size: 0.9rem;
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-weight: 600; font-size: 0.8rem;
             cursor: pointer;
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            gap: 8px;
-            transition: all 0.4s var(--spring-curve);
-            box-shadow: var(--shadow);
-            backdrop-filter: blur(var(--blur-strength)) saturate(150%);
-            position: relative;
-            overflow: hidden;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            transition: all 0.3s var(--transition-curve);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
-        
-        .new-chat-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            transition: left 0.5s var(--apple-curve);
-        }
-        
-        .new-chat-btn:hover::before {
-            left: 100%;
-        }
-        
         .new-chat-btn:hover, .new-chat-btn:active {
-            transform: translateY(-3px) scale(1.02);
+            transform: translateY(-2px);
             border-color: var(--border-glow);
-            background: var(--glass-strong);
-            box-shadow: 
-                var(--shadow-elevated), 
-                0 0 20px var(--border-glow),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4), 0 0 15px var(--border-glow);
         }
 
         .sidebar-content { padding: 12px; flex-grow: 1; overflow-y: auto; }
@@ -481,117 +299,20 @@
             overscroll-behavior: contain;
         }
 
-        /* iOS-style Tab Bar */
-        .tab-bar {
-            position: fixed;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--surface-elevated);
-            backdrop-filter: blur(var(--blur-strong)) saturate(180%);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-large) var(--radius-large) 0 0;
-            padding: 12px 20px;
-            box-shadow: var(--shadow-elevated);
-            z-index: 1000;
-            display: none; /* Show on mobile */
-            transition: transform 0.3s var(--spring-curve);
-        }
-        
-        .tab-bar.visible {
-            transform: translateX(-50%) translateY(0);
-        }
-        
-        .tab-bar.hidden {
-            transform: translateX(-50%) translateY(100%);
-        }
-        
-        .tab-item {
-            padding: 8px 16px;
-            border-radius: var(--radius);
-            cursor: pointer;
-            transition: all 0.3s var(--apple-curve);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-        
-        .tab-item.active {
-            background: var(--accent-gradient);
-            color: white;
-            box-shadow: var(--shadow-apple);
-        }
-
-        /* Ultra-szép Placeholder */
         .welcome-screen {
-            text-align: center; 
-            max-width: 600px;
-            margin: 0 auto; 
-            padding: 60px 20px;
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center;
-            height: 100%; 
-            animation: fadeInUp 1.2s var(--spring-curve);
-            position: relative;
+            text-align: center; max-width: 500px;
+            margin: 0 auto; padding: 30px 16px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100%; animation: fadeIn 1s var(--transition-curve);
         }
-        
-        .welcome-screen::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
-            opacity: 0.1;
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            animation: pulse 4s ease-in-out infinite;
-        }
-        
-        @keyframes fadeInUp { 
-            from { 
-                opacity: 0; 
-                transform: translateY(40px) scale(0.95); 
-            } 
-            to { 
-                opacity: 1; 
-                transform: translateY(0) scale(1); 
-            } 
-        }
-        
-        @keyframes pulse {
-            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.1; }
-            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.05; }
-        }
-        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .welcome-title {
-            font-size: 3.5rem; 
-            font-weight: 900; 
-            margin-bottom: 1.5rem;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 50%, var(--accent) 100%);
-            -webkit-background-clip: text; 
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 40px rgba(229, 18, 132, 0.3);
-            letter-spacing: -0.02em;
-            position: relative;
-            z-index: 1;
+            font-size: 2.5rem; font-weight: 800; margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(229, 18, 132, 0.6);
         }
-        
-        .welcome-subtitle { 
-            font-size: 1.2rem; 
-            color: var(--text-muted); 
-            margin-bottom: 3rem; 
-            line-height: 1.7;
-            font-weight: 400;
-            max-width: 480px;
-            position: relative;
-            z-index: 1;
-        }
+        .welcome-subtitle { font-size: 1rem; color: var(--text-muted); margin-bottom: 2rem; line-height: 1.6; }
         .start-btn {
             background: var(--glass-strong);
             border: 1px solid var(--border);
@@ -611,67 +332,20 @@
         .message { margin-bottom: 16px; animation: messageSlideIn 0.5s var(--transition-curve); }
         @keyframes messageSlideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        .user-message { 
-            display: flex; 
-            justify-content: flex-end; 
-            margin-bottom: 20px;
-        }
+        .user-message { display: flex; justify-content: flex-end; }
         .user-bubble {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 50%, var(--primary) 100%);
-            color: #fff; 
-            padding: 12px 18px;
-            border-radius: 20px 20px 6px 20px;
-            max-width: 85%; 
-            font-weight: 500; 
-            font-size: 0.95rem; 
-            line-height: 1.5;
-            box-shadow: 
-                var(--shadow-apple),
-                0 8px 32px rgba(229, 18, 132, 0.25),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2);
-            position: relative;
-            transform: translateY(0);
-            transition: all 0.3s var(--apple-curve);
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff; padding: 10px 16px;
+            border-radius: 16px 16px 4px 16px;
+            max-width: 85%; font-weight: 500; font-size: 0.9rem; line-height: 1.5;
+            box-shadow: 0 5px 20px rgba(229, 18, 132, 0.3);
         }
-        
-        .user-bubble:hover {
-            transform: translateY(-2px);
-            box-shadow: 
-                var(--shadow-apple),
-                0 12px 40px rgba(229, 18, 132, 0.35),
-                inset 0 1px 0 rgba(255, 255, 255, 0.3);
-        }
-        
-        .ai-message { 
-            display: flex; 
-            flex-direction: column; 
-            max-width: 95%; 
-            margin-bottom: 20px;
-        }
+        .ai-message { display: flex; flex-direction: column; max-width: 95%; }
         .ai-content {
-            background: var(--glass-strong);
+            background: var(--glass);
             border: 1px solid var(--border);
-            border-radius: 20px 20px 20px 6px;
-            padding: 16px 20px; 
-            line-height: 1.7; 
-            font-size: 0.95rem;
-            backdrop-filter: blur(var(--blur-strength)) saturate(150%);
-            box-shadow: 
-                var(--shadow),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            position: relative;
-            transform: translateY(0);
-            transition: all 0.3s var(--apple-curve);
-        }
-        
-        .ai-content:hover {
-            transform: translateY(-1px);
-            background: var(--glass-ultra);
-            border-color: var(--border-glow);
-            box-shadow: 
-                var(--shadow-elevated),
-                inset 0 1px 0 rgba(255, 255, 255, 0.15),
-                0 0 20px rgba(0, 119, 255, 0.1);
+            border-radius: 16px 16px 16px 4px;
+            padding: 12px 16px; line-height: 1.7; font-size: 0.9rem;
         }
         .ai-content pre {
             background: rgba(0,0,0,0.4); border: 1px solid var(--border);
@@ -772,120 +446,27 @@
         .research-indicator h4 { font-weight: 600; color: var(--text); font-size: 0.9rem; }
         .research-indicator p { font-size: 0.8rem; color: var(--text-muted); text-align: center; }
 
-        /* --- Stacked Cards Modal --- */
+        /* --- Modális ablak (Modal) --- */
         .modal {
-            position: fixed; 
-            top: 0; 
-            left: 0;
-            width: 100%; 
-            height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(var(--blur-strength));
-            display: none; 
-            align-items: center; 
-            justify-content: center;
-            z-index: 2000; 
-            opacity: 0;
-            transition: opacity 0.4s var(--apple-curve); 
-            padding: 20px;
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(15px);
+            display: none; align-items: center; justify-content: center;
+            z-index: 2000; opacity: 0;
+            transition: opacity 0.3s ease; padding: 16px;
         }
-        .modal.show { 
-            display: flex; 
-            opacity: 1; 
-        }
-        
-        .modal-stack {
-            position: relative;
-            perspective: 1000px;
-        }
-        
+        .modal.show { display: flex; opacity: 1; }
         .modal-content {
-            background: var(--surface-elevated); 
-            border: 1px solid var(--border);
-            border-radius: var(--radius-large); 
-            padding: 24px;
-            max-width: 480px; 
-            width: 100%;
-            max-height: 85vh; 
-            overflow-y: auto;
-            backdrop-filter: blur(var(--blur-strong)) saturate(200%);
-            transform: scale(0.8) translateY(40px) rotateX(10deg);
-            transition: transform 0.5s var(--spring-curve);
-            box-shadow: 
-                var(--shadow-elevated),
-                0 20px 80px rgba(0, 0, 0, 0.3);
-            position: relative;
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 16px; padding: 20px;
+            max-width: 450px; width: 100%;
+            max-height: 90vh; overflow-y: auto;
+            backdrop-filter: blur(40px) saturate(180%);
+            transform: scale(0.95) translateY(20px);
+            transition: transform 0.4s var(--transition-curve);
         }
-        
-        .modal.show .modal-content { 
-            transform: scale(1) translateY(0) rotateX(0deg); 
-        }
-        
-        .modal-content::before {
-            content: '';
-            position: absolute;
-            top: -10px;
-            left: 5px;
-            right: 5px;
-            height: 20px;
-            background: var(--surface);
-            border-radius: var(--radius-large);
-            z-index: -1;
-            opacity: 0.6;
-            transform: rotateX(5deg);
-        }
-        
-        .modal-content::after {
-            content: '';
-            position: absolute;
-            top: -20px;
-            left: 10px;
-            right: 10px;
-            height: 20px;
-            background: var(--surface);
-            border-radius: var(--radius-large);
-            z-index: -2;
-            opacity: 0.3;
-            transform: rotateX(10deg);
-        }
-
-        /* Context Menu */
-        .context-menu {
-            position: fixed;
-            background: var(--surface-elevated);
-            backdrop-filter: blur(var(--blur-strong)) saturate(180%);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 8px;
-            min-width: 160px;
-            box-shadow: var(--shadow-elevated);
-            z-index: 10000;
-            opacity: 0;
-            transform: scale(0.8) translateY(-10px);
-            transition: all 0.2s var(--spring-curve);
-            pointer-events: none;
-        }
-        
-        .context-menu.show {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-            pointer-events: auto;
-        }
-        
-        .context-menu-item {
-            padding: 8px 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.2s var(--apple-curve);
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .context-menu-item:hover {
-            background: var(--glass-strong);
-        }
+        .modal.show .modal-content { transform: scale(1) translateY(0); }
         .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
         .modal-title {
             font-size: 1.2rem; font-weight: 700;
@@ -1086,101 +667,8 @@
             opacity: 0.8 !important;
         }
 
-        /* Theme Toggle */
-        .theme-toggle {
-            background: var(--glass-strong);
-            border: 1px solid var(--border);
-            border-radius: 50%;
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s var(--spring-curve);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .theme-toggle:hover {
-            background: var(--glass-ultra);
-            transform: scale(1.1);
-            box-shadow: var(--shadow-apple);
-        }
-        
-        .theme-icon-light,
-        .theme-icon-dark {
-            position: absolute;
-            font-size: 0.9rem;
-            transition: all 0.4s var(--spring-curve);
-        }
-        
-        .theme-icon-light {
-            opacity: 1;
-            transform: rotate(0deg) scale(1);
-        }
-        
-        .theme-icon-dark {
-            opacity: 0;
-            transform: rotate(180deg) scale(0);
-        }
-        
-        [data-theme="light"] .theme-icon-light {
-            opacity: 0;
-            transform: rotate(-180deg) scale(0);
-        }
-        
-        [data-theme="light"] .theme-icon-dark {
-            opacity: 1;
-            transform: rotate(0deg) scale(1);
-        }
-
-        /* Tooltip */
-        .tooltip {
-            position: absolute;
-            background: var(--surface-elevated);
-            backdrop-filter: blur(var(--blur-strong)) saturate(180%);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 8px 12px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            color: var(--text);
-            box-shadow: var(--shadow-elevated);
-            z-index: 10000;
-            opacity: 0;
-            transform: scale(0.8) translateY(-5px);
-            transition: all 0.3s var(--spring-curve);
-            pointer-events: none;
-            white-space: nowrap;
-        }
-        
-        .tooltip.show {
-            opacity: 1;
-            transform: scale(1) translateY(-10px);
-        }
-        
-        .tooltip::after {
-            content: '';
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            border: 5px solid transparent;
-            border-top-color: var(--border);
-        }
-
-        /* Header Controls */
-        .header-controls {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
         /* Mobil nézet optimalizációk */
         @media (max-width: 768px) {
-            .tab-bar { display: flex; }
-            .tab-bar { padding: 8px 16px; }
             .sidebar { width: 240px; }
             .header-title { font-size: 0.9rem; }
             .messages-container, .input-area { padding: 12px; }
@@ -1257,12 +745,7 @@
                     <i class="fas fa-bars"></i>
                 </button>
                 <h1 class="header-title">JADE AI Platform</h1>
-                <div class="header-controls">
-                    <button class="theme-toggle touch-feedback" onclick="toggleTheme()" aria-label="Téma váltása">
-                        <i class="fas fa-sun theme-icon-light"></i>
-                        <i class="fas fa-moon theme-icon-dark"></i>
-                    </button>
-                </div>
+                <div></div> <!-- Spacer -->
             </header>
 
             <div class="chat-area">
@@ -1295,27 +778,6 @@
                 </div>
             </div>
         </main>
-    </div>
-
-    <!-- Floating Action Button -->
-    <button class="fab touch-feedback" onclick="newChat()" data-tooltip="Új beszélgetés">
-        <i class="fas fa-plus animated-icon"></i>
-    </button>
-
-    <!-- iOS-style Tab Bar (Mobile) -->
-    <div class="tab-bar visible">
-        <div class="tab-item active">
-            <i class="fas fa-comments animated-icon"></i>
-            <span>Chat</span>
-        </div>
-        <div class="tab-item">
-            <i class="fas fa-search animated-icon"></i>
-            <span>Kutatás</span>
-        </div>
-        <div class="tab-item">
-            <i class="fas fa-cog animated-icon"></i>
-            <span>Beállítások</span>
-        </div>
     </div>
 
     <!-- Szolgáltatás Modális Ablak -->
@@ -1486,161 +948,25 @@
 
         // Gesztuskezelő inicializálása
         let gestureHandler;
-        
-        // Theme management
-        let currentTheme = localStorage.getItem('theme') || 'auto';
-
-        // Theme Management
-        function initTheme() {
-            const savedTheme = localStorage.getItem('theme');
-            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            
-            if (savedTheme) {
-                document.documentElement.setAttribute('data-theme', savedTheme);
-            } else if (systemPrefersDark) {
-                document.documentElement.setAttribute('data-theme', 'dark');
-            } else {
-                document.documentElement.setAttribute('data-theme', 'light');
-            }
-            
-            // Listen for system theme changes
-            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-                if (!localStorage.getItem('theme')) {
-                    document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
-                }
-            });
-        }
-
-        function toggleTheme() {
-            const currentTheme = document.documentElement.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            
-            document.documentElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            
-            HapticFeedback.medium();
-            showDynamicIsland(`${newTheme === 'dark' ? 'Sötét' : 'Világos'} téma aktiválva`, 'success');
-        }
-
-        // Dynamic Island Notifications
-        function showDynamicIsland(message, type = 'info', duration = 3000) {
-            const island = document.createElement('div');
-            island.className = `dynamic-island ${type}`;
-            island.textContent = message;
-            document.body.appendChild(island);
-            
-            setTimeout(() => island.classList.add('show'), 100);
-            setTimeout(() => {
-                island.classList.remove('show');
-                setTimeout(() => island.remove(), 400);
-            }, duration);
-        }
-
-        // Enhanced Tooltips
-        function createTooltip(element, text) {
-            const tooltip = document.createElement('div');
-            tooltip.className = 'tooltip';
-            tooltip.textContent = text;
-            document.body.appendChild(tooltip);
-            
-            const rect = element.getBoundingClientRect();
-            tooltip.style.left = rect.left + rect.width / 2 - tooltip.offsetWidth / 2 + 'px';
-            tooltip.style.top = rect.top - tooltip.offsetHeight - 10 + 'px';
-            
-            tooltip.classList.add('show');
-            
-            return tooltip;
-        }
-
-        function removeTooltip(tooltip) {
-            if (tooltip) {
-                tooltip.classList.remove('show');
-                setTimeout(() => tooltip.remove(), 300);
-            }
-        }
-
-        // Context Menu
-        function showContextMenu(event, items) {
-            event.preventDefault();
-            const menu = document.createElement('div');
-            menu.className = 'context-menu';
-            
-            items.forEach(item => {
-                const menuItem = document.createElement('div');
-                menuItem.className = 'context-menu-item';
-                menuItem.innerHTML = `<i class="fas ${item.icon}"></i> ${item.text}`;
-                menuItem.addEventListener('click', () => {
-                    item.action();
-                    hideContextMenu(menu);
-                });
-                menu.appendChild(menuItem);
-            });
-            
-            document.body.appendChild(menu);
-            menu.style.left = event.clientX + 'px';
-            menu.style.top = event.clientY + 'px';
-            
-            setTimeout(() => menu.classList.add('show'), 10);
-            
-            document.addEventListener('click', () => hideContextMenu(menu), { once: true });
-            
-            return menu;
-        }
-
-        function hideContextMenu(menu) {
-            menu.classList.remove('show');
-            setTimeout(() => menu.remove(), 200);
-        }
 
         // --- Alkalmazás Inicializálása ---
         document.addEventListener('DOMContentLoaded', () => {
-            initTheme();
             setupEventListeners();
             loadServices();
             messageInput.focus();
             gestureHandler = new TouchGestureHandler();
             
-            // Enhanced Haptikus feedback minden érintésre
+            // Haptikus feedback minden érintésre
             document.addEventListener('touchstart', (e) => {
                 if (e.target.classList.contains('touch-feedback')) {
                     HapticFeedback.light();
                     e.target.classList.add('btn-pressed');
-                    
-                    // Icon animation trigger
-                    const icon = e.target.querySelector('.animated-icon');
-                    if (icon) {
-                        icon.classList.add('active');
-                        setTimeout(() => icon.classList.remove('active'), 600);
-                    }
                 }
             });
 
             document.addEventListener('touchend', (e) => {
                 if (e.target.classList.contains('touch-feedback')) {
                     e.target.classList.remove('btn-pressed');
-                }
-            });
-
-            // Enhanced tooltips for buttons
-            document.querySelectorAll('[data-tooltip]').forEach(element => {
-                let tooltip;
-                element.addEventListener('mouseenter', () => {
-                    tooltip = createTooltip(element, element.getAttribute('data-tooltip'));
-                });
-                element.addEventListener('mouseleave', () => {
-                    removeTooltip(tooltip);
-                });
-            });
-
-            // Context menu for messages
-            document.addEventListener('contextmenu', (e) => {
-                if (e.target.closest('.ai-content') || e.target.closest('.user-bubble')) {
-                    const items = [
-                        { icon: 'fa-copy', text: 'Másolás', action: () => copyMessage(e, e.target.closest('.ai-content')?.id || 'user-message') },
-                        { icon: 'fa-share-alt', text: 'Megosztás', action: () => console.log('Share') },
-                        { icon: 'fa-heart', text: 'Kedvencekhez', action: () => console.log('Favorite') }
-                    ];
-                    showContextMenu(e, items);
                 }
             });
         });
@@ -1825,13 +1151,6 @@
             const message = messageInput.value.trim();
             if (!message || AppState.isTyping) return;
 
-            // Enhanced send animation
-            const sendButton = getEl('sendBtn');
-            sendButton.style.transform = 'scale(0.8)';
-            setTimeout(() => {
-                sendButton.style.transform = 'scale(1)';
-            }, 150);
-
             hideWelcome();
             addUserMessage(message);
             messageInput.value = '';
@@ -1847,10 +1166,8 @@
                 hideTypingIndicator();
                 addAiMessage(data.response, data.model_used);
                 HapticFeedback.success();
-                showDynamicIsland('Válasz érkezett', 'success', 2000);
             } catch (error) {
                 hideTypingIndicator();
-                showDynamicIsland('Hiba történt a válasz során', 'error');
                 HapticFeedback.error();
             }
         }
@@ -1859,25 +1176,11 @@
             const messageDiv = document.createElement('div');
             messageDiv.className = 'message user-message';
             const bubble = document.createElement('div');
-            bubble.className = 'user-bubble touch-feedback';
+            bubble.className = 'user-bubble';
             bubble.textContent = message;
-            
-            // Enhanced entrance animation
-            bubble.style.transform = 'translateX(100px) scale(0.8)';
-            bubble.style.opacity = '0';
-            
             messageDiv.appendChild(bubble);
             messagesContainer.appendChild(messageDiv);
-            
-            // Smooth entrance
-            requestAnimationFrame(() => {
-                bubble.style.transition = 'all 0.4s var(--spring-curve)';
-                bubble.style.transform = 'translateX(0) scale(1)';
-                bubble.style.opacity = '1';
-            });
-            
             scrollToBottom();
-            HapticFeedback.light();
         }
 
         function addAiMessage(content, model = 'JADE AI') {
@@ -1886,68 +1189,16 @@
             messageDiv.className = 'message ai-message';
 
             messageDiv.innerHTML = `
-                <div class="ai-content touch-feedback" id="${messageId}"></div>
+                <div class="ai-content" id="${messageId}"></div>
                 <div class="message-actions">
-                    <button class="action-btn touch-feedback" onclick="copyMessage(event, '${messageId}')" data-tooltip="Üzenet másolása">
-                        <i class="fas fa-copy animated-icon"></i> Másolás
-                    </button>
-                    <button class="action-btn touch-feedback" onclick="shareMessage('${messageId}')" data-tooltip="Megosztás">
-                        <i class="fas fa-share-alt animated-icon"></i> Megosztás
-                    </button>
+                    <button class="action-btn touch-feedback" onclick="copyMessage(event, '${messageId}')"><i class="fas fa-copy"></i> Másolás</button>
                 </div>`;
             messagesContainer.appendChild(messageDiv);
 
             const contentElement = getEl(messageId);
-            
-            // Enhanced entrance animation
-            contentElement.style.transform = 'translateX(-50px) scale(0.95)';
-            contentElement.style.opacity = '0';
-            
-            requestAnimationFrame(() => {
-                contentElement.style.transition = 'all 0.5s var(--spring-curve)';
-                contentElement.style.transform = 'translateX(0) scale(1)';
-                contentElement.style.opacity = '1';
-            });
-            
-            // Typewriter effect for content
-            typeWriterEffect(contentElement, marked.parse(content));
+            contentElement.innerHTML = marked.parse(content);
+            contentElement.querySelectorAll('pre code').forEach(hljs.highlightElement);
             scrollToBottom();
-        }
-        
-        function typeWriterEffect(element, content) {
-            element.innerHTML = '';
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = content;
-            const text = tempDiv.textContent;
-            
-            let i = 0;
-            const timer = setInterval(() => {
-                if (i < text.length) {
-                    element.textContent += text.charAt(i);
-                    i++;
-                    scrollToBottom();
-                } else {
-                    clearInterval(timer);
-                    element.innerHTML = content;
-                    element.querySelectorAll('pre code').forEach(hljs.highlightElement);
-                }
-            }, 20);
-        }
-        
-        function shareMessage(messageId) {
-            const messageElement = getEl(messageId);
-            const text = messageElement.textContent;
-            
-            if (navigator.share) {
-                navigator.share({
-                    title: 'JADE AI Válasz',
-                    text: text
-                });
-            } else {
-                copyMessage({ target: { innerHTML: '<i class="fas fa-check"></i> Másolva!' } }, messageId);
-                showDynamicIsland('Üzenet vágólapra másolva', 'success');
-            }
-            HapticFeedback.success();
         }
 
         function showTypingIndicator() {
@@ -2175,24 +1426,12 @@
             const textToCopy = messageElement.innerText;
             
             navigator.clipboard.writeText(textToCopy).then(() => {
-                const button = event.target.closest('.action-btn');
-                const originalContent = button.innerHTML;
-                
-                button.innerHTML = '<i class="fas fa-check animated-icon"></i> Másolva!';
-                button.style.background = 'linear-gradient(135deg, #34d399, #10b981)';
-                button.style.color = 'white';
-                
-                showDynamicIsland('Üzenet sikeresen másolva', 'success');
-                
+                event.target.innerHTML = '<i class="fas fa-check"></i> Másolva!';
                 setTimeout(() => {
-                    button.innerHTML = originalContent;
-                    button.style.background = '';
-                    button.style.color = '';
+                    event.target.innerHTML = '<i class="fas fa-copy"></i> Másolás';
                 }, 2000);
-                
                 HapticFeedback.success();
             }).catch(() => {
-                showDynamicIsland('Másolás sikertelen', 'error');
                 HapticFeedback.error();
             });
         }
