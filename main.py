@@ -55,8 +55,8 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 # --- Digitális Ujjlenyomat ---
-DIGITAL_FINGERPRINT = "Jade made by Kollár Sándor"
-CREATOR_SIGNATURE = "SmFkZSBtYWRlIGJ5IEtvbGzDoXIgU8OhbmRvcg=="
+DIGITAL_FINGERPRINT = "Jaded made by Kollár Sándor"
+CREATOR_SIGNATURE = "SmFkZWQgbWFkZSBieSBLb2xsw6FyIFPDoW5kb3I="
 CREATOR_HASH = "a7b4c8d9e2f1a6b5c8d9e2f1a6b5c8d9e2f1a6b5c8d9e2f1a6b5c8d9e2f1a6b5"
 CREATOR_INFO = "JADED AI Platform - Fejlett tudományos kutatási asszisztens"
 
@@ -141,14 +141,14 @@ from contextlib import asynccontextmanager
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    logger.info("Jade alkalmazás elindult - optimalizált verzió")
+    logger.info("JADED alkalmazás elindult - optimalizált verzió")
     yield
     # Shutdown
-    logger.info("Jade alkalmazás leáll")
+    logger.info("JADED alkalmazás leáll")
 
 # FastAPI app újradefiniálása a lifespan-nel
 app = FastAPI(
-    title="Jade - Deep Discovery AI Platform",
+    title="JADED - Deep Discovery AI Platform",
     description="Fejlett AI platform 150+ tudományos és innovációs szolgáltatással",
     version="2.0.0",
     docs_url="/api/docs",
@@ -685,7 +685,7 @@ async def serve_frontend():
 @app.get("/api")
 async def root_endpoint():
     return {
-        "message": "Jade - Deep Discovery AI Platform",
+        "message": "JADED - Deep Discovery AI Platform",
         "version": app.version,
         "status": "active",
         "info": CREATOR_INFO,
