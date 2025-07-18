@@ -40,6 +40,13 @@ try:
 except ImportError:
     EXA_AVAILABLE = False
 
+# OpenAI API
+try:
+    import openai
+    OPENAI_AVAILABLE = True
+except ImportError:
+    OPENAI_AVAILABLE = False
+
 # FastAPI
 from fastapi import FastAPI, HTTPException, status, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -132,6 +139,19 @@ if EXA_API_KEY and EXA_AVAILABLE:
     except Exception as e:
         logger.error(f"Error initializing Exa client: {e}")
         exa_client = None
+
+# OpenAI kliens inicializálása
+openai_client = None
+if OPENAI_API_KEY and OPENAI_AVAILABLE:
+    try:
+        openai_client = openai.OpenAI(
+            api_key=OPENAI_API_KEY,
+            organization=OPENAI_ORG_ID
+        )
+        logger.info("OpenAI client initialized successfully.")
+    except Exception as e:
+        logger.error(f"Error initializing OpenAI client: {e}")
+        openai_client = None
 
 # --- FastAPI alkalmazás ---
 
@@ -475,16 +495,25 @@ async def select_backend_model(prompt: str, service_name: str = None):
             # Egyszerű elérhetőség ellenőrzés teszt nélkül
             selected_model = cerebras_client
             model_name = "llama-4-scout-17b-16e-instruct"
-            return {"model": selected_model, "name": model_name}
+            return {"model": selected_model, "name": model_name, "type": "cerebras"}
         except Exception as e:
             logger.warning(f"Cerebras client not responding, falling back: {e}")
+
+    # Backup: OpenAI GPT-4o
+    if openai_client and OPENAI_AVAILABLE:
+        try:
+            selected_model = openai_client
+            model_name = "gpt-4o"
+            return {"model": selected_model, "name": model_name, "type": "openai"}
+        except Exception as e:
+            logger.warning(f"OpenAI client not available: {e}")
 
     # Backup: Gemini 2.5 Pro
     if gemini_25_pro and GEMINI_AVAILABLE:
         try:
             selected_model = gemini_25_pro
             model_name = "gemini-2.5-pro"
-            return {"model": selected_model, "name": model_name}
+            return {"model": selected_model, "name": model_name, "type": "gemini"}
         except Exception as e:
             logger.warning(f"Gemini 2.5 Pro not available: {e}")
 
@@ -493,7 +522,7 @@ async def select_backend_model(prompt: str, service_name: str = None):
         try:
             selected_model = gemini_model
             model_name = "gemini-1.5-pro"
-            return {"model": selected_model, "name": model_name}
+            return {"model": selected_model, "name": model_name, "type": "gemini"}
         except Exception as e:
             logger.warning(f"Gemini 1.5 Pro not available: {e}")
 
@@ -507,10 +536,11 @@ async def execute_model(model_info: Dict[str, Any], prompt: str):
     """Modell futtatása a kiválasztott backenddel."""
     model = model_info["model"]
     model_name = model_info["name"]
+    model_type = model_info.get("type", "unknown")
     response_text = ""
 
     try:
-        if model == gemini_25_pro or model == gemini_model:
+        if model_type == "gemini" and (model == gemini_25_pro or model == gemini_model):
             generation_config = genai.types.GenerationConfig(
                 max_output_tokens=4096,
                 temperature=0.05
@@ -522,7 +552,7 @@ async def execute_model(model_info: Dict[str, Any], prompt: str):
             response_text = response.text
             return {"response": response_text, "model_used": "JADED AI", "selected_backend": "JADED AI"}
 
-        elif model == cerebras_client:
+        elif model_type == "cerebras" and model == cerebras_client:
             stream = cerebras_client.chat.completions.create(
                 messages=[{"role": "user", "content": prompt}],
                 model="llama-4-scout-17b-16e-instruct",
@@ -534,6 +564,17 @@ async def execute_model(model_info: Dict[str, Any], prompt: str):
             for chunk in stream:
                 if chunk.choices[0].delta.content:
                     response_text += chunk.choices[0].delta.content
+            return {"response": response_text, "model_used": "JADED AI", "selected_backend": "JADED AI"}
+
+        elif model_type == "openai" and model == openai_client:
+            response = openai_client.chat.completions.create(
+                model=model_name,
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=4096,
+                temperature=0.05,
+                top_p=0.9
+            )
+            response_text = response.choices[0].message.content
             return {"response": response_text, "model_used": "JADED AI", "selected_backend": "JADED AI"}
 
         else:
@@ -878,6 +919,16 @@ async def deep_discovery_chat(req: ChatRequest):
             for chunk in stream:
                 if chunk.choices[0].delta.content:
                     response_text += chunk.choices[0].delta.content
+            model_used = "JADED AI"
+        elif openai_client:
+            response = openai_client.chat.completions.create(
+                model="gpt-4o",
+                messages=messages_for_llm,
+                max_tokens=4096,
+                temperature=0.05,
+                top_p=0.9
+            )
+            response_text = response.choices[0].message.content
             model_used = "JADED AI"
         elif gemini_25_pro:
             response = await gemini_25_pro.generate_content_async(
@@ -2193,3 +2244,222 @@ if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 5000))
     uvicorn.run(app, host="0.0.0.0", port=port)
+
+
+# --- OpenAI Specifikus Modellek ---
+class OpenAIImageRequest(BaseModel):
+    prompt: str = Field(..., description="Kép generálási prompt")
+    model: str = Field(default="dall-e-3", description="DALL-E modell")
+    size: str = Field(default="1024x1024", description="Kép mérete")
+    quality: str = Field(default="standard", description="Kép minősége")
+    n: int = Field(default=1, ge=1, le=4, description="Generált képek száma")
+
+class OpenAIAudioRequest(BaseModel):
+    text: str = Field(..., description="Felolvasandó szöveg")
+    model: str = Field(default="tts-1", description="TTS modell")
+    voice: str = Field(default="alloy", description="Hang típusa")
+    response_format: str = Field(default="mp3", description="Audio formátum")
+
+class OpenAITranscriptionRequest(BaseModel):
+    language: str = Field(default="hu", description="Nyelv kódja")
+    model: str = Field(default="whisper-1", description="Whisper modell")
+
+class OpenAIVisionRequest(BaseModel):
+    prompt: str = Field(..., description="Kép elemzési kérés")
+    image_url: str = Field(..., description="Elemzendő kép URL-je")
+    max_tokens: int = Field(default=300, description="Maximum tokenek")
+
+# --- OpenAI API Végpontok ---
+
+@app.post("/api/openai/generate_image")
+async def openai_generate_image(req: OpenAIImageRequest):
+    """DALL-E kép generálás"""
+    if not openai_client or not OPENAI_AVAILABLE:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="OpenAI nem elérhető"
+        )
+
+    try:
+        response = openai_client.images.generate(
+            model=req.model,
+            prompt=req.prompt,
+            size=req.size,
+            quality=req.quality,
+            n=req.n
+        )
+
+        images = []
+        for image in response.data:
+            images.append({
+                "url": image.url,
+                "revised_prompt": getattr(image, 'revised_prompt', req.prompt)
+            })
+
+        return {
+            "prompt": req.prompt,
+            "model": req.model,
+            "images": images,
+            "total_images": len(images),
+            "status": "success"
+        }
+
+    except Exception as e:
+        logger.error(f"OpenAI image generation error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Hiba a kép generálása során: {e}"
+        )
+
+@app.post("/api/openai/text_to_speech")
+async def openai_text_to_speech(req: OpenAIAudioRequest):
+    """OpenAI Text-to-Speech"""
+    if not openai_client or not OPENAI_AVAILABLE:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="OpenAI nem elérhető"
+        )
+
+    try:
+        response = openai_client.audio.speech.create(
+            model=req.model,
+            voice=req.voice,
+            input=req.text,
+            response_format=req.response_format
+        )
+
+        # Audio fájl base64 kódolással
+        import base64
+        audio_data = base64.b64encode(response.content).decode('utf-8')
+
+        return {
+            "text": req.text,
+            "model": req.model,
+            "voice": req.voice,
+            "format": req.response_format,
+            "audio_data": audio_data,
+            "status": "success"
+        }
+
+    except Exception as e:
+        logger.error(f"OpenAI TTS error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Hiba a hang generálása során: {e}"
+        )
+
+@app.post("/api/openai/vision_analysis")
+async def openai_vision_analysis(req: OpenAIVisionRequest):
+    """GPT-4 Vision kép elemzés"""
+    if not openai_client or not OPENAI_AVAILABLE:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="OpenAI nem elérhető"
+        )
+
+    try:
+        response = openai_client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": req.prompt},
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": req.image_url}
+                        }
+                    ]
+                }
+            ],
+            max_tokens=req.max_tokens
+        )
+
+        analysis = response.choices[0].message.content
+
+        return {
+            "prompt": req.prompt,
+            "image_url": req.image_url,
+            "analysis": analysis,
+            "model": "gpt-4o",
+            "status": "success"
+        }
+
+    except Exception as e:
+        logger.error(f"OpenAI Vision error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Hiba a kép elemzése során: {e}"
+        )
+
+@app.get("/api/openai/models")
+async def get_openai_models():
+    """Elérhető OpenAI modellek listázása"""
+    if not openai_client or not OPENAI_AVAILABLE:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="OpenAI nem elérhető"
+        )
+
+    try:
+        models = openai_client.models.list()
+        
+        model_list = []
+        for model in models.data:
+            model_list.append({
+                "id": model.id,
+                "created": model.created,
+                "owned_by": model.owned_by
+            })
+
+        return {
+            "models": model_list,
+            "total_models": len(model_list),
+            "status": "success"
+        }
+
+    except Exception as e:
+        logger.error(f"OpenAI models list error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Hiba a modellek lekérése során: {e}"
+        )
+
+@app.post("/api/openai/advanced_chat")
+async def openai_advanced_chat(messages: List[Message], model: str = "gpt-4o", temperature: float = 0.7):
+    """Fejlett OpenAI chat funkciók"""
+    if not openai_client or not OPENAI_AVAILABLE:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="OpenAI nem elérhető"
+        )
+
+    try:
+        # Üzenetek konvertálása OpenAI formátumba
+        openai_messages = [{"role": msg.role, "content": msg.content} for msg in messages]
+
+        response = openai_client.chat.completions.create(
+            model=model,
+            messages=openai_messages,
+            temperature=temperature,
+            max_tokens=4096
+        )
+
+        return {
+            "response": response.choices[0].message.content,
+            "model": model,
+            "usage": {
+                "prompt_tokens": response.usage.prompt_tokens,
+                "completion_tokens": response.usage.completion_tokens,
+                "total_tokens": response.usage.total_tokens
+            },
+            "status": "success"
+        }
+
+    except Exception as e:
+        logger.error(f"OpenAI advanced chat error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Hiba a fejlett chat során: {e}"
+        )
+
