@@ -967,7 +967,7 @@ async def deep_research(req: DeepResearchRequest):
                     type="neural",
                     num_results=50,
                     include_domains=scientific_domains,
-                    text_contents={"max_characters": 3000, "strategy": "comprehensive"},
+                    text=True,
                     livecrawl="when_necessary"
                 )
                 all_results.extend(neural_search.results)
@@ -991,7 +991,7 @@ async def deep_research(req: DeepResearchRequest):
                     type="keyword",
                     num_results=40,
                     include_domains=scientific_domains,
-                    text_contents={"max_characters": 3000, "strategy": "comprehensive"}
+                    text=True
                 )
                 all_results.extend(keyword_search.results)
                 logger.info(f"Keyword search '{variant}': {len(keyword_search.results)} results")
@@ -1007,7 +1007,7 @@ async def deep_research(req: DeepResearchRequest):
                     type="neural",
                     num_results=30,
                     start_published_date=f"{year}-01-01",
-                    text_contents={"max_characters": 3000, "strategy": "comprehensive"}
+                    text=True
                 )
                 all_results.extend(recent_search.results)
                 logger.info(f"Time period {year}: {len(recent_search.results)} results")
@@ -1022,7 +1022,7 @@ async def deep_research(req: DeepResearchRequest):
                     type="neural",
                     num_results=20,
                     include_domains=[domain],
-                    text_contents={"max_characters": 3000, "strategy": "comprehensive"}
+                    text=True
                 )
                 all_results.extend(domain_search.results)
                 logger.info(f"Domain {domain}: {len(domain_search.results)} results")
@@ -1052,8 +1052,8 @@ async def deep_research(req: DeepResearchRequest):
             }
             sources.append(source_data)
 
-            if result.text_contents and result.text_contents.text:
-                content_snippet = result.text_contents.text[:2000]  # Hosszabb részletek
+            if hasattr(result, 'text') and result.text:
+                content_snippet = result.text[:2000]  # Hosszabb részletek
                 combined_content += f"\n--- Forrás {i+1}: {result.title} ---\n{content_snippet}\n"
 
         # AI elemzés kibővített prompt-tal
@@ -1412,10 +1412,7 @@ async def exa_neural_search(query: str, domains: List[str] = [], exclude_domains
             num_results=num_results,
             include_domains=domains,
             exclude_domains=exclude_domains,
-            text_contents={
-                "max_characters": 3000,
-                "strategy": "comprehensive"
-            },
+            text=True,
             livecrawl="when_necessary"
         )
 
@@ -1434,7 +1431,7 @@ async def exa_neural_search(query: str, domains: List[str] = [], exclude_domains
                 "score": getattr(result, 'score', 0),
                 "published_date": result.published_date,
                 "domain": result.url.split('/')[2] if '/' in result.url else result.url,
-                "text_preview": result.text_contents.text[:500] + "..." if result.text_contents else None
+                "text_preview": result.text[:500] + "..." if hasattr(result, 'text') and result.text else None
             }
             processed_results.append(processed_result)
 
@@ -1474,11 +1471,7 @@ async def get_research_trends(req: ScientificInsightRequest):
             type="neural",
             num_results=req.num_results,
             include_domains=scientific_domains,
-            text_contents={
-                "max_characters": 2000, 
-                "strategy": "comprehensive",
-                "include_html_tags": False
-            },
+            text=True,
             livecrawl="when_necessary",
             start_published_date="2020-01-01"  # Friss kutatások
         )
@@ -1493,8 +1486,8 @@ async def get_research_trends(req: ScientificInsightRequest):
         sources = []
         combined_content = ""
         for i, result in enumerate(search_response.results):
-            if result.text_contents and result.text_contents.text:
-                combined_content += f"--- Forrás {i+1}: {result.title} ({result.url}) ---\n{result.text_contents.text}\n\n"
+            if hasattr(result, 'text') and result.text:
+                combined_content += f"--- Forrás {i+1}: {result.title} ({result.url}) ---\n{result.text}\n\n"
                 sources.append({
                     "title": result.title,
                     "url": result.url,
