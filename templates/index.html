@@ -395,26 +395,130 @@
             transition: all 0.3s var(--transition-curve);
         }
 
-        .flux-button {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            border: none;
-            color: white;
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
+        .tools-button {
+            background: var(--glass-strong);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid var(--border);
+            color: var(--text);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             margin-right: 8px;
             transition: all 0.3s var(--transition-curve);
-            font-size: 14px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            font-size: 16px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+            position: relative;
         }
 
-        .flux-button:hover {
+        .tools-button:hover {
+            transform: translateY(-2px) scale(1.05);
+            background: var(--glass);
+            border-color: var(--border-glow);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 20px rgba(229, 18, 132, 0.3);
+        }
+
+        .tools-menu {
+            position: absolute;
+            bottom: 50px;
+            left: 0;
+            background: var(--glass-strong);
+            backdrop-filter: blur(30px) saturate(180%);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 8px;
+            min-width: 180px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px) scale(0.95);
+            transition: all 0.3s var(--transition-curve);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .tools-menu.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+        }
+
+        .tool-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s var(--transition-curve);
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .tool-item:hover {
+            background: var(--glass);
+            border: 1px solid var(--border-glow);
+            transform: translateX(4px);
+        }
+
+        .tool-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 6px;
+            color: white;
+            font-size: 10px;
+        }
+
+        .image-message {
+            max-width: 100%;
+            border-radius: 12px;
+            margin: 12px 0;
+        }
+
+        .image-container {
+            position: relative;
+            display: inline-block;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .generated-image {
+            max-width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+            border-radius: 12px;
+        }
+
+        .download-button {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            background: var(--glass-strong);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: var(--text);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s var(--transition-curve);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .download-button:hover {
+            background: var(--glass);
+            border-color: var(--accent);
             transform: translateY(-2px);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 0 12px var(--primary);
         }
         .message-input {
             flex: 1; background: var(--glass-strong);
@@ -814,9 +918,25 @@
 
                 <div class="input-area">
                     <div class="input-wrapper">
-                        <button class="flux-button touch-feedback" id="fluxButton" title="FLUX 1.1 Pro Ultra kép generálás">
-                            <i class="fas fa-plus"></i>
-                        </button>
+                        <div class="tools-container">
+                            <button class="tools-button touch-feedback" id="toolsButton" title="Eszközök">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                            <div class="tools-menu" id="toolsMenu">
+                                <div class="tool-item touch-feedback" onclick="selectImageGeneration()">
+                                    <div class="tool-icon">
+                                        <i class="fas fa-image"></i>
+                                    </div>
+                                    <span>Kép generálás</span>
+                                </div>
+                                <div class="tool-item touch-feedback" onclick="selectCodeGeneration()">
+                                    <div class="tool-icon">
+                                        <i class="fas fa-code"></i>
+                                    </div>
+                                    <span>Kód generálás</span>
+                                </div>
+                            </div>
+                        </div>
                         <textarea 
                             class="message-input" 
                             id="messageInput" 
@@ -1211,23 +1331,68 @@ async function fetchAPI(endpoint, options = {}) {
             if (!message || AppState.isTyping) return;
 
             hideWelcome();
-            addUserMessage(message);
-            messageInput.value = '';
-            messageInput.style.height = 'auto';
-            showTypingIndicator();
+            
+            if (currentImageGenerationMode) {
+                // Képgenerálás mód
+                addUserMessage(`🎨 Kép generálás: ${message}`);
+                messageInput.value = '';
+                messageInput.style.height = 'auto';
+                messageInput.placeholder = "Kérdezz bármit...";
+                messageInput.style.borderColor = "var(--border)";
+                currentImageGenerationMode = false;
+                showImageGenerationIndicator();
 
-            try {
-                const data = await fetchAPI('/deep_discovery/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: message, user_id: AppState.userId })
-                });
-                hideTypingIndicator();
-                addAiMessage(data.response, data.model_used);
-                HapticFeedback.success();
-            } catch (error) {
-                hideTypingIndicator();
-                HapticFeedback.error();
+                try {
+                    const response = await fetch('/api/replicate/flux_generate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            prompt: message,
+                            aspect_ratio: "3:2",
+                            output_format: "jpg",
+                            safety_tolerance: 2,
+                            image_prompt_strength: 0.1,
+                            raw: false
+                        })
+                    });
+
+                    const data = await response.json();
+                    hideImageGenerationIndicator();
+
+                    if (data.status === 'success') {
+                        addGeneratedImageToChat(data.image_url, message);
+                        HapticFeedback.success();
+                    } else {
+                        addAiMessage(`❌ Hiba a kép generálása során: ${data.detail || 'Ismeretlen hiba'}`, "JADED AI");
+                        HapticFeedback.error();
+                    }
+                } catch (error) {
+                    hideImageGenerationIndicator();
+                    addAiMessage(`❌ Hiba a kép generálása során: ${error.message}`, "JADED AI");
+                    HapticFeedback.error();
+                }
+            } else {
+                // Normál chat mód
+                addUserMessage(message);
+                messageInput.value = '';
+                messageInput.style.height = 'auto';
+                showTypingIndicator();
+
+                try {
+                    const data = await fetchAPI('/deep_discovery/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message: message, user_id: AppState.userId })
+                    });
+                    hideTypingIndicator();
+                    addAiMessage(data.response, data.model_used);
+                    HapticFeedback.success();
+                } catch (error) {
+                    hideTypingIndicator();
+                    HapticFeedback.error();
+                }
             }
         }
 
@@ -1278,6 +1443,117 @@ async function fetchAPI(endpoint, options = {}) {
             AppState.isTyping = false;
             sendBtn.disabled = false;
             getEl('typingIndicator')?.remove();
+        }
+
+        function showImageGenerationIndicator() {
+            AppState.isTyping = true;
+            sendBtn.disabled = true;
+            const indicator = document.createElement('div');
+            indicator.id = 'imageGenerationIndicator';
+            indicator.className = 'message ai-message';
+            indicator.innerHTML = `
+                <div class="ai-content" style="padding: 20px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div class="spinner" style="width: 24px; height: 24px; border: 2px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                        <div>
+                            <h4 style="margin: 0; color: var(--primary);">🎨 Kép generálás folyamatban...</h4>
+                            <p style="margin: 4px 0 0 0; color: var(--text-muted); font-size: 0.8rem;">FLUX 1.1 Pro Ultra modell dolgozik</p>
+                        </div>
+                    </div>
+                </div>`;
+            messagesContainer.appendChild(indicator);
+            scrollToBottom();
+        }
+
+        function hideImageGenerationIndicator() {
+            AppState.isTyping = false;
+            sendBtn.disabled = false;
+            getEl('imageGenerationIndicator')?.remove();
+        }
+
+        function addGeneratedImageToChat(imageUrl, prompt) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ai-message';
+            messageDiv.innerHTML = `
+                <div class="ai-content">
+                    <div class="image-container">
+                        <img src="${imageUrl}" alt="${prompt}" class="generated-image" onclick="openImageModal('${imageUrl}', '${prompt}')">
+                        <button class="download-button touch-feedback" onclick="downloadImage('${imageUrl}', '${prompt}')">
+                            <i class="fas fa-download"></i>
+                            Letöltés
+                        </button>
+                    </div>
+                    <div style="margin-top: 12px; padding: 12px; background: var(--glass); border-radius: 8px;">
+                        <p style="margin: 0; font-size: 0.9rem;"><strong>Prompt:</strong> ${prompt}</p>
+                        <p style="margin: 4px 0 0 0; font-size: 0.8rem; color: var(--text-muted);">Generálva: FLUX 1.1 Pro Ultra</p>
+                    </div>
+                </div>
+                <div class="message-actions">
+                    <button class="action-btn touch-feedback" onclick="copyImageUrl('${imageUrl}')"><i class="fas fa-link"></i> URL másolás</button>
+                    <button class="action-btn touch-feedback" onclick="shareImage('${imageUrl}', '${prompt}')"><i class="fas fa-share"></i> Megosztás</button>
+                </div>`;
+            messagesContainer.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        function downloadImage(imageUrl, prompt) {
+            const link = document.createElement('a');
+            link.href = imageUrl;
+            link.download = `generated_image_${Date.now()}.jpg`;
+            link.target = '_blank';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            HapticFeedback.success();
+        }
+
+        function copyImageUrl(imageUrl) {
+            navigator.clipboard.writeText(imageUrl).then(() => {
+                HapticFeedback.success();
+                // Toast notification lehetne itt
+            }).catch(() => {
+                HapticFeedback.error();
+            });
+        }
+
+        function shareImage(imageUrl, prompt) {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'JADED AI - Generált kép',
+                    text: `Generált kép: ${prompt}`,
+                    url: imageUrl
+                });
+            } else {
+                copyImageUrl(imageUrl);
+            }
+            HapticFeedback.medium();
+        }
+
+        function openImageModal(imageUrl, prompt) {
+            // Egyszerű modal a kép nagyobb megjelenítéséhez
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center;
+                z-index: 10000; cursor: pointer;
+            `;
+            
+            const img = document.createElement('img');
+            img.src = imageUrl;
+            img.style.cssText = `
+                max-width: 90%; max-height: 90%; object-fit: contain;
+                border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+            `;
+            
+            modal.appendChild(img);
+            document.body.appendChild(modal);
+            
+            modal.addEventListener('click', () => {
+                document.body.removeChild(modal);
+                HapticFeedback.light();
+            });
+            
+            HapticFeedback.medium();
         }
 
         function scrollToBottom() {
@@ -1563,21 +1839,65 @@ async function fetchAPI(endpoint, options = {}) {
     </div>
 
     <script>
+        // Globális változók
+        let currentImageGenerationMode = false;
+
         // Event listeners
         document.getElementById('sendBtn').addEventListener('click', sendMessage);
         document.getElementById('messageInput').addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
                 sendMessage();
             }
         });
 
-        // FLUX button event listener
-        document.getElementById('fluxButton').addEventListener('click', openFluxModal);
+        // Tools button event listener
+        document.getElementById('toolsButton').addEventListener('click', toggleToolsMenu);
+
+        // Kívül kattintás az eszközök menü bezárásához
+        document.addEventListener('click', function(e) {
+            const toolsContainer = e.target.closest('.tools-container');
+            if (!toolsContainer) {
+                closeToolsMenu();
+            }
+        });
 
         // Image prompt strength slider
         document.getElementById('imagePromptStrength').addEventListener('input', function(e) {
             document.getElementById('strengthValue').textContent = e.target.value;
         });
+
+        // Eszközök menü kezelés
+        function toggleToolsMenu() {
+            const menu = document.getElementById('toolsMenu');
+            menu.classList.toggle('show');
+            HapticFeedback.light();
+        }
+
+        function closeToolsMenu() {
+            const menu = document.getElementById('toolsMenu');
+            menu.classList.remove('show');
+        }
+
+        function selectImageGeneration() {
+            currentImageGenerationMode = true;
+            const input = document.getElementById('messageInput');
+            input.placeholder = "Írj le részletesen, milyen képet szeretnél generálni...";
+            input.style.borderColor = "var(--primary)";
+            closeToolsMenu();
+            input.focus();
+            HapticFeedback.medium();
+        }
+
+        function selectCodeGeneration() {
+            currentImageGenerationMode = false;
+            const input = document.getElementById('messageInput');
+            input.placeholder = "Kérdezz bármit...";
+            input.style.borderColor = "var(--border)";
+            closeToolsMenu();
+            input.focus();
+            HapticFeedback.medium();
+        }
 
         // FLUX Modal functions
         function openFluxModal() {
