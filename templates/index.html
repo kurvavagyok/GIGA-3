@@ -383,7 +383,39 @@
             }
         }
 
-        .input-wrapper { max-width: 1000px; margin: 0 auto; display: flex; gap: 8px; align-items: flex-end; }
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 4px;
+            backdrop-filter: blur(12px);
+            transition: all 0.3s var(--transition-curve);
+        }
+
+        .flux-button {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 8px;
+            transition: all 0.3s var(--transition-curve);
+            font-size: 14px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .flux-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 0 12px var(--primary);
+        }
         .message-input {
             flex: 1; background: var(--glass-strong);
             border: 1px solid var(--border); border-radius: 12px;
@@ -713,6 +745,25 @@
     </div>
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
+    <!-- FLUX 1.1 Pro Ultra Modal -->
+    <div class="modal" id="fluxModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle"><i class="fas fa-image"></i> FLUX 1.1 Pro Ultra</h2>
+                <button class="close-btn touch-feedback" onclick="closeModal()" aria-label="Bezárás">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <label for="serviceQuery">Kérdés vagy feladat:</label>
+                <textarea id="serviceQuery" rows="4" placeholder="Adja meg a  szolgáltatáshoz kapcsolódó kérését..."></textarea>
+            </div>
+            <div class="modal-footer" id="modalFooter">
+                <button class="modal-submit-btn touch-feedback" onclick="">Elemzés indítása</button>
+            </div>
+        </div>
+    </div>
+
     <div class="container">
         <!-- Oldalsáv (Sidebar) -->
         <aside class="sidebar" id="sidebar" role="navigation">
@@ -763,6 +814,9 @@
 
                 <div class="input-area">
                     <div class="input-wrapper">
+                        <button class="flux-button touch-feedback" id="fluxButton" title="FLUX 1.1 Pro Ultra kép generálás">
+                            <i class="fas fa-plus"></i>
+                        </button>
                         <textarea 
                             class="message-input" 
                             id="messageInput" 
@@ -1445,6 +1499,176 @@ async function fetchAPI(endpoint, options = {}) {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+    </script>
+
+    <div id="fluxModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-image"></i> FLUX 1.1 Pro Ultra</h3>
+                <button class="close-btn" onclick="closeFluxModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="fluxPrompt">Kép leírása:</label>
+                    <textarea id="fluxPrompt" placeholder="Írj le részletesen, milyen képet szeretnél generálni..." rows="3"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="aspectRatio">Képarány:</label>
+                        <select id="aspectRatio">
+                            <option value="3:2">3:2 (Landscape)</option>
+                            <option value="1:1">1:1 (Square)</option>
+                            <option value="2:3">2:3 (Portrait)</option>
+                            <option value="16:9">16:9 (Widescreen)</option>
+                            <option value="9:16">9:16 (Mobile)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="outputFormat">Formátum:</label>
+                        <select id="outputFormat">
+                            <option value="jpg">JPG</option>
+                            <option value="png">PNG</option>
+                            <option value="webp">WebP</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="safetyTolerance">Biztonsági szint:</label>
+                        <select id="safetyTolerance">
+                            <option value="1">1 (Legbiztonságosabb)</option>
+                            <option value="2" selected>2 (Biztonságos)</option>
+                            <option value="3">3 (Kiegyensúlyozott)</option>
+                            <option value="4">4 (Engedékeny)</option>
+                            <option value="5">5 (Legkevésbé korlátozott)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="imagePromptStrength">Prompt erősség:</label>
+                        <input type="range" id="imagePromptStrength" min="0" max="1" step="0.1" value="0.1">
+                        <span id="strengthValue">0.1</span>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-cancel" onclick="closeFluxModal()">Mégse</button>
+                    <button class="btn-generate" onclick="generateFluxImage()">
+                        <i class="fas fa-magic"></i> Generálás
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Event listeners
+        document.getElementById('sendBtn').addEventListener('click', sendMessage);
+        document.getElementById('messageInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // FLUX button event listener
+        document.getElementById('fluxButton').addEventListener('click', openFluxModal);
+
+        // Image prompt strength slider
+        document.getElementById('imagePromptStrength').addEventListener('input', function(e) {
+            document.getElementById('strengthValue').textContent = e.target.value;
+        });
+
+        // FLUX Modal functions
+        function openFluxModal() {
+            document.getElementById('fluxModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeFluxModal() {
+            document.getElementById('fluxModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('fluxModal');
+            if (event.target === modal) {
+                closeFluxModal();
+            }
+        }
+
+        async function generateFluxImage() {
+            const prompt = document.getElementById('fluxPrompt').value.trim();
+            if (!prompt) {
+                alert('Kérlek add meg a kép leírását!');
+                return;
+            }
+
+            const generateBtn = document.querySelector('.btn-generate');
+            const originalText = generateBtn.innerHTML;
+            generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generálás...';
+            generateBtn.disabled = true;
+
+            try {
+                const response = await fetch('/api/replicate/flux_generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        prompt: prompt,
+                        aspect_ratio: document.getElementById('aspectRatio').value,
+                        output_format: document.getElementById('outputFormat').value,
+                        safety_tolerance: parseInt(document.getElementById('safetyTolerance').value),
+                        image_prompt_strength: parseFloat(document.getElementById('imagePromptStrength').value),
+                        raw: false
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    // Add generated image to chat
+                    addImageToChat(data.image_url, prompt, data);
+                    closeFluxModal();
+                    // Clear form
+                    document.getElementById('fluxPrompt').value = '';
+                } else {
+                    alert('Hiba a kép generálása során: ' + data.detail);
+                }
+            } catch (error) {
+                console.error('FLUX generálási hiba:', error);
+                alert('Hiba történt a kép generálása során.');
+            } finally {
+                generateBtn.innerHTML = originalText;
+                generateBtn.disabled = false;
+            }
+        }
+
+        function addImageToChat(imageUrl, prompt, metadata) {
+            const chatContainer = document.getElementById('messagesContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ai-message';
+
+            messageDiv.innerHTML = `
+                <div class="ai-content">
+                    <div class="flux-image-container">
+                        <img src="${imageUrl}" alt="${prompt}" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+                        <div class="image-metadata">
+                            <p><strong>Prompt:</strong> ${prompt}</p>
+                            <p><strong>Képarány:</strong> ${metadata.aspect_ratio} | <strong>Formátum:</strong> ${metadata.output_format}</p>
+                            <p><strong>Biztonsági szint:</strong> ${metadata.safety_tolerance} | <strong>Modell:</strong> ${metadata.model}</p>
+                        </div>
+                    </div>
+                </div>
+				<div class="message-actions">
+                    <button class="action-btn touch-feedback" onclick=""><i class="fas fa-copy"></i> Másolás</button>
+                </div>
+            `;
+
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
         }
     </script>
 </body>

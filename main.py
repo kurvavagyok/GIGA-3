@@ -41,6 +41,13 @@ try:
 except ImportError:
     EXA_AVAILABLE = False
 
+# Replicate API
+try:
+    import replicate
+    REPLICATE_AVAILABLE = True
+except ImportError:
+    REPLICATE_AVAILABLE = False
+
 # OpenAI API
 try:
     import openai
@@ -80,6 +87,7 @@ GCP_REGION = os.environ.get("GCP_REGION")
 CEREBRAS_API_KEY = os.environ.get("CEREBRAS_API_KEY")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 EXA_API_KEY = os.environ.get("EXA_API_KEY")
+REPLICATE_API_TOKEN = os.environ.get("REPLICATE_API_TOKEN", "r8_ZHFOjPjftzHL2YxTipyshoqnVUopsVT2iHyHu")
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 OPENAI_ORG_ID = os.environ.get("OPENAI_ORG_ID")
 OPENAI_ADMIN_KEY = os.environ.get("OPENAI_ADMIN_KEY")
@@ -145,6 +153,17 @@ if EXA_API_KEY and EXA_AVAILABLE:
     except Exception as e:
         logger.error(f"Error initializing Exa client: {e}")
         exa_client = None
+
+# Replicate kliens inicializálása
+replicate_client = None
+if REPLICATE_API_TOKEN and REPLICATE_AVAILABLE:
+    try:
+        os.environ["REPLICATE_API_TOKEN"] = REPLICATE_API_TOKEN
+        replicate_client = replicate
+        logger.info("Replicate client initialized successfully.")
+    except Exception as e:
+        logger.error(f"Error initializing Replicate client: {e}")
+        replicate_client = None
 
 # OpenAI kliens inicializálása
 openai_client = None
@@ -2218,6 +2237,84 @@ class OpenAIVisionRequest(BaseModel):
     prompt: str = Field(..., description="Kép elemzési kérés")
     image_url: str = Field(..., description="Elemzendő kép URL-je")
     max_tokens: int = Field(default=300, description="Maximum tokenek")
+
+class FluxImageRequest(BaseModel):
+    prompt: str = Field(..., description="Kép generálási prompt")
+    aspect_ratio: str = Field(default="3:2", description="Képarány (1:1, 3:2, 16:9, stb.)")
+    output_format: str = Field(default="jpg", description="Kimeneti formátum (jpg, png, webp)")
+    safety_tolerance: int = Field(default=2, ge=1, le=5, description="Biztonsági tolerancia (1-5)")
+    image_prompt_strength: float = Field(default=0.1, ge=0.0, le=1.0, description="Kép prompt erősség")
+    raw: bool = Field(default=False, description="Nyers kimenet")
+
+# --- Replicate FLUX 1.1 Pro Ultra API Végpontok ---
+
+@app.post("/api/replicate/flux_generate")
+async def flux_generate_image(req: FluxImageRequest):
+    """FLUX 1.1 Pro Ultra kép generálás Replicate-tel"""
+    if not replicate_client or not REPLICATE_AVAILABLE:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Replicate szolgáltatás nem elérhető"
+        )
+
+    try:
+        logger.info(f"FLUX 1.1 Pro Ultra kép generálás: {req.prompt}")
+        
+        # FLUX 1.1 Pro Ultra modell futtatása
+        output = replicate_client.run(
+            "black-forest-labs/flux-1.1-pro-ultra",
+            input={
+                "raw": req.raw,
+                "prompt": req.prompt,
+                "aspect_ratio": req.aspect_ratio,
+                "output_format": req.output_format,
+                "safety_tolerance": req.safety_tolerance,
+                "image_prompt_strength": req.image_prompt_strength
+            }
+        )
+
+        # Kép URL lekérése
+        image_url = output if isinstance(output, str) else str(output)
+        
+        return {
+            "prompt": req.prompt,
+            "image_url": image_url,
+            "aspect_ratio": req.aspect_ratio,
+            "output_format": req.output_format,
+            "safety_tolerance": req.safety_tolerance,
+            "image_prompt_strength": req.image_prompt_strength,
+            "model": "FLUX 1.1 Pro Ultra",
+            "status": "success",
+            "timestamp": datetime.now().isoformat()
+        }
+
+    except Exception as e:
+        logger.error(f"FLUX 1.1 Pro Ultra generálási hiba: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Hiba a FLUX kép generálása során: {e}"
+        )
+
+@app.get("/api/replicate/flux_info")
+async def flux_info():
+    """FLUX 1.1 Pro Ultra modell információk"""
+    return {
+        "model_name": "FLUX 1.1 Pro Ultra",
+        "provider": "Replicate",
+        "description": "Legújabb FLUX 1.1 Pro Ultra modell a Black Forest Labs-től",
+        "capabilities": {
+            "image_generation": True,
+            "ultra_quality": True,
+            "fast_generation": True,
+            "style_control": True,
+            "aspect_ratio_control": True
+        },
+        "supported_formats": ["jpg", "png", "webp"],
+        "supported_aspect_ratios": ["1:1", "3:2", "2:3", "4:3", "3:4", "16:9", "9:16"],
+        "safety_levels": list(range(1, 6)),
+        "available": REPLICATE_AVAILABLE and replicate_client is not None,
+        "status": "Aktív és integrált"
+    }
 
 # --- OpenAI API Végpontok ---
 
