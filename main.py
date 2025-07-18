@@ -55,6 +55,10 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
+# Naplózás konfigurálása
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
 # AlphaFold 3 integráció - biztonságos path hozzáadás
 af3_src_path = pathlib.Path("alphafold3_repo/src")
 if af3_src_path.exists():
@@ -62,10 +66,6 @@ if af3_src_path.exists():
     logger.info(f"AlphaFold 3 source path added: {af3_src_path}")
 else:
     logger.warning(f"AlphaFold 3 source path not found: {af3_src_path}")
-
-# Naplózás konfigurálása
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
 
 # --- Digitális Ujjlenyomat ---
 DIGITAL_FINGERPRINT = "Jaded made by Kollár Sándor"
