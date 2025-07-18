@@ -2412,4 +2412,3 @@ async def openai_advanced_chat(messages: List[Message], model: str = "gpt-4o", t
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Hiba a fejlett chat során: {e}"
         )
-
