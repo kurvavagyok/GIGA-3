@@ -331,30 +331,30 @@ def cleanup_memory():
     """Agresszívebb memória tisztítás a teljesítményért"""
     try:
         current_time = time.time()
-        
+
         # Gyorsabb cache tisztítás
         if len(response_cache) > 200:  # Kisebb cache méret
             expired_keys = [k for k, v in response_cache.items() 
                            if current_time - v.get('timestamp', 0) > CACHE_EXPIRY]
             for key in expired_keys[:50]:  # Batch törlés
                 response_cache.pop(key, None)
-        
+
         # Chat history agresszív tisztítás
         if len(chat_histories) > MAX_CHAT_HISTORY:
             # Legrégebbi beszélgetések törlése
             users_to_remove = list(chat_histories.keys())[:len(chat_histories) - MAX_CHAT_HISTORY]
             for user_id in users_to_remove:
                 chat_histories.pop(user_id, None)
-        
+
         # Beszélgetések rövidítése
         for user_id in list(chat_histories.keys()):
             if len(chat_histories[user_id]) > MAX_HISTORY_LENGTH:
                 chat_histories[user_id] = chat_histories[user_id][-MAX_HISTORY_LENGTH:]
-                
+
         # Cache függvény tisztítása
         if len(response_cache) > 300:
             get_cached_response.cache_clear()
-                
+
     except Exception as e:
         logger.error(f"Memory cleanup error: {e}")
 
@@ -548,13 +548,13 @@ def _get_available_models():
 async def select_backend_model(prompt: str, service_name: str = None):
     """Gyorsított backend modell kiválasztás - Cerebras prioritás"""
     models = _get_available_models()
-    
+
     if not models:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Nincs elérhető AI modell"
         )
-    
+
     # Első elérhető modell visszaadása (Cerebras első)
     return models[0]
 
@@ -840,7 +840,7 @@ async def alphafold3_info():
         # AlphaFold 3 repository ellenőrzése
         af3_path = pathlib.Path("alphafold3_repo")
         af3_exists = af3_path.exists()
-        
+
         if af3_exists:
             version_file = af3_path / "src" / "alphafold3" / "version.py"
             version = "Ismeretlen"
@@ -850,7 +850,7 @@ async def alphafold3_info():
                 version_match = re.search(r"__version__ = ['\"]([^'\"]+)['\"]", version_content)
                 if version_match:
                     version = version_match.group(1)
-        
+
         return {
             "alphafold3_available": af3_exists,
             "version": version if af3_exists else None,
@@ -871,7 +871,7 @@ async def alphafold3_info():
             },
             "status": "Működőképes (model paraméterek nélkül csak data pipeline)"
         }
-        
+
     except Exception as e:
         return {
             "alphafold3_available": False,
@@ -915,7 +915,7 @@ async def deep_discovery_chat(req: ChatRequest):
 
     # Gyorsabb backend kiválasztás
     model_info = await select_backend_model(current_message)
-    
+
     history = chat_histories.get(user_id, [])
 
     # Rövidebb system message a gyorsaságért
@@ -947,7 +947,7 @@ async def deep_discovery_chat(req: ChatRequest):
             for chunk in stream:
                 if chunk.choices[0].delta.content:
                     response_text += chunk.choices[0].delta.content
-                    
+
         elif model_info["type"] == "openai":
             response = openai_client.chat.completions.create(
                 model="gpt-4o",
@@ -957,7 +957,7 @@ async def deep_discovery_chat(req: ChatRequest):
                 top_p=0.95
             )
             response_text = response.choices[0].message.content
-            
+
         elif model_info["type"] == "gemini":
             response = await model_info["model"].generate_content_async(
                 '\n'.join([msg['content'] for msg in messages_for_llm]),
@@ -978,7 +978,7 @@ async def deep_discovery_chat(req: ChatRequest):
             history = history[-MAX_HISTORY_LENGTH:]
 
         chat_histories[user_id] = history
-        
+
         # Periodikus tisztítás
         if len(response_cache) > 200:
             cleanup_memory()
@@ -1608,7 +1608,7 @@ class AlphaFold3ComplexRequest(BaseModel):
 def generate_alphafold3_input(req: AlphaFold3ComplexRequest) -> Dict[str, Any]:
     """AlphaFold 3 input JSON generálása"""
     sequences = []
-    
+
     # Protein láncok hozzáadása
     for i, protein_seq in enumerate(req.protein_chains):
         sequences.append({
@@ -1617,7 +1617,7 @@ def generate_alphafold3_input(req: AlphaFold3ComplexRequest) -> Dict[str, Any]:
                 "sequence": protein_seq
             }
         })
-    
+
     # DNS szekvenciák hozzáadása
     for i, dna_seq in enumerate(req.dna_sequences):
         sequences.append({
@@ -1626,7 +1626,7 @@ def generate_alphafold3_input(req: AlphaFold3ComplexRequest) -> Dict[str, Any]:
                 "sequence": dna_seq
             }
         })
-    
+
     # RNS szekvenciák hozzáadása
     for i, rna_seq in enumerate(req.rna_sequences):
         sequences.append({
@@ -1635,7 +1635,7 @@ def generate_alphafold3_input(req: AlphaFold3ComplexRequest) -> Dict[str, Any]:
                 "sequence": rna_seq
             }
         })
-    
+
     # Ligandumok hozzáadása
     for i, ligand in enumerate(req.ligands):
         sequences.append({
@@ -1644,7 +1644,7 @@ def generate_alphafold3_input(req: AlphaFold3ComplexRequest) -> Dict[str, Any]:
                 "smiles": ligand
             }
         })
-    
+
     return {
         "name": req.prediction_name,
         "sequences": sequences,
@@ -1664,16 +1664,16 @@ async def alphafold3_structure_prediction(req: AlphaFold3ComplexRequest):
             output_dir = os.path.join(temp_dir, "output")
             os.makedirs(input_dir, exist_ok=True)
             os.makedirs(output_dir, exist_ok=True)
-            
+
             # Input JSON generálása
             input_json = generate_alphafold3_input(req)
             input_file = os.path.join(input_dir, "fold_input.json")
-            
+
             with open(input_file, 'w') as f:
                 json.dump(input_json, f, indent=2)
-            
+
             logger.info(f"AlphaFold 3 input created: {input_file}")
-            
+
             # AlphaFold 3 futtatása (csak data pipeline most, model nélkül)
             cmd = [
                 sys.executable,
@@ -1684,9 +1684,9 @@ async def alphafold3_structure_prediction(req: AlphaFold3ComplexRequest):
                 "--run_inference=false",  # Most csak adatfeldolgozás
                 "--force_output_dir=true"
             ]
-            
+
             logger.info(f"Running AlphaFold 3 command: {' '.join(cmd)}")
-            
+
             # Futtatás subprocess-szel
             process = await asyncio.create_subprocess_exec(
                 *cmd,
@@ -1694,9 +1694,9 @@ async def alphafold3_structure_prediction(req: AlphaFold3ComplexRequest):
                 stderr=asyncio.subprocess.PIPE,
                 cwd=os.getcwd()
             )
-            
+
             stdout, stderr = await process.communicate()
-            
+
             if process.returncode == 0:
                 # Sikeres futtatás - eredmények feldolgozása
                 result_files = []
@@ -1704,7 +1704,7 @@ async def alphafold3_structure_prediction(req: AlphaFold3ComplexRequest):
                     for file in files:
                         if file.endswith(('.json', '.pdb', '.cif')):
                             result_files.append(os.path.join(root, file))
-                
+
                 return {
                     "status": "success",
                     "prediction_name": req.prediction_name,
@@ -1723,7 +1723,7 @@ async def alphafold3_structure_prediction(req: AlphaFold3ComplexRequest):
                     "stdout": stdout.decode('utf-8')[-2000:],
                     "return_code": process.returncode
                 }
-                
+
     except Exception as e:
         logger.error(f"AlphaFold 3 prediction error: {e}")
         raise HTTPException(
@@ -2026,7 +2026,7 @@ async def alphamissense_analysis(req: AlphaMissenseRequest):
             random.seed(hash(mutation))
             score = random.uniform(0.1, 0.9)
             pathogenic = score >= req.pathogenicity_threshold
-            
+
             mutation_scores.append({
                 "mutation": mutation,
                 "pathogenicity_score": round(score, 3),
@@ -2164,21 +2164,21 @@ Csak a kódot add vissza, magyarázó szöveg nélkül. A kód legyen közvetlen
 
         model_info = await select_backend_model(prompt)
         result = await execute_model(model_info, prompt)
-        
+
         # Kód tisztítása - csak a kód részek megtartása
         generated_code = result["response"]
-        
+
         # Kód blokkok extraktálása ha van
         if "```" in generated_code:
             code_blocks = re.findall(r'```[\w]*\n(.*?)\n```', generated_code, re.DOTALL)
             if code_blocks:
                 generated_code = code_blocks[0].strip()
-        
+
         # További tisztítás
         lines = generated_code.split('\n')
         clean_lines = []
         in_code = True
-        
+
         for line in lines:
             # Kihagyjuk az üres magyarázó sorokat
             if line.strip() and not line.strip().startswith('Ez a kód') and not line.strip().startswith('A fenti'):
@@ -2186,7 +2186,7 @@ Csak a kódot add vissza, magyarázó szöveg nélkül. A kód legyen közvetlen
                 in_code = True
             elif in_code and line.strip() == '':
                 clean_lines.append(line)
-        
+
         generated_code = '\n'.join(clean_lines).strip()
 
         return {
@@ -2206,306 +2206,22 @@ Csak a kódot add vissza, magyarázó szöveg nélkül. A kód legyen közvetlen
             detail=f"Hiba a kód generálása során: {e}"
         )
 
-# The following JavaScript code is not used in the backend and will be removed.
+# Dinamikus port kiválasztás
+def find_available_port(start_port=5000, max_attempts=10):
+    """Elérhető port keresése"""
+    import socket
+    for port in range(start_port, start_port + max_attempts):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            try:
+                s.bind(('0.0.0.0', port))
+                return port
+            except OSError:
+                continue
+    return start_port  # Fallback
 
 # Adding FastAPI application execution to the end of the file.
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.environ.get("PORT", 5000))
+    port = int(os.environ.get("PORT", find_available_port()))
+    logger.info(f"Starting JADED AI Platform on port {port}")
     uvicorn.run(app, host="0.0.0.0", port=port)
-
-
-# --- OpenAI Specifikus Modellek ---
-class OpenAIImageRequest(BaseModel):
-    prompt: str = Field(..., description="Kép generálási prompt")
-    model: str = Field(default="dall-e-3", description="DALL-E modell")
-    size: str = Field(default="1024x1024", description="Kép mérete")
-    quality: str = Field(default="standard", description="Kép minősége")
-    n: int = Field(default=1, ge=1, le=4, description="Generált képek száma")
-
-class OpenAIAudioRequest(BaseModel):
-    text: str = Field(..., description="Felolvasandó szöveg")
-    model: str = Field(default="tts-1", description="TTS modell")
-    voice: str = Field(default="alloy", description="Hang típusa")
-    response_format: str = Field(default="mp3", description="Audio formátum")
-
-class OpenAITranscriptionRequest(BaseModel):
-    language: str = Field(default="hu", description="Nyelv kódja")
-    model: str = Field(default="whisper-1", description="Whisper modell")
-
-class OpenAIVisionRequest(BaseModel):
-    prompt: str = Field(..., description="Kép elemzési kérés")
-    image_url: str = Field(..., description="Elemzendő kép URL-je")
-    max_tokens: int = Field(default=300, description="Maximum tokenek")
-
-class FluxImageRequest(BaseModel):
-    prompt: str = Field(..., description="Kép generálási prompt")
-    aspect_ratio: str = Field(default="3:2", description="Képarány (1:1, 3:2, 16:9, stb.)")
-    output_format: str = Field(default="jpg", description="Kimeneti formátum (jpg, png, webp)")
-    safety_tolerance: int = Field(default=2, ge=1, le=5, description="Biztonsági tolerancia (1-5)")
-    image_prompt_strength: float = Field(default=0.1, ge=0.0, le=1.0, description="Kép prompt erősség")
-    raw: bool = Field(default=False, description="Nyers kimenet")
-
-# --- Replicate FLUX 1.1 Pro Ultra API Végpontok ---
-
-@app.post("/api/replicate/flux_generate")
-async def flux_generate_image(req: FluxImageRequest):
-    """FLUX 1.1 Pro Ultra kép generálás Replicate-tel"""
-    if not replicate_client or not REPLICATE_AVAILABLE:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Replicate szolgáltatás nem elérhető"
-        )
-
-    try:
-        logger.info(f"FLUX 1.1 Pro Ultra kép generálás: {req.prompt}")
-        
-        # FLUX 1.1 Pro Ultra modell futtatása
-        output = replicate_client.run(
-            "black-forest-labs/flux-1.1-pro-ultra",
-            input={
-                "raw": req.raw,
-                "prompt": req.prompt,
-                "aspect_ratio": req.aspect_ratio,
-                "output_format": req.output_format,
-                "safety_tolerance": req.safety_tolerance,
-                "image_prompt_strength": req.image_prompt_strength
-            }
-        )
-
-        # Kép URL lekérése
-        image_url = output if isinstance(output, str) else str(output)
-        
-        return {
-            "prompt": req.prompt,
-            "image_url": image_url,
-            "aspect_ratio": req.aspect_ratio,
-            "output_format": req.output_format,
-            "safety_tolerance": req.safety_tolerance,
-            "image_prompt_strength": req.image_prompt_strength,
-            "model": "FLUX 1.1 Pro Ultra",
-            "status": "success",
-            "timestamp": datetime.now().isoformat()
-        }
-
-    except Exception as e:
-        logger.error(f"FLUX 1.1 Pro Ultra generálási hiba: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Hiba a FLUX kép generálása során: {e}"
-        )
-
-@app.get("/api/replicate/flux_info")
-async def flux_info():
-    """FLUX 1.1 Pro Ultra modell információk"""
-    return {
-        "model_name": "FLUX 1.1 Pro Ultra",
-        "provider": "Replicate",
-        "description": "Legújabb FLUX 1.1 Pro Ultra modell a Black Forest Labs-től",
-        "capabilities": {
-            "image_generation": True,
-            "ultra_quality": True,
-            "fast_generation": True,
-            "style_control": True,
-            "aspect_ratio_control": True
-        },
-        "supported_formats": ["jpg", "png", "webp"],
-        "supported_aspect_ratios": ["1:1", "3:2", "2:3", "4:3", "3:4", "16:9", "9:16"],
-        "safety_levels": list(range(1, 6)),
-        "available": REPLICATE_AVAILABLE and replicate_client is not None,
-        "status": "Aktív és integrált"
-    }
-
-# --- OpenAI API Végpontok ---
-
-@app.post("/api/openai/generate_image")
-async def openai_generate_image(req: OpenAIImageRequest):
-    """DALL-E kép generálás"""
-    if not openai_client or not OPENAI_AVAILABLE:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="OpenAI nem elérhető"
-        )
-
-    try:
-        response = openai_client.images.generate(
-            model=req.model,
-            prompt=req.prompt,
-            size=req.size,
-            quality=req.quality,
-            n=req.n
-        )
-
-        images = []
-        for image in response.data:
-            images.append({
-                "url": image.url,
-                "revised_prompt": getattr(image, 'revised_prompt', req.prompt)
-            })
-
-        return {
-            "prompt": req.prompt,
-            "model": req.model,
-            "images": images,
-            "total_images": len(images),
-            "status": "success"
-        }
-
-    except Exception as e:
-        logger.error(f"OpenAI image generation error: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Hiba a kép generálása során: {e}"
-        )
-
-@app.post("/api/openai/text_to_speech")
-async def openai_text_to_speech(req: OpenAIAudioRequest):
-    """OpenAI Text-to-Speech"""
-    if not openai_client or not OPENAI_AVAILABLE:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="OpenAI nem elérhető"
-        )
-
-    try:
-        response = openai_client.audio.speech.create(
-            model=req.model,
-            voice=req.voice,
-            input=req.text,
-            response_format=req.response_format
-        )
-
-        # Audio fájl base64 kódolással
-        import base64
-        audio_data = base64.b64encode(response.content).decode('utf-8')
-
-        return {
-            "text": req.text,
-            "model": req.model,
-            "voice": req.voice,
-            "format": req.response_format,
-            "audio_data": audio_data,
-            "status": "success"
-        }
-
-    except Exception as e:
-        logger.error(f"OpenAI TTS error: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Hiba a hang generálása során: {e}"
-        )
-
-@app.post("/api/openai/vision_analysis")
-async def openai_vision_analysis(req: OpenAIVisionRequest):
-    """GPT-4 Vision kép elemzés"""
-    if not openai_client or not OPENAI_AVAILABLE:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="OpenAI nem elérhető"
-        )
-
-    try:
-        response = openai_client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": req.prompt},
-                        {
-                            "type": "image_url",
-                            "image_url": {"url": req.image_url}
-                        }
-                    ]
-                }
-            ],
-            max_tokens=req.max_tokens
-        )
-
-        analysis = response.choices[0].message.content
-
-        return {
-            "prompt": req.prompt,
-            "image_url": req.image_url,
-            "analysis": analysis,
-            "model": "gpt-4o",
-            "status": "success"
-        }
-
-    except Exception as e:
-        logger.error(f"OpenAI Vision error: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Hiba a kép elemzése során: {e}"
-        )
-
-@app.get("/api/openai/models")
-async def get_openai_models():
-    """Elérhető OpenAI modellek listázása"""
-    if not openai_client or not OPENAI_AVAILABLE:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="OpenAI nem elérhető"
-        )
-
-    try:
-        models = openai_client.models.list()
-        
-        model_list = []
-        for model in models.data:
-            model_list.append({
-                "id": model.id,
-                "created": model.created,
-                "owned_by": model.owned_by
-            })
-
-        return {
-            "models": model_list,
-            "total_models": len(model_list),
-            "status": "success"
-        }
-
-    except Exception as e:
-        logger.error(f"OpenAI models list error: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Hiba a modellek lekérése során: {e}"
-        )
-
-@app.post("/api/openai/advanced_chat")
-async def openai_advanced_chat(messages: List[Message], model: str = "gpt-4o", temperature: float = 0.7):
-    """Fejlett OpenAI chat funkciók"""
-    if not openai_client or not OPENAI_AVAILABLE:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="OpenAI nem elérhető"
-        )
-
-    try:
-        # Üzenetek konvertálása OpenAI formátumba
-        openai_messages = [{"role": msg.role, "content": msg.content} for msg in messages]
-
-        response = openai_client.chat.completions.create(
-            model=model,
-            messages=openai_messages,
-            temperature=temperature,
-            max_tokens=4096
-        )
-
-        return {
-            "response": response.choices[0].message.content,
-            "model": model,
-            "usage": {
-                "prompt_tokens": response.usage.prompt_tokens,
-                "completion_tokens": response.usage.completion_tokens,
-                "total_tokens": response.usage.total_tokens
-            },
-            "status": "success"
-        }
-
-    except Exception as e:
-        logger.error(f"OpenAI advanced chat error: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Hiba a fejlett chat során: {e}"
-        )
