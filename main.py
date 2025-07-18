@@ -935,7 +935,7 @@ async def deep_discovery_chat(req: ChatRequest):
             detail=f"Hiba a beszélgetés során: {e}"
         )
 
-@app.post("/api/deep_research")
+@app.post("/api/deep_discovery/deep_research")
 async def deep_research(req: DeepResearchRequest):
     """Optimalizált deep research API - valóban működő 1000+ forrás feldolgozással"""
     if not exa_client or not EXA_AVAILABLE:

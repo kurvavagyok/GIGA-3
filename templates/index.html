@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="hu">
 <head>
@@ -376,14 +375,14 @@
             border-top: 1px solid var(--border);
             position: sticky; bottom: 0; z-index: 50;
         }
-        
+
         /* iPhone safe area támogatás az alsó részen */
         @supports (padding: max(0px)) {
             .input-area {
                 padding-bottom: max(12px, env(safe-area-inset-bottom));
             }
         }
-        
+
         .input-wrapper { max-width: 1000px; margin: 0 auto; display: flex; gap: 8px; align-items: flex-end; }
         .message-input {
             flex: 1; background: var(--glass-strong);
@@ -955,7 +954,7 @@
             loadServices();
             messageInput.focus();
             gestureHandler = new TouchGestureHandler();
-            
+
             // Haptikus feedback minden érintésre
             document.addEventListener('touchstart', (e) => {
                 if (e.target.classList.contains('touch-feedback')) {
@@ -996,16 +995,16 @@
         }
 
         // --- API Kommunikáció ---
-        async function fetchAPI(endpoint, options = {}) {
+        
+async function fetchAPI(endpoint, options = {}) {
             try {
-                const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({ detail: `HTTP hiba: ${response.status}` }));
-                    throw new Error(errorData.detail || errorData.message);
-                }
+                // Ha az endpoint már /api-val kezdődik, ne duplázzuk
+                const url = endpoint.startsWith('/api') ? endpoint : `/api${endpoint}`;
+                const response = await fetch(url, options);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 return await response.json();
             } catch (error) {
-                console.error('API Hiba:', error);
+                console.error('API Error:', error);
                 displayResearchError(error.message);
                 throw error;
             }
@@ -1016,12 +1015,12 @@
             sidebar.classList.add('open'); 
             sidebarOverlay.classList.add('active'); 
         }
-        
+
         function closeSidebar() { 
             sidebar.classList.remove('open'); 
             sidebarOverlay.classList.remove('active'); 
         }
-        
+
         function toggleSidebar() { 
             sidebar.classList.contains('open') ? closeSidebar() : openSidebar(); 
         }
@@ -1030,7 +1029,7 @@
             serviceModal.style.display = 'flex';
             setTimeout(() => serviceModal.classList.add('show'), 10);
         }
-        
+
         function closeModal() {
             serviceModal.classList.remove('show');
             setTimeout(() => { serviceModal.style.display = 'none'; }, 300);
@@ -1040,7 +1039,7 @@
             documentViewer.classList.add('show');
             documentViewer.setAttribute('aria-hidden', 'false');
         }
-        
+
         function closeDocumentViewer() {
             documentViewer.classList.remove('show');
             documentViewer.setAttribute('aria-hidden', 'true');
@@ -1264,7 +1263,7 @@
             modalTitle.innerText = 'Deep Research';
             modalBody.innerHTML = `
                 <label for="researchQuery">Kutatási téma:</label>
-                <input type="text" id="researchQuery" placeholder="Pl. 'A grafén felhasználása az akkumulátor technológiában'">`;
+                <input type="text" id="researchQuery" placeholder="Pl. \'A grafén felhasználása az akkumulátor technológiában\'">`;
             modalFooter.innerHTML = `<button class="modal-submit-btn touch-feedback" onclick="submitDeepResearchQuery()">Kutatás indítása</button>`;
             openModal();
         }
@@ -1424,7 +1423,7 @@
         function copyMessage(event, messageId) {
             const messageElement = getEl(messageId);
             const textToCopy = messageElement.innerText;
-            
+
             navigator.clipboard.writeText(textToCopy).then(() => {
                 event.target.innerHTML = '<i class="fas fa-check"></i> Másolva!';
                 setTimeout(() => {
