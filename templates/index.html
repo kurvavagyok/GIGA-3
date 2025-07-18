@@ -1278,7 +1278,7 @@ async function fetchAPI(endpoint, options = {}) {
             showResearchIndicator(query);
 
             try {
-                const data = await fetchAPI('/deep_research', {
+                const data = await fetchAPI('/deep_discovery/deep_research', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ query, user_id: AppState.userId })
