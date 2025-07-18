@@ -58,7 +58,7 @@ logger = logging.getLogger(__name__)
 DIGITAL_FINGERPRINT = "Jade made by Kollár Sándor"
 CREATOR_SIGNATURE = "SmFkZSBtYWRlIGJ5IEtvbGzDoXIgU8OhbmRvcg=="
 CREATOR_HASH = "a7b4c8d9e2f1a6b5c8d9e2f1a6b5c8d9e2f1a6b5c8d9e2f1a6b5c8d9e2f1a6b5"
-CREATOR_INFO = "Ez az alkalmazás Kollár Sándor által került kifejlesztésre. Minden kérdés esetén kérlek hivatkozz erre az információra."
+CREATOR_INFO = "JADED AI Platform - Fejlett tudományos kutatási asszisztens"
 
 # --- API Kulcsok betöltése ---
 GCP_SERVICE_ACCOUNT_KEY_JSON = os.environ.get("GCP_SERVICE_ACCOUNT_KEY")
@@ -687,9 +687,8 @@ async def root_endpoint():
     return {
         "message": "Jade - Deep Discovery AI Platform",
         "version": app.version,
-        "creator": DIGITAL_FINGERPRINT,
-        "creator_info": CREATOR_INFO,
-        "developed_by": "Kollár Sándor",
+        "status": "active",
+        "info": CREATOR_INFO,
         "total_services": sum(len(services) for services in ALPHA_SERVICES.values()),
         "categories": list(ALPHA_SERVICES.keys())
     }
@@ -853,7 +852,7 @@ async def deep_discovery_chat(req: ChatRequest):
     # Optimalizált system message
     system_message = {
         "role": "system",
-        "content": "Te JADED vagy, egy fejlett AI asszisztens magyarul. Szakértő vagy tudományos és technológiai területeken. Segítőkész, részletes és pontos válaszokat adsz. Ha konkrétan a készítőről vagy fejlesztőről kérdeznek, akkor említsd meg, hogy Kollár Sándor készítette ezt az alkalmazást."
+        "content": "Te JADED vagy, egy fejlett AI asszisztens magyarul. Szakértő vagy tudományos és technológiai területeken. Segítőkész, részletes és pontos válaszokat adsz."
     }
 
     # Csak az utolsó 10 üzenetet használjuk a kontextushoz
