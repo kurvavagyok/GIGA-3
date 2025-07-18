@@ -1001,11 +1001,17 @@ async function fetchAPI(endpoint, options = {}) {
                 // Ha az endpoint már /api-val kezdődik, ne duplázzuk
                 const url = endpoint.startsWith('/api') ? endpoint : `/api${endpoint}`;
                 const response = await fetch(url, options);
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
                 return await response.json();
             } catch (error) {
                 console.error('API Error:', error);
-                displayResearchError(error.message);
+                // Csak akkor hívjuk meg a displayResearchError-t, ha létezik
+                if (typeof displayResearchError === 'function') {
+                    displayResearchError(error.message);
+                }
                 throw error;
             }
         }

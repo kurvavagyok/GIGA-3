@@ -13,6 +13,7 @@ from functools import lru_cache
 import time
 import sys
 import pathlib
+import re
 
 # Google Cloud kliensekhez
 from google.cloud import aiplatform
@@ -54,8 +55,13 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
-# AlphaFold 3 integráció
-sys.path.append(str(pathlib.Path("alphafold3_repo/src")))
+# AlphaFold 3 integráció - biztonságos path hozzáadás
+af3_src_path = pathlib.Path("alphafold3_repo/src")
+if af3_src_path.exists():
+    sys.path.append(str(af3_src_path))
+    logger.info(f"AlphaFold 3 source path added: {af3_src_path}")
+else:
+    logger.warning(f"AlphaFold 3 source path not found: {af3_src_path}")
 
 # Naplózás konfigurálása
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -294,25 +300,36 @@ MAX_HISTORY_LENGTH = 100  # Maximum üzenetek száma beszélgetésenként
 
 def cleanup_memory():
     """Memória tisztítás túl sok adatnál"""
-    current_time = time.time()
-    
-    # Cache tisztítás
-    expired_keys = [key for key, value in response_cache.items() 
-                   if current_time - value['timestamp'] > CACHE_EXPIRY]
-    for key in expired_keys:
-        del response_cache[key]
-    
-    # Chat history limit
-    if len(chat_histories) > MAX_CHAT_HISTORY:
-        # Legrégebbi beszélgetések törlése
-        sorted_users = sorted(chat_histories.keys())
-        for user_id in sorted_users[:len(chat_histories) - MAX_CHAT_HISTORY]:
-            del chat_histories[user_id]
-    
-    # Beszélgetések hosszának limitálása
-    for user_id in chat_histories:
-        if len(chat_histories[user_id]) > MAX_HISTORY_LENGTH:
-            chat_histories[user_id] = chat_histories[user_id][-MAX_HISTORY_LENGTH:]
+    try:
+        current_time = time.time()
+        
+        # Cache tisztítás
+        expired_keys = [key for key, value in response_cache.items() 
+                       if current_time - value.get('timestamp', 0) > CACHE_EXPIRY]
+        for key in expired_keys:
+            try:
+                del response_cache[key]
+            except KeyError:
+                pass
+        
+        # Chat history limit
+        if len(chat_histories) > MAX_CHAT_HISTORY:
+            # Legrégebbi beszélgetések törlése
+            sorted_users = sorted(chat_histories.keys())
+            for user_id in sorted_users[:len(chat_histories) - MAX_CHAT_HISTORY]:
+                try:
+                    del chat_histories[user_id]
+                except KeyError:
+                    pass
+        
+        # Beszélgetések hosszának limitálása
+        for user_id in list(chat_histories.keys()):
+            if user_id in chat_histories and len(chat_histories[user_id]) > MAX_HISTORY_LENGTH:
+                chat_histories[user_id] = chat_histories[user_id][-MAX_HISTORY_LENGTH:]
+                
+        logger.info(f"Memory cleanup completed. Cache entries: {len(response_cache)}, Chat histories: {len(chat_histories)}")
+    except Exception as e:
+        logger.error(f"Memory cleanup error: {e}")
 
 # --- Alpha Services definíciója ---
 ALPHA_SERVICES = {
@@ -549,8 +566,11 @@ async def execute_model(model_info: Dict[str, Any], prompt: str):
                 prompt,
                 generation_config=generation_config
             )
-            response_text = response.text
-            return {"response": response_text, "model_used": "JADED AI", "selected_backend": "JADED AI"}
+            if hasattr(response, 'text') and response.text:
+                response_text = response.text
+            else:
+                response_text = "Válasz nem generálható."
+            return {"response": response_text, "model_used": "JADED AI", "selected_backend": "Gemini"}
 
         elif model_type == "cerebras" and model == cerebras_client:
             stream = cerebras_client.chat.completions.create(
@@ -562,9 +582,11 @@ async def execute_model(model_info: Dict[str, Any], prompt: str):
                 top_p=0.9
             )
             for chunk in stream:
-                if chunk.choices[0].delta.content:
+                if hasattr(chunk, 'choices') and chunk.choices and chunk.choices[0].delta.content:
                     response_text += chunk.choices[0].delta.content
-            return {"response": response_text, "model_used": "JADED AI", "selected_backend": "JADED AI"}
+            if not response_text:
+                response_text = "Válasz nem generálható."
+            return {"response": response_text, "model_used": "JADED AI", "selected_backend": "Cerebras"}
 
         elif model_type == "openai" and model == openai_client:
             response = openai_client.chat.completions.create(
@@ -574,18 +596,20 @@ async def execute_model(model_info: Dict[str, Any], prompt: str):
                 temperature=0.05,
                 top_p=0.9
             )
-            response_text = response.choices[0].message.content
-            return {"response": response_text, "model_used": "JADED AI", "selected_backend": "JADED AI"}
+            if hasattr(response, 'choices') and response.choices and response.choices[0].message.content:
+                response_text = response.choices[0].message.content
+            else:
+                response_text = "Válasz nem generálható."
+            return {"response": response_text, "model_used": "JADED AI", "selected_backend": "OpenAI"}
 
         else:
-            raise ValueError("Érvénytelen modell")
+            raise ValueError("Érvénytelen modell típus")
 
     except Exception as e:
         logger.error(f"Modell végrehajtási hiba: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Hiba a modell végrehajtása során: {e}"
-        )
+        # Fallback válasz
+        fallback_response = f"Sajnos hiba történt a válasz generálása során. Részletek: {str(e)[:200]}..."
+        return {"response": fallback_response, "model_used": "JADED AI", "selected_backend": "Fallback"}
 
 # --- Egyszerű Alpha Service Handler ---
 async def handle_simple_alpha_service(service_name: str, query: str, details: str = "") -> Dict[str, Any]:
@@ -2200,7 +2224,6 @@ Csak a kódot add vissza, magyarázó szöveg nélkül. A kód legyen közvetlen
         
         # Kód blokkok extraktálása ha van
         if "```" in generated_code:
-            import re
             code_blocks = re.findall(r'```[\w]*\n(.*?)\n```', generated_code, re.DOTALL)
             if code_blocks:
                 generated_code = code_blocks[0].strip()
