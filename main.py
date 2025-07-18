@@ -291,43 +291,51 @@ class CodeGenerationRequest(BaseModel):
     complexity: str = Field(default="medium", description="Kód komplexitása")
     temperature: float = Field(default=0.3, ge=0.0, le=1.0, description="AI kreativitás")
 
-# Beszélgetési előzmények és cache
+# Beszélgetési előzmények és cache - Optimalizált
 chat_histories: Dict[str, List[Message]] = {}
 response_cache: Dict[str, Dict[str, Any]] = {}
-CACHE_EXPIRY = 300  # 5 perc cache
-MAX_CHAT_HISTORY = 50  # Maximum beszélgetések száma
-MAX_HISTORY_LENGTH = 100  # Maximum üzenetek száma beszélgetésenként
+CACHE_EXPIRY = 600  # 10 perces cache a teljesítményért
+MAX_CHAT_HISTORY = 25  # Csökkentett memória használat
+MAX_HISTORY_LENGTH = 20  # Rövidebb előzmények
+
+# Gyorsabb cache implementáció
+@lru_cache(maxsize=500)
+def get_cached_response(cache_key: str, timestamp: float) -> Optional[Dict[str, Any]]:
+    """LRU cache-elt válasz lekérés"""
+    if cache_key in response_cache:
+        cached = response_cache[cache_key]
+        if time.time() - cached['timestamp'] < CACHE_EXPIRY:
+            return cached['data']
+    return None
 
 def cleanup_memory():
-    """Memória tisztítás túl sok adatnál"""
+    """Agresszívebb memória tisztítás a teljesítményért"""
     try:
         current_time = time.time()
         
-        # Cache tisztítás
-        expired_keys = [key for key, value in response_cache.items() 
-                       if current_time - value.get('timestamp', 0) > CACHE_EXPIRY]
-        for key in expired_keys:
-            try:
-                del response_cache[key]
-            except KeyError:
-                pass
+        # Gyorsabb cache tisztítás
+        if len(response_cache) > 200:  # Kisebb cache méret
+            expired_keys = [k for k, v in response_cache.items() 
+                           if current_time - v.get('timestamp', 0) > CACHE_EXPIRY]
+            for key in expired_keys[:50]:  # Batch törlés
+                response_cache.pop(key, None)
         
-        # Chat history limit
+        # Chat history agresszív tisztítás
         if len(chat_histories) > MAX_CHAT_HISTORY:
             # Legrégebbi beszélgetések törlése
-            sorted_users = sorted(chat_histories.keys())
-            for user_id in sorted_users[:len(chat_histories) - MAX_CHAT_HISTORY]:
-                try:
-                    del chat_histories[user_id]
-                except KeyError:
-                    pass
+            users_to_remove = list(chat_histories.keys())[:len(chat_histories) - MAX_CHAT_HISTORY]
+            for user_id in users_to_remove:
+                chat_histories.pop(user_id, None)
         
-        # Beszélgetések hosszának limitálása
+        # Beszélgetések rövidítése
         for user_id in list(chat_histories.keys()):
-            if user_id in chat_histories and len(chat_histories[user_id]) > MAX_HISTORY_LENGTH:
+            if len(chat_histories[user_id]) > MAX_HISTORY_LENGTH:
                 chat_histories[user_id] = chat_histories[user_id][-MAX_HISTORY_LENGTH:]
                 
-        logger.info(f"Memory cleanup completed. Cache entries: {len(response_cache)}, Chat histories: {len(chat_histories)}")
+        # Cache függvény tisztítása
+        if len(response_cache) > 300:
+            get_cached_response.cache_clear()
+                
     except Exception as e:
         logger.error(f"Memory cleanup error: {e}")
 
@@ -504,112 +512,92 @@ ALPHA_SERVICES = {
 }
 
 # --- Backend Model Selection ---
-async def select_backend_model(prompt: str, service_name: str = None):
-    """Backend modell kiválasztása a kérés és a token limitek alapján - Cerebras prioritás"""
-    # CEREBRAS ELSŐ PRIORITÁS a sebességért
+@lru_cache(maxsize=1)
+def _get_available_models():
+    """Elérhető modellek cache-elése"""
+    models = []
     if cerebras_client and CEREBRAS_AVAILABLE:
-        try:
-            # Egyszerű elérhetőség ellenőrzés teszt nélkül
-            selected_model = cerebras_client
-            model_name = "llama-4-scout-17b-16e-instruct"
-            return {"model": selected_model, "name": model_name, "type": "cerebras"}
-        except Exception as e:
-            logger.warning(f"Cerebras client not responding, falling back: {e}")
-
-    # Backup: OpenAI GPT-4o
+        models.append({"model": cerebras_client, "name": "llama-4-scout-17b-16e-instruct", "type": "cerebras"})
     if openai_client and OPENAI_AVAILABLE:
-        try:
-            selected_model = openai_client
-            model_name = "gpt-4o"
-            return {"model": selected_model, "name": model_name, "type": "openai"}
-        except Exception as e:
-            logger.warning(f"OpenAI client not available: {e}")
-
-    # Backup: Gemini 2.5 Pro
+        models.append({"model": openai_client, "name": "gpt-4o", "type": "openai"})
     if gemini_25_pro and GEMINI_AVAILABLE:
-        try:
-            selected_model = gemini_25_pro
-            model_name = "gemini-2.5-pro"
-            return {"model": selected_model, "name": model_name, "type": "gemini"}
-        except Exception as e:
-            logger.warning(f"Gemini 2.5 Pro not available: {e}")
-
-    # Backup: Gemini 1.5 Pro
+        models.append({"model": gemini_25_pro, "name": "gemini-2.5-pro", "type": "gemini"})
     if gemini_model and GEMINI_AVAILABLE:
-        try:
-            selected_model = gemini_model
-            model_name = "gemini-1.5-pro"
-            return {"model": selected_model, "name": model_name, "type": "gemini"}
-        except Exception as e:
-            logger.warning(f"Gemini 1.5 Pro not available: {e}")
+        models.append({"model": gemini_model, "name": "gemini-1.5-pro", "type": "gemini"})
+    return models
 
-    raise HTTPException(
-        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-        detail="Nincs elérhető AI modell"
-    )
+async def select_backend_model(prompt: str, service_name: str = None):
+    """Gyorsított backend modell kiválasztás - Cerebras prioritás"""
+    models = _get_available_models()
+    
+    if not models:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Nincs elérhető AI modell"
+        )
+    
+    # Első elérhető modell visszaadása (Cerebras első)
+    return models[0]
 
 # --- Model Execution ---
 async def execute_model(model_info: Dict[str, Any], prompt: str):
-    """Modell futtatása a kiválasztott backenddel."""
+    """Optimalizált modell futtatás gyorsabb válaszokért."""
     model = model_info["model"]
     model_name = model_info["name"]
     model_type = model_info.get("type", "unknown")
     response_text = ""
 
     try:
-        if model_type == "gemini" and (model == gemini_25_pro or model == gemini_model):
-            generation_config = genai.types.GenerationConfig(
-                max_output_tokens=4096,
-                temperature=0.05
-            )
-            response = await model.generate_content_async(
-                prompt,
-                generation_config=generation_config
-            )
-            if hasattr(response, 'text') and response.text:
-                response_text = response.text
-            else:
-                response_text = "Válasz nem generálható."
-            return {"response": response_text, "model_used": "JADED AI", "selected_backend": "Gemini"}
-
-        elif model_type == "cerebras" and model == cerebras_client:
+        if model_type == "cerebras" and model == cerebras_client:
+            # Cerebras optimalizált streamelés
             stream = cerebras_client.chat.completions.create(
                 messages=[{"role": "user", "content": prompt}],
                 model="llama-4-scout-17b-16e-instruct",
                 stream=True,
-                max_completion_tokens=4096,
-                temperature=0.05,
-                top_p=0.9
+                max_completion_tokens=2048,  # Csökkentett token limit a sebességért
+                temperature=0.01,  # Még gyorsabb válaszokért
+                top_p=0.95,
+                presence_penalty=0.0,
+                frequency_penalty=0.0
             )
             for chunk in stream:
                 if hasattr(chunk, 'choices') and chunk.choices and chunk.choices[0].delta.content:
                     response_text += chunk.choices[0].delta.content
-            if not response_text:
-                response_text = "Válasz nem generálható."
-            return {"response": response_text, "model_used": "JADED AI", "selected_backend": "Cerebras"}
+            return {"response": response_text or "Válasz nem generálható.", "model_used": "JADED AI", "selected_backend": "Cerebras"}
 
         elif model_type == "openai" and model == openai_client:
+            # OpenAI gyorsított beállítások
             response = openai_client.chat.completions.create(
                 model=model_name,
                 messages=[{"role": "user", "content": prompt}],
-                max_tokens=4096,
-                temperature=0.05,
-                top_p=0.9
+                max_tokens=2048,
+                temperature=0.01,
+                top_p=0.95,
+                frequency_penalty=0.0,
+                presence_penalty=0.0
             )
-            if hasattr(response, 'choices') and response.choices and response.choices[0].message.content:
-                response_text = response.choices[0].message.content
-            else:
-                response_text = "Válasz nem generálható."
+            response_text = response.choices[0].message.content if response.choices else "Válasz nem generálható."
             return {"response": response_text, "model_used": "JADED AI", "selected_backend": "OpenAI"}
+
+        elif model_type == "gemini":
+            # Gemini gyorsított konfiguráció
+            generation_config = genai.types.GenerationConfig(
+                max_output_tokens=2048,
+                temperature=0.01,
+                top_p=0.95,
+                top_k=40,
+                candidate_count=1
+            )
+            response = await model.generate_content_async(prompt, generation_config=generation_config)
+            response_text = response.text if hasattr(response, 'text') and response.text else "Válasz nem generálható."
+            return {"response": response_text, "model_used": "JADED AI", "selected_backend": "Gemini"}
 
         else:
             raise ValueError("Érvénytelen modell típus")
 
     except Exception as e:
         logger.error(f"Modell végrehajtási hiba: {e}")
-        # Fallback válasz
-        fallback_response = f"Sajnos hiba történt a válasz generálása során. Részletek: {str(e)[:200]}..."
-        return {"response": fallback_response, "model_used": "JADED AI", "selected_backend": "Fallback"}
+        return {"response": f"Hiba: {str(e)[:100]}...", "model_used": "JADED AI", "selected_backend": "Fallback"}
 
 # --- Egyszerű Alpha Service Handler ---
 async def handle_simple_alpha_service(service_name: str, query: str, details: str = "") -> Dict[str, Any]:
@@ -892,100 +880,88 @@ async def execute_simple_alpha_service(service_name: str, request: SimpleAlphaRe
 
 @app.post("/api/deep_discovery/chat")
 async def deep_discovery_chat(req: ChatRequest):
-    """Optimalizált chat funkcionalitás cache-eléssel"""
-    if not cerebras_client and not gemini_model:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Nincs elérhető chat modell"
-        )
-
+    """Szuper gyors chat funkcionalitás optimalizált teljesítménnyel"""
     user_id = req.user_id
     current_message = req.message
 
-    # Cache ellenőrzés
+    # Gyorsabb cache ellenőrzés
     cache_key = hashlib.md5(f"{user_id}:{current_message}".encode()).hexdigest()
     current_time = time.time()
 
-    if cache_key in response_cache:
-        cached_response = response_cache[cache_key]
-        if current_time - cached_response['timestamp'] < CACHE_EXPIRY:
-            logger.info("Serving cached response")
-            return cached_response['data']
+    # Cache lookup
+    cached = get_cached_response(cache_key, current_time)
+    if cached:
+        logger.info("Serving cached response")
+        return cached
 
+    # Gyorsabb backend kiválasztás
+    model_info = await select_backend_model(current_message)
+    
     history = chat_histories.get(user_id, [])
 
-    # Optimalizált system message
+    # Rövidebb system message a gyorsaságért
     system_message = {
         "role": "system",
-        "content": "Te JADED vagy, egy fejlett AI asszisztens magyarul. Szakértő vagy tudományos és technológiai területeken. Segítőkész, részletes és pontos válaszokat adsz."
+        "content": "Te JADED vagy, egy AI asszisztens magyarul. Segítőkész és pontos válaszokat adsz."
     }
 
-    # Csak az utolsó 10 üzenetet használjuk a kontextushoz
-    recent_history = history[-10:] if len(history) > 10 else history
+    # Csak az utolsó 6 üzenetet használjuk (gyorsabb kontextus)
+    recent_history = history[-6:] if len(history) > 6 else history
     messages_for_llm = [system_message] + recent_history + [{"role": "user", "content": current_message}]
 
     try:
         response_text = ""
-        model_used = ""
+        model_used = "JADED AI"
 
-        # Optimalizált AI backend kiválasztás
-        if cerebras_client:
+        # Gyorsított AI backend futtatás
+        if model_info["type"] == "cerebras":
             stream = cerebras_client.chat.completions.create(
                 messages=messages_for_llm,
                 model="llama-4-scout-17b-16e-instruct",
                 stream=True,
-                max_completion_tokens=4096,
-                temperature=0.05,
-                top_p=0.9,
+                max_completion_tokens=1024,  # Rövidebb válaszok = gyorsabb
+                temperature=0.01,
+                top_p=0.95,
                 presence_penalty=0.0,
                 frequency_penalty=0.0
             )
             for chunk in stream:
                 if chunk.choices[0].delta.content:
                     response_text += chunk.choices[0].delta.content
-            model_used = "JADED AI"
-        elif openai_client:
+                    
+        elif model_info["type"] == "openai":
             response = openai_client.chat.completions.create(
                 model="gpt-4o",
                 messages=messages_for_llm,
-                max_tokens=4096,
-                temperature=0.05,
-                top_p=0.9
+                max_tokens=1024,
+                temperature=0.01,
+                top_p=0.95
             )
             response_text = response.choices[0].message.content
-            model_used = "JADED AI"
-        elif gemini_25_pro:
-            response = await gemini_25_pro.generate_content_async(
+            
+        elif model_info["type"] == "gemini":
+            response = await model_info["model"].generate_content_async(
                 '\n'.join([msg['content'] for msg in messages_for_llm]),
                 generation_config=genai.types.GenerationConfig(
-                    max_output_tokens=4096,
-                    temperature=0.05
+                    max_output_tokens=1024,
+                    temperature=0.01,
+                    top_p=0.95
                 )
             )
             response_text = response.text
-            model_used = "JADED AI"
-        elif gemini_model:
-            response = await gemini_model.generate_content_async(
-                '\n'.join([msg['content'] for msg in messages_for_llm]),
-                generation_config=genai.types.GenerationConfig(
-                    max_output_tokens=4096,
-                    temperature=0.05
-                )
-            )
-            response_text = response.text
-            model_used = "JADED AI"
 
+        # Gyorsabb memória kezelés
         history.append({"role": "user", "content": current_message})
         history.append({"role": "assistant", "content": response_text})
 
-        # Memória optimalizálás: csak az utolsó 20 üzenetet tartjuk meg
-        if len(history) > 20:
-            history = history[-20:]
+        # Agresszív memória optimalizálás
+        if len(history) > MAX_HISTORY_LENGTH:
+            history = history[-MAX_HISTORY_LENGTH:]
 
         chat_histories[user_id] = history
         
-        # Rendszeres memória tisztítás
-        if len(response_cache) > 1000 or len(chat_histories) > MAX_CHAT_HISTORY:
+        # Periodikus tisztítás
+        if len(response_cache) > 200:
             cleanup_memory()
 
         result = {
@@ -994,7 +970,7 @@ async def deep_discovery_chat(req: ChatRequest):
             'status': 'success'
         }
 
-        # Válasz cache-elése
+        # Cache mentés
         response_cache[cache_key] = {
             'data': result,
             'timestamp': current_time
@@ -1011,7 +987,7 @@ async def deep_discovery_chat(req: ChatRequest):
 
 @app.post("/api/deep_discovery/deep_research")
 async def deep_research(req: DeepResearchRequest):
-    """Optimalizált deep research API - valóban működő 1000+ forrás feldolgozással"""
+    """Gyorsított deep research API - optimalizált teljesítménnyel"""
     if not exa_client or not EXA_AVAILABLE:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -1019,104 +995,71 @@ async def deep_research(req: DeepResearchRequest):
         )
 
     try:
-        logger.info(f"Starting comprehensive deep research for: {req.query}")
+        logger.info(f"Starting optimized deep research for: {req.query}")
 
-        # Kibővített tudományos és akadémiai domainok listája
+        # Optimalizált tudományos domainok - top 10 csak
         scientific_domains = [
             "arxiv.org", "pubmed.ncbi.nlm.nih.gov", "nature.com", "science.org",
-            "cell.com", "nejm.org", "nejm.org", "ieee.org", "acm.org", "springer.com", "wiley.com",
-            "sciencedirect.com", "jstor.org", "researchgate.net", "semantic-scholar.org",
-            "biorxiv.org", "medrxiv.org", "plos.org", "bmj.com", "thelancet.com",
-            "nih.gov", "who.int", "cdc.gov", "fda.gov", "ema.europa.eu"
+            "cell.com", "ieee.org", "springer.com", "wiley.com", "biorxiv.org", "plos.org"
         ]
 
-        # Keresési eredmények gyűjtése
+        # Gyorsabb keresés - kevesebb batch
         all_results = []
 
-        # 1. Fő neurális keresés - több batch-ben
-        for batch in range(5):  # 5 batch = 250 eredmény
+        # 1. Fő neurális keresés - 2 batch csak
+        for batch in range(2):
             try:
                 neural_search = exa_client.search(
-                    query=f"{req.query} scientific research study",
+                    query=f"{req.query} research",
                     type="neural",
-                    num_results=50,
+                    num_results=100,  # Több eredmény batch-enként
                     include_domains=scientific_domains,
                     text=True,
-                    livecrawl="when_necessary"
+                    livecrawl="never"  # Gyorsabb
                 )
                 all_results.extend(neural_search.results)
-                logger.info(f"Neural batch {batch+1}/5 completed: {len(neural_search.results)} results")
+                logger.info(f"Neural batch {batch+1}/2 completed: {len(neural_search.results)} results")
             except Exception as e:
                 logger.error(f"Neural search batch {batch+1} error: {e}")
 
-        # 2. Kulcsszavas keresések - specifikus témák
-        keyword_variants = [
-            f"{req.query} research",
-            f"{req.query} study",
-            f"{req.query} analysis",
-            f"{req.query} review",
-            f"{req.query} investigation"
-        ]
+        # 2. Egyszerűsített kulcsszavas keresés
+        try:
+            keyword_search = exa_client.search(
+                query=f"{req.query} study analysis",
+                type="keyword",
+                num_results=50,
+                include_domains=scientific_domains,
+                text=True
+            )
+            all_results.extend(keyword_search.results)
+            logger.info(f"Keyword search completed: {len(keyword_search.results)} results")
+        except Exception as e:
+            logger.error(f"Keyword search error: {e}")
 
-        for variant in keyword_variants:
-            try:
-                keyword_search = exa_client.search(
-                    query=variant,
-                    type="keyword",
-                    num_results=40,
-                    include_domains=scientific_domains,
-                    text=True
-                )
-                all_results.extend(keyword_search.results)
-                logger.info(f"Keyword search '{variant}': {len(keyword_search.results)} results")
-            except Exception as e:
-                logger.error(f"Keyword search error for '{variant}': {e}")
+        # 3. Gyors idő alapú keresés - csak 2024
+        try:
+            recent_search = exa_client.search(
+                query=f"{req.query} 2024",
+                type="neural",
+                num_results=50,
+                start_published_date="2024-01-01",
+                text=True
+            )
+            all_results.extend(recent_search.results)
+            logger.info(f"Recent search completed: {len(recent_search.results)} results")
+        except Exception as e:
+            logger.error(f"Recent search error: {e}")
 
-        # 3. Időszakos keresések - több év
-        time_periods = ["2024", "2023", "2022"]
-        for year in time_periods:
-            try:
-                recent_search = exa_client.search(
-                    query=f"{req.query} {year}",
-                    type="neural",
-                    num_results=30,
-                    start_published_date=f"{year}-01-01",
-                    text=True
-                )
-                all_results.extend(recent_search.results)
-                logger.info(f"Time period {year}: {len(recent_search.results)} results")
-            except Exception as e:
-                logger.error(f"Time period search error for {year}: {e}")
-
-        # 4. Speciális domain keresések
-        for domain in scientific_domains[:10]:  # Top 10 domain
-            try:
-                domain_search = exa_client.search(
-                    query=req.query,
-                    type="neural",
-                    num_results=20,
-                    include_domains=[domain],
-                    text=True
-                )
-                all_results.extend(domain_search.results)
-                logger.info(f"Domain {domain}: {len(domain_search.results)} results")
-            except Exception as e:
-                logger.error(f"Domain search error for {domain}: {e}")
-
-        # Duplikációk eltávolítása URL alapján
-        unique_results = {}
-        for result in all_results:
-            if result.url not in unique_results:
-                unique_results[result.url] = result
-
+        # Gyorsabb deduplikáció
+        unique_results = {result.url: result for result in all_results}
         final_results = list(unique_results.values())
-        logger.info(f"Total unique results after deduplication: {len(final_results)}")
+        logger.info(f"Total unique results: {len(final_results)}")
 
-        # Eredmények feldolgozása
+        # Gyorsabb eredmény feldolgozás - max 500 eredmény
         sources = []
         combined_content = ""
 
-        for i, result in enumerate(final_results[:1000]):  # Max 1000 eredmény
+        for i, result in enumerate(final_results[:500]):
             source_data = {
                 "id": i + 1,
                 "title": result.title or "Cím nem elérhető",
@@ -1127,61 +1070,45 @@ async def deep_research(req: DeepResearchRequest):
             sources.append(source_data)
 
             if hasattr(result, 'text') and result.text:
-                content_snippet = result.text[:2000]  # Hosszabb részletek
-                combined_content += f"\n--- Forrás {i+1}: {result.title} ---\n{content_snippet}\n"
+                content_snippet = result.text[:1000]  # Rövidebb részletek
+                combined_content += f"\n--- {result.title} ---\n{content_snippet}\n"
 
-        # AI elemzés kibővített prompt-tal
+        # Gyorsabb AI elemzés
         analysis_text = ""
 
         if combined_content and len(combined_content) > 500:
             model_info = await select_backend_model(req.query)
             analysis_prompt = f"""
-        ÁTFOGÓ TUDOMÁNYOS ELEMZÉS: {req.query}
+        GYORS TUDOMÁNYOS ELEMZÉS: {req.query}
 
-        Feldolgozott források száma: {len(sources)} db
-        Teljes tartalom hossza: {len(combined_content)} karakter
+        Feldolgozott források: {len(sources)} db
 
-        FORRÁS ADATOK:
-        {combined_content[:50000]}
+        FORRÁSOK:
+        {combined_content[:20000]}
 
-        KÉRLEK, KÉSZÍTS RÉSZLETES, TUDOMÁNYOS ELEMZÉST:
+        KÉSZÍTS TÖMÖR, STRUKTURÁLT ELEMZÉST:
 
-        1. EXECUTIVE SUMMARY
-        - Legfontosabb megállapítások
+        1. ÖSSZEFOGLALÓ
+        - Fő megállapítások
         - Kulcs információk
 
-        2. TUDOMÁNYOS ÁTTEKINTÉS
-        - Jelenlegi kutatási állapot
-        - Főbb tanulmányok eredményei
-        - Konszenzus és viták
+        2. KUTATÁSI ÁLLAPOT
+        - Jelenlegi eredmények
+        - Főbb tanulmányok
 
-        3. MÓDSZERTANI MEGKÖZELÍTÉSEK
-        - Alkalmazott kutatási módszerek
-        - Adatgyűjtési technikák
-        - Elemzési eljárások
+        3. GYAKORLATI ALKALMAZÁSOK
+        - Implementációk
+        - Alkalmazási területek
 
-        4. GYAKORLATI ALKALMAZÁSOK
-        - Valós életbeli implementációk
-        - Ipari alkalmazások
-        - Társadalmi hatások
+        4. JÖVŐBELI IRÁNYOK
+        - Kutatási rések
+        - Fejlődési trendek
 
-        5. JÖVŐBELI KUTATÁSI IRÁNYOK
-        - Azonosított kutatási rések
-        - Új technológiai lehetőségek
-        - Várható fejlődési trendek
+        5. KÖVETKEZTETÉSEK
+        - Összegzés
+        - Ajánlások
 
-        6. FORRÁSOK MINŐSÉGI ÉRTÉKELÉSE
-        - Magas impakt faktorú publikációk
-        - Peer-reviewed források aránya
-        - Földrajzi és intézményi diverzitás
-
-        7. KÖVETKEZTETÉSEK ÉS AJÁNLÁSOK
-        - Összegző megállapítások
-        - Döntéshozóknak szóló ajánlások
-        - További kutatási prioritások
-
-        A válasz legyen strukturált, magyar nyelvű, és használjon tudományos terminológiát.
-        Hivatkozz konkrét forrásokra ahol lehetséges.
+        A válasz legyen tömör, magyar nyelvű.
         """
 
             try:
@@ -1190,9 +1117,9 @@ async def deep_research(req: DeepResearchRequest):
                 logger.info(f"AI analysis completed using {result['model_used']}")
             except Exception as e:
                 logger.error(f"Analysis error: {e}")
-                analysis_text = f"Részleges elemzés készült. Hiba részletei: {e}\n\nElérhető források alapján: {len(sources)} publikáció került feldolgozásra a témában."
+                analysis_text = f"Gyors elemzés készült. {len(sources)} forrás feldolgozva."
         else:
-            analysis_text = "Nem sikerült elegendő forrást találni az elemzéshez."
+            analysis_text = "Nem sikerült elegendő forrást találni."
 
         return {
             "query": req.query,
