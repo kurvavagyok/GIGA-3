@@ -1,0 +1,32 @@
+Az /api/alpha/alphamissense végpont szimulált patogenitási pontszámokat használ véletlenszerű generálással (random.uniform(0.1, 0.9)). Ez nem valós implementáció, csak demo célú.
+	•  Javaslat: Valódi AlphaMissense API-t vagy modellt kell integrálni a hiteles eredmények érdekében.
+4.  Szimulációs optimalizáció placeholder:
+	•  Az /api/simulation/optimize végpont csak placeholder implementációt tartalmaz, amely egyszerű heurisztikát használ (anyagtervezes, gyogyszerkutatas). Ez nem valódi optimalizációs algoritmus.
+	•  Javaslat: Implementálni kell valódi optimalizációs algoritmusokat (pl. genetikus algoritmus, szimulált hűtés).
+5.  Memóriakezelési korlátok:
+	•  A chat_histories és response_cache szótárak memóriakorlátokkal rendelkeznek (MAX_CHAT_HISTORY, CACHE_EXPIRY), de a cleanup_memory függvény nem kezeli a nagy méretű adatokat hatékonyan, ami memóriaszivárgáshoz vezethet.
+	•  Javaslat: Hatékonyabb memóriakezelés, például külső adatbázis használata nagy adathalmazokhoz.
+6.  Kódgenerálás tisztítási logika:
+	•  A /api/code/generate végpont regex alapú kód tisztítást használ, ami nem mindig megbízható, ha a generált kód formátuma eltér. Ez hibás kódokat eredményezhet.
+	•  Javaslat: Robusztusabb kód tisztítási logika, például AST (Abstract Syntax Tree) alapú elemzés.
+7.  Hibakezelés hiányosságai:
+	•  Több végpont (pl. /api/exa/advanced_search, /api/alphafold3/structure_prediction) nem kezeli megfelelően az összes lehetséges kivételt (pl. hálózati hibák, időtúllépések).
+	•  Javaslat: Részletesebb hibakezelés, például httpx hálózati hibák és időtúllépések kezelése.
+8.  Exa API korlátozások:
+	•  Az /api/deep_discovery/deep_research végpont nagy mennyiségű adatot (1000+ forrást) dolgoz fel, de nem kezeli az Exa API korlátozásait (pl. rate limiting, maximális találatok száma).
+	•  Javaslat: API korlátozások kezelésére retry logika és pagináció implementálása.
+9.  Nem használt JavaScript megjegyzés:
+	•  A kód végén van egy megjegyzés a JavaScript kódról, amely nem releváns a Python backend számára, és zavaró lehet.
+	•  Javaslat: Törölni a felesleges megjegyzést.
+10.  Hiányzó típusellenőrzések:
+	•  A Pydantic modellek használata jó, de néhány bemenetnél (pl. AlphaFold3ComplexRequest) nincs szigorú validáció a szekvenciák formátumára (pl. DNS/RNS szekvenciák validitása).
+	•  Javaslat: Specifikus validációs logika hozzáadása a szekvenciákhoz (pl. reguláris kifejezések).
+11.  Hardkódolt értékek:
+	•  Több helyen hardkódolt értékek vannak (pl. modelSeeds=[1, 2, 3, 4, 5] az AlphaFold 3 input generátorban). Ez rugalmatlanná teszi a kódot.
+	•  Javaslat: Paraméterezni ezeket az értékeket, hogy a kérésekben testreszabhatók legyenek.
+12.  Logolás részletessége:
+	•  A naplózás (logging.basicConfig) alapértelmezett formátumban van, de nem tartalmaz elég kontextust (pl. user_id, request_id) a hibák pontos azonosításához.
+	•  Javaslat: Strukturált naplózás bevezetése (pl. structlog) további metaadatokkal.
+13.  Aszinkron végrehajtási problémák:
+	•  Az aszinkron függvények (pl. execute_model) nem mindig kezelik megfelelően az aszinkron hibákat, például a gemini_model.generate_content_async hívásoknál.
+	•  Javaslat: Try-except blokkok használata az aszinkron műveletekhez, és timeoutok pontos kezelése.
