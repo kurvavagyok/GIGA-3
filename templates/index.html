@@ -1322,32 +1322,22 @@ async function fetchAPI(endpoint, options = {}) {
 
         function displayResearchCompletion() {
             const { researchState } = AppState;
-            if (!researchState) return;
+            const sourcesCount = researchState.sources ? researchState.sources.length : 0;
+            const contentLength = researchState.documentContent ? researchState.documentContent.length : 0;
 
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'message ai-message';
-            messageDiv.innerHTML = `
-                <div class="research-complete">
-                    <div class="completion-stats">
-                        <h3><i class="fas fa-check-circle"></i> Kutatás befejezve!</h3>
-                        <div class="stats-grid">
-                            <div class="stat-item">
-                                <span class="stat-number">${researchState.totalSources}</span>
-                                <span class="stat-label">Forrás</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="document-preview touch-feedback" onclick="showDocument()">
-                        <i class="fas fa-file-alt document-icon"></i>
-                        <div class="document-info">
-                            <h4>Kutatási jelentés megtekintése</h4>
-                            <p>Kattintson a teljes, AI által generált szintézis elolvasásához.</p>
-                        </div>
-                        <i class="fas fa-arrow-right document-arrow"></i>
-                    </div>
-                </div>`;
-            messagesContainer.appendChild(messageDiv);
-            scrollToBottom();
+            addAiMessage(`🔬 **Deep Research befejezve!**
+
+**Kutatási téma:** ${researchState.query}
+**Összes forrás:** ${researchState.totalSources || sourcesCount} találat
+**Felhasznált források:** ${sourcesCount} forrás
+**Jelentés hossza:** ${contentLength} karakter
+
+📋 [Részletes jelentés megtekintése](#document-viewer)
+
+A jelentés tartalmazza a három AI rendszer (Exa, Gemini, OpenAI) keresési eredményeinek szintézisét.`, 'JADED AI');
+
+            // Document viewer gomb hozzáadása
+            addDocumentViewerButton();
         }
 
         function displayResearchError(errorMessage) {
@@ -1364,29 +1354,51 @@ async function fetchAPI(endpoint, options = {}) {
             scrollToBottom();
         }
 
-        function showDocument() {
+        function showDocumentViewer() {
             const { researchState } = AppState;
-            if (!researchState || !researchState.documentContent) return;
+            if (!researchState || !researchState.documentContent) {
+                console.log('No research data:', researchState);
+                HapticFeedback.error();
+                addAiMessage('⚠️ Nincs megjeleníthető kutatási jelentés.', 'JADED AI');
+                return;
+            }
+
+            const documentViewer = getEl('documentViewer');
+            const documentTitle = getEl('documentTitle');
+            const documentContent = getEl('documentContent');
+
+            if (!documentViewer || !documentTitle || !documentContent) {
+                console.error('Document viewer elements not found');
+                return;
+            }
 
             documentTitle.textContent = `Kutatási jelentés: ${researchState.query}`;
+
+            const sourcesArray = Array.isArray(researchState.sources) ? researchState.sources : [];
+
             documentContent.innerHTML = `
                 <div class="document-section">
                     <h3>AI Által Generált Szintézis</h3>
                     <div class="synthesis-content">${marked.parse(researchState.documentContent)}</div>
                 </div>
                 <div class="document-section">
-                    <h3>Felhasznált Források (${researchState.sources.length})</h3>
-                    ${researchState.sources.map((source, index) => `
-                        <div class="source-item">
-                            <span class="source-number">${index + 1}.</span>
-                            <div class="source-content">
-                                <h4>${escapeHtml(source.title || 'Nincs cím')}</h4>
-                                <a href="${source.url}" target="_blank" rel="noopener noreferrer">${escapeHtml(source.url)}</a>
-                                <span class="source-date">${escapeHtml(source.date || 'Nincs dátum')}</span>
+                    <h3>Felhasznált Források (${sourcesArray.length})</h3>
+                    <div class="sources-list">
+                        ${sourcesArray.length > 0 ? sourcesArray.map(source => `
+                            <div class="source-item">
+                                <a href="${source.url}" target="_blank" class="source-link">
+                                    <h4>${source.title || 'Névtelen forrás'}</h4>
+                                    <p class="source-meta">${source.domain || (source.url ? new URL(source.url).hostname : 'Ismeretlen domain')} • ${source.published_date || 'Dátum ismeretlen'}</p>
+                                </a>
                             </div>
-                        </div>`).join('')}
-                </div>`;
-            openDocumentViewer();
+                        `).join('') : '<p>Nincsenek elérhető források.</p>'}
+                    </div>
+                </div>
+            `;
+
+            documentViewer.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            HapticFeedback.success();
         }
 
         function openCodeGenerator() {

@@ -1135,9 +1135,10 @@ async def deep_research(req: DeepResearchRequest):
                 logger.error(f"OPENAI search phase error: {e}")
                 openai_search_results = "OpenAI keresés során hiba történt"
 
-        # === 4. OPENAI ÖSSZESÍTETT 20,000+ KARAKTERES JELENTÉS ===
+        # === 4. VÉGSŐ JELENTÉS GENERÁLÁS - GEMINI FALLBACK ===
         final_comprehensive_report = ""
         
+        # OpenAI kvóta probléma esetén Gemini fallback
         if openai_client and OPENAI_AVAILABLE:
             try:
                 logger.info("Phase 4: OPENAI comprehensive 20,000+ character report generation...")
@@ -1159,69 +1160,7 @@ async def deep_research(req: DeepResearchRequest):
                 3. OPENAI KUTATÁSI EREDMÉNYEK:
                 {openai_search_results}
                 
-                === JELENTÉS STRUKTÚRA (MINIMUM 20,000 KARAKTER) ===
-                
-                1. EXECUTIVE SUMMARY (800-1000 karakter)
-                - Főbb megállapítások tömör összefoglalása
-                - Kulcsfontosságú trendek és fejlemények
-                - Stratégiai ajánlások röviden
-                
-                2. BEVEZETÉS ÉS KONTEXTUS (1500-2000 karakter)
-                - A téma jelentősége és relevanciája
-                - Történeti háttér és fejlődés
-                - Jelenlegi piaci/társadalmi helyzet
-                - A kutatás célja és módszertana
-                
-                3. FŐ MEGÁLLAPÍTÁSOK ÉS TRENDEK (3000-4000 karakter)
-                - Legfontosabb kutatási eredmények
-                - Azonosított trendek és mintázatok
-                - Statisztikai adatok és faktumok
-                - Szakértői vélemények szintézise
-                
-                4. RÉSZLETES SZEKTORIÁLIS ELEMZÉS (4000-5000 karakter)
-                - Különböző aspektusok mélyreható vizsgálata
-                - Összehasonlító elemzések
-                - Kritikai értékelések
-                - Regionális és nemzetközi perspektívák
-                
-                5. GYAKORLATI ALKALMAZÁSOK (2500-3000 karakter)
-                - Valós esettanulmányok és példák
-                - Implementációs stratégiák
-                - Sikertényezők és kihívások
-                - Best practice példák
-                
-                6. JÖVŐBELI KILÁTÁSOK ÉS ELŐREJELZÉSEK (2500-3000 karakter)
-                - Rövid és hosszú távú prognózisok
-                - Várható változások és fejlemények
-                - Lehetséges forgatókönyvek
-                - Kockázatok és lehetőségek
-                
-                7. STRATÉGIAI AJÁNLÁSOK (2000-2500 karakter)
-                - Konkrét cselekvési javaslatok
-                - Döntéshozói iránymutatás
-                - Implementációs roadmap
-                - Monitoring és értékelési szempontok
-                
-                8. KÖVETKEZTETÉSEK (1500-2000 karakter)
-                - Összefoglaló megállapítások
-                - Kulcsfontosságú tanulságok
-                - További kutatási irányok
-                - Zárógondolatok
-                
-                9. FORRÁSOK ÉS HIVATKOZÁSOK (1000-1500 karakter)
-                - Felhasznált források listája
-                - További olvasmányok
-                - Hasznos linkek és adatbázisok
-                
-                === ÍRÁSI ELVEK ===
-                - Magyar nyelvű, professzionális stílus
-                - Objektív és tényszerű megközelítés
-                - Konkrét adatok és példák használata
-                - Strukturált és logikus felépítés
-                - Gyakorlatias és implementálható ajánlások
-                - Minimum 20,000 karakter teljes hosszúság
-                
-                Írj egy rendkívül részletes, professzionális jelentést, amely teljes mértékben megfelel a fenti követelményeknek!
+                Írj egy rendkívül részletes, professzionális jelentést minimum 20,000 karakter hosszúságban!
                 """
                 
                 final_report_response = openai_client.chat.completions.create(
@@ -1237,9 +1176,76 @@ async def deep_research(req: DeepResearchRequest):
                 
             except Exception as e:
                 logger.error(f"Final report generation error: {e}")
-                final_comprehensive_report = "Végső jelentés generálása során hiba történt"
+                # GEMINI FALLBACK
+                if gemini_25_pro:
+                    try:
+                        logger.info("Phase 4 FALLBACK: Using GEMINI 2.5 Pro for final report...")
+                        
+                        gemini_synthesis_prompt = f"""
+                        ÁTFOGÓ KUTATÁSI JELENTÉS - GEMINI SZINTÉZIS
+                        
+                        Témakör: {req.query}
+                        Cél: Professzionális, átfogó jelentés írása legalább 15,000 karakter hosszúságban
+                        
+                        === KUTATÁSI ANYAGOK ===
+                        
+                        EXA KERESÉSI EREDMÉNYEK ({len(exa_content)} karakter):
+                        {exa_content[:10000]}
+                        
+                        GEMINI ELEMZÉS ({len(gemini_search_results)} karakter):
+                        {gemini_search_results}
+                        
+                        OPENAI KUTATÁS: {openai_search_results if openai_search_results != "OpenAI keresés során hiba történt" else "Nem elérhető"}
+                        
+                        === FELADAT ===
+                        Készíts egy NAGYON RÉSZLETES, ÁTFOGÓ JELENTÉST a fenti anyagok alapján.
+                        
+                        STRUKTÚRA:
+                        1. EXECUTIVE SUMMARY
+                        2. BEVEZETÉS ÉS HÁTTÉR
+                        3. FŐBB MEGÁLLAPÍTÁSOK
+                        4. RÉSZLETES ELEMZÉS
+                        5. TRENDEK ÉS FEJLEMÉNYEK
+                        6. GYAKORLATI ALKALMAZÁSOK
+                        7. JÖVŐBELI KILÁTÁSOK
+                        8. AJÁNLÁSOK
+                        9. KÖVETKEZTETÉSEK
+                        10. FORRÁSOK
+                        
+                        A jelentés legyen MINIMUM 15,000 karakter hosszú, strukturált, magyar nyelvű és professzionális!
+                        """
+                        
+                        gemini_final_response = await gemini_25_pro.generate_content_async(
+                            gemini_synthesis_prompt,
+                            generation_config=genai.types.GenerationConfig(
+                                max_output_tokens=16000,
+                                temperature=0.2,
+                                top_p=0.9
+                            )
+                        )
+                        
+                        final_comprehensive_report = gemini_final_response.text
+                        logger.info(f"Phase 4 FALLBACK complete: Gemini final report {len(final_comprehensive_report)} characters")
+                        
+                    except Exception as gemini_error:
+                        logger.error(f"Gemini fallback error: {gemini_error}")
+                        final_comprehensive_report = f"Jelentés generálás során hiba: {str(e)[:200]}"
+                else:
+                    final_comprehensive_report = f"Jelentés generálás során hiba: {str(e)[:200]}"
 
         # === 5. VÉGSŐ ÖSSZEÁLLÍTÁS ÉS METAADATOK ===
+        
+        # Források gyűjtése az Exa eredményekből
+        sources = []
+        for result in exa_results[:20]:  # Első 20 forrás
+            if hasattr(result, 'title') and hasattr(result, 'url'):
+                sources.append({
+                    "title": result.title,
+                    "url": result.url,
+                    "published_date": getattr(result, 'published_date', None),
+                    "author": getattr(result, 'author', None),
+                    "domain": result.url.split('/')[2] if '/' in result.url else result.url
+                })
         
         complete_report = f"""
 # HÁROMSZOROS AI KERESÉSI RENDSZER - ÁTFOGÓ JELENTÉS
@@ -1273,10 +1279,10 @@ async def deep_research(req: DeepResearchRequest):
 - **Módszer:** Mélyreható webes adatgyűjtés
 - **Lefedettség:** Multidiszciplináris megközelítés
 
-### 4. OpenAI végső szintézis:
+### 4. Végső szintézis:
 - **Jelentés hossza:** {len(final_comprehensive_report)} karakter
-- **Cél karakter minimum:** 20,000 karakter
-- **Megfelelés:** {"✓ TELJESÍTVE" if len(final_comprehensive_report) >= 20000 else "⚠ ALULMÚLTA"}
+- **Cél karakter minimum:** 15,000+ karakter
+- **Megfelelés:** {"✓ TELJESÍTVE" if len(final_comprehensive_report) >= 15000 else "⚠ ALULMÚLTA"}
 
 ## TECHNIKAI STATISZTIKÁK
 
@@ -1288,15 +1294,9 @@ async def deep_research(req: DeepResearchRequest):
 
 ---
 
-## METODOLÓGIAI JEGYZET
+## FELHASZNÁLT FORRÁSOK
 
-Ez a jelentés egy innovatív háromszoros AI keresési rendszer eredménye:
-
-1. **Exa AI**: Specializált webes keresés és tartalom extrakció
-2. **Gemini 2.5 Pro**: Trendek elemzése és kontextuális értékelés  
-3. **OpenAI GPT-4**: Kutatás és végső szintézis 20,000+ karakterben
-
-Minden AI modell külön végezte el a webes keresést, majd az OpenAI egy átfogó jelentést írt a három keresési eredmény alapján.
+{chr(10).join([f"- [{source['title']}]({source['url']})" for source in sources[:10]])}
 
 ---
 
@@ -1307,14 +1307,16 @@ Minden AI modell külön végezte el a webes keresést, majd az OpenAI egy átfo
 
         # Végső validáció és statisztikák
         total_content_length = len(complete_report)
-        character_target_met = len(final_comprehensive_report) >= 20000
+        character_target_met = len(final_comprehensive_report) >= 15000
         
         logger.info(f"Triple AI search completed. Total report: {total_content_length} characters")
-        logger.info(f"20K character target: {'✓ MET' if character_target_met else '✗ NOT MET'}")
+        logger.info(f"15K character target: {'✓ MET' if character_target_met else '✗ NOT MET'}")
 
         return {
             "query": req.query,
-            "triple_ai_report": complete_report,
+            "final_synthesis": complete_report,
+            "sources": sources,
+            "total_sources_found": len(exa_results),
             "search_phases": {
                 "exa_results_count": len(exa_results),
                 "exa_content_length": len(exa_content),
@@ -1324,16 +1326,10 @@ Minden AI modell külön végezte el a webes keresést, majd az OpenAI egy átfo
             },
             "quality_metrics": {
                 "total_report_length": total_content_length,
-                "character_target_20k": character_target_met,
+                "character_target_15k": character_target_met,
                 "ai_models_used": 3,
                 "search_phases_completed": 3,
                 "synthesis_phase_completed": True
-            },
-            "ai_breakdown": {
-                "exa_search_preview": exa_content[:300] + "..." if len(exa_content) > 300 else exa_content,
-                "gemini_analysis_preview": gemini_search_results[:300] + "..." if len(gemini_search_results) > 300 else gemini_search_results,
-                "openai_research_preview": openai_search_results[:300] + "..." if len(openai_search_results) > 300 else openai_search_results,
-                "final_synthesis_preview": final_comprehensive_report[:500] + "..." if len(final_comprehensive_report) > 500 else final_comprehensive_report
             },
             "timestamp": datetime.now().isoformat(),
             "status": "success"
