@@ -970,10 +970,10 @@
             <div class="document-header-left"></div>
             <h2 id="documentTitle">Kutatási Dokumentum</h2>
             <div class="document-header-right">
-                <button class="compact-btn touch-feedback" title="Letöltés">
+                <button class="compact-btn touch-feedback" onclick="downloadReport()" title="Letöltés">
                     <i class="fas fa-download"></i>
                 </button>
-                <button class="compact-btn touch-feedback" title="Megosztás">
+                <button class="compact-btn touch-feedback" onclick="shareReport()" title="Megosztás">
                     <i class="fas fa-share-alt"></i>
                 </button>
                 <button class="compact-btn touch-feedback" onclick="closeDocumentViewer()" title="Bezárás">
@@ -1767,6 +1767,116 @@ async function fetchAPI(endpoint, options = {}) {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        function downloadReport() {
+            try {
+                const { researchState } = AppState;
+                if (!researchState || !researchState.documentContent) {
+                    HapticFeedback.error();
+                    alert('Nincs letölthető jelentés');
+                    return;
+                }
+
+                // Tiszta szöveg készítése
+                const content = researchState.documentContent;
+                const fileName = `JADED_kutatasi_jelentes_${researchState.query.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().slice(0, 10)}.txt`;
+                
+                // Fájl letöltése
+                const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                
+                HapticFeedback.success();
+                
+                // Visszajelzés a felhasználónak
+                const downloadBtn = document.querySelector('[title="Letöltés"]');
+                const originalIcon = downloadBtn.innerHTML;
+                downloadBtn.innerHTML = '<i class="fas fa-check"></i>';
+                setTimeout(() => {
+                    downloadBtn.innerHTML = originalIcon;
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Letöltési hiba:', error);
+                HapticFeedback.error();
+                alert('Hiba a letöltés során');
+            }
+        }
+
+        function shareReport() {
+            try {
+                const { researchState } = AppState;
+                if (!researchState || !researchState.documentContent) {
+                    HapticFeedback.error();
+                    alert('Nincs megosztható jelentés');
+                    return;
+                }
+
+                const shareText = `JADED AI Kutatási Jelentés: ${researchState.query}\n\n${researchState.documentContent.slice(0, 500)}...\n\nGenerálva: JADED Deep Discovery AI Platform`;
+                
+                // Modern Web Share API ha elérhető (mobil eszközökön)
+                if (navigator.share) {
+                    navigator.share({
+                        title: `JADED Kutatási Jelentés: ${researchState.query}`,
+                        text: shareText,
+                        url: window.location.href
+                    }).then(() => {
+                        HapticFeedback.success();
+                    }).catch((error) => {
+                        console.log('Megosztási hiba:', error);
+                        fallbackShare(shareText);
+                    });
+                } else {
+                    // Fallback: vágólapra másolás
+                    fallbackShare(shareText);
+                }
+                
+            } catch (error) {
+                console.error('Megosztási hiba:', error);
+                HapticFeedback.error();
+                alert('Hiba a megosztás során');
+            }
+        }
+
+        function fallbackShare(text) {
+            // Vágólapra másolás
+            navigator.clipboard.writeText(text).then(() => {
+                HapticFeedback.success();
+                alert('Jelentés vágólapra másolva!');
+                
+                // Vizuális visszajelzés
+                const shareBtn = document.querySelector('[title="Megosztás"]');
+                const originalIcon = shareBtn.innerHTML;
+                shareBtn.innerHTML = '<i class="fas fa-check"></i>';
+                setTimeout(() => {
+                    shareBtn.innerHTML = originalIcon;
+                }, 2000);
+                
+            }).catch(() => {
+                HapticFeedback.error();
+                // Régi módszer fallback
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    alert('Jelentés vágólapra másolva!');
+                    HapticFeedback.success();
+                } catch (err) {
+                    alert('Nem sikerült a vágólapra másolás');
+                    HapticFeedback.error();
+                }
+                document.body.removeChild(textArea);
+            });
         }
     </script>
 </body>
