@@ -1,0 +1,113 @@
+Renderelést blokkoló kérelmek megjelenítése Potenciálisan 3160 ms megtakarítás
+Kérelmek blokkolják az oldal kezdeti megjelenítését, ami késleltetheti az LCP-t. Elhalasztás vagy a beágyazás segítségével ezeket a hálózati kérelmeket el lehet távolítani a kritikus útvonalról.LCPFCP
+URL
+Átviteli méret
+Időtartam
+Cloudflare CDN Cdn 
+56,7 KiB	3370 ms
+…11.9.0/highlight.min.js(cdnjs.cloudflare.com)
+36,1 KiB
+1510 ms
+…css/all.min.css(cdnjs.cloudflare.com)
+19,4 KiB
+1080 ms
+…styles/atom-one-dark.min.css(cdnjs.cloudflare.com)
+1,3 KiB
+780 ms
+JSDelivr CDN Cdn 
+13,7 KiB	1080 ms
+…marked/marked.min.js(cdn.jsdelivr.net)
+13,7 KiB
+1080 ms
+Google Fonts Cdn 
+1,5 KiB	780 ms
+/css2?family=Inter:wght@300;400;500;600;700;800&display=swap(fonts.googleapis.com)
+1,5 KiB
+780 ms
+Kényszerített újraszámítás
+Sok API – jellemzően az elrendezés geometriáját olvasó API – a szkriptvégrehajtás szüneteltetésére kényszeríti a renderelőmotort a stílus és az elrendezés kiszámítása érdekében. További információ az újraszámítás kényszerítéséről és a lehetséges megoldásokról.
+Legidőigényesebb függvényhívás
+Teljes újraszámítási idő
+https://kollarsandor.com:953:55
+59 ms
+Forrás
+Teljes újraszámítási idő
+https://kollarsandor.com:955:25
+59 ms
+Hálózati függőségi fa
+Kerülje a kritikus kérések láncba fűzését a láncok hosszának csökkentésével, a letöltött források méretének csökkentésével, vagy a felesleges források letöltésének késleltetésével, hogy javuljon az oldalbetöltés.LCP
+Kritikus elérési út maximális várakozási ideje: 1471 ms
+Kezdeti navigáció
+https://kollarsandor.com - 308 ms, 60,80 KiB
+…css/all.min.css(cdnjs.cloudflare.com) - 359 ms, 19,38 KiB
+…webfonts/fa-solid-900.woff2(cdnjs.cloudflare.com) - 478 ms, 153,79 KiB
+…styles/atom-one-dark.min.css(cdnjs.cloudflare.com) - 350 ms, 1,26 KiB
+…11.9.0/highlight.min.js(cdnjs.cloudflare.com) - 359 ms, 36,10 KiB
+/api/services(kollarsandor.com) - 681 ms, 7,92 KiB
+…marked/marked.min.js(cdn.jsdelivr.net) - 340 ms, 13,74 KiB
+/css2?family=Inter:wght@300;400;500;600;700;800&display=swap(fonts.googleapis.com) - 324 ms, 1,54 KiB
+…v19/UcC73FwrK….woff2(fonts.gstatic.com) - 1471 ms, 84,07 KiB
+…v19/UcC73FwrK….woff2(fonts.gstatic.com) - 477 ms, 48,09 KiB
+Preconnected origins
+preconnect hints help the browser establish a connection earlier in the page load, saving time when the first request for that origin is made. The following are the origins that the page preconnected to.
+no origins were preconnected
+Preconnect candidates
+Add preconnect hints to your most important origins, but try to use no more than 4.
+No additional origins are good candidates for preconnecting
+Hatékony gyorsítótár-élettartam használata Akár 1 KiB megtakarítás
+Ha a gyorsítótárak élettartama hosszú, gyorsabbá válnak az oldal későbbi ismételt megnyitásai. További információ.LCPFCP
+Kérés
+Gyorsítótár-TTL
+Átviteli méret
+JSDelivr CDN Cdn 
+14 KiB
+…marked/marked.min.js(cdn.jsdelivr.net)
+7 nap
+14 KiB
+Dokumentumkérés várakozási ideje Akár 40 KiB megtakarítás
+Az első hálózati kérelem a legfontosabb. Csökkentse a várakozási idejét az átirányítások elkerülésével, gyors szerverválasz biztosításával és a szövegtömörítés engedélyezésével.LCPFCP
+Elkerüli az átirányításokat
+Server responds quickly (observed 286 ms)
+Nincs alkalmazva tömörítés
+Betűtípus megjelenítése Potenciálisan 20 ms megtakarítás
+A szöveg következetes láthatóságának biztosítása érdekében fontolja meg a font-display beállítását a következők egyikére: swap vagy optional. A swap tovább optimalizálható az elrendezésmozgások mérséklése érdekében a betűméretmutató-felülbírálásokkal.FCP
+URL
+Potenciális megtakarítás
+Cloudflare CDN Cdn 
+20 ms
+…webfonts/fa-solid-900.woff2(cdnjs.cloudflare.com)
+20 ms
+LCP breakdown
+Harmadik felek
+These insights are also available in the Chrome DevTools Performance Panel - record a trace to view more detailed information.
+DIAGNOSZTIKA
+Minimalizálja a CSS-fájlokat Akár 10 KiB megtakarítás
+A CSS-fájlok kicsinyítése csökkentheti a hálózaton továbbított adatok méretét. További információ a CSS kicsinyítéséről.LCPFCP
+URL
+Átviteli méret
+Potenciális megtakarítás
+/* --- Alap stílusok és változók --- */ @import url('https://fonts.googleapis.com/css2?family=Int…
+28,3 KiB
+9,7 KiB
+Minimalizálja a JavaScript-kódot Akár 8 KiB megtakarítás
+A JavaScript-fájlok kicsinyítésével csökkenthető a továbbított adatok mérete és a szkriptek elemzésére fordított idő. További információ arról, hogy miként kicsinyíthető a JavaScript.LCPFCP
+URL
+Átviteli méret
+Potenciális megtakarítás
+inline: // --- Globális Állapot és Kon…
+26,5 KiB
+8,1 KiB
+Nem használt CSS-kódok számának csökkentése Akár 32 KiB megtakarítás
+A stíluslapok nem használt szabályainak eltávolításával és a hajtás feletti tartalomhoz nem használt CSS-ek késleltetésével csökkentheti a hálózati tevékenység által felhasznált bájtmennyiséget. További információ a nem használt CSS csökkentéséről.LCPFCP
+  Harmadik féltől származó források megjelenítése (1)
+URL
+Átviteli méret
+Potenciális megtakarítás
+Cloudflare CDN Cdn 
+18,3 KiB	18,1 KiB
+…css/all.min.css(cdnjs.cloudflare.com)
+18,3 KiB
+18,1 KiB
+Nem hozzárendelhető
+28,1 KiB	14,4 KiB
+/* --- Alap stílusok és változók --- */ @import url('https://fonts.googleapis.com/css2?family=Int…
