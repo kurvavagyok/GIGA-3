@@ -569,16 +569,17 @@ async def execute_model(model_info: Dict[str, Any], prompt: str):
 
     try:
         if model_type == "cerebras" and model == cerebras_client:
-            # Cerebras optimalizált streamelés
+            # Cerebras optimalizált pontosság és sebesség
             stream = cerebras_client.chat.completions.create(
                 messages=[{"role": "user", "content": prompt}],
                 model="llama-4-scout-17b-16e-instruct",
                 stream=True,
-                max_completion_tokens=2048,  # Csökkentett token limit a sebességért
-                temperature=0.01,  # Még gyorsabb válaszokért
-                top_p=0.95,
-                presence_penalty=0.0,
-                frequency_penalty=0.0
+                max_completion_tokens=4096,  # Növelt token limit a pontosabb válaszokért
+                temperature=0.3,  # Optimalizált kreativitás a pontosságért
+                top_p=0.9,  # Finomított nucleus sampling
+                presence_penalty=0.1,  # Enyhe penalty a repetíció elkerülésére
+                frequency_penalty=0.1,  # Változatosabb válaszokért
+                top_k=40  # Top-k sampling a pontosságért
             )
             for chunk in stream:
                 if hasattr(chunk, 'choices') and chunk.choices and chunk.choices[0].delta.content:
@@ -925,10 +926,14 @@ async def deep_discovery_chat(req: ChatRequest):
     
     history = chat_histories.get(user_id, [])
 
-    # Rövidebb system message a gyorsaságért
+    # Pontosított system message a minőségi válaszokért
     system_message = {
-        "role": "system",
-        "content": "Te JADED vagy, egy AI asszisztens magyarul. Segítőkész és pontos válaszokat adsz."
+        "role": "system", 
+        "content": """Te JADED vagy, egy fejlett AI asszisztens, aki magyarul kommunikál. 
+        Mindig pontos, részletes és szakmailag megalapozott válaszokat adsz. 
+        Gondolkodj át minden kérdést alaposan, adj strukturált válaszokat, 
+        és használj konkrét példákat ahol releváns. Ha nem vagy biztos valamiben, 
+        említsd meg ezt őszintén."""
     }
 
     # Csak az utolsó 6 üzenetet használjuk (gyorsabb kontextus)
@@ -939,17 +944,18 @@ async def deep_discovery_chat(req: ChatRequest):
         response_text = ""
         model_used = "JADED AI"
 
-        # Gyorsított AI backend futtatás
+        # Optimalizált Cerebras pontosság és sebesség
         if model_info["type"] == "cerebras":
             stream = cerebras_client.chat.completions.create(
                 messages=messages_for_llm,
                 model="llama-4-scout-17b-16e-instruct",
                 stream=True,
-                max_completion_tokens=1024,  # Rövidebb válaszok = gyorsabb
-                temperature=0.01,
-                top_p=0.95,
-                presence_penalty=0.0,
-                frequency_penalty=0.0
+                max_completion_tokens=2048,  # Megnövelt token limit a részletesebb válaszokért
+                temperature=0.25,  # Kiegyensúlyozott kreativitás
+                top_p=0.9,  # Nucleus sampling optimalizálása
+                presence_penalty=0.1,  # Változatosság növelése
+                frequency_penalty=0.05,  # Enyhe repetíció csökkentés
+                top_k=50  # Szélesebb választási spektrum
             )
             for chunk in stream:
                 if chunk.choices[0].delta.content:
@@ -1596,8 +1602,12 @@ async def exa_get_contents(req: ExaContentsRequest):
                         messages=[{"role": "user", "content": summary_prompt}],
                         model="llama-4-scout-17b-16e-instruct",
                         stream=True,
-                        max_completion_tokens=1000,
-                        temperature=0.1
+                        max_completion_tokens=2000,  # Részletesebb összefoglalókért
+                        temperature=0.2,  # Kiegyensúlyozott kreativitás
+                        top_p=0.9,
+                        top_k=40,
+                        presence_penalty=0.1,
+                        frequency_penalty=0.05
                     )
                     for chunk in stream:
                         if chunk.choices[0].delta.content:
