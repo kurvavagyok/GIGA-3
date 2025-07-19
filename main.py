@@ -743,8 +743,7 @@ async def execute_model(model_info: Dict[str, Any], prompt: str):
                 temperature=0.3,  # Optimalizált kreativitás a pontosságért
                 top_p=0.9,  # Finomított nucleus sampling
                 presence_penalty=0.1,  # Enyhe penalty a repetíció elkerülésére
-                frequency_penalty=0.1,  # Változatosabb válaszokért
-                top_k=40  # Top-k sampling a pontosságért
+                frequency_penalty=0.1  # Változatosabb válaszokért
             )
             for chunk in stream:
                 if hasattr(chunk, 'choices') and chunk.choices and chunk.choices[0].delta.content:
@@ -1231,8 +1230,7 @@ async def deep_discovery_chat(req: ChatRequest):
                 temperature=0.25,  # Kiegyensúlyozott kreativitás
                 top_p=0.9,  # Nucleus sampling optimalizálása
                 presence_penalty=0.1,  # Változatosság növelése
-                frequency_penalty=0.05,  # Enyhe repetíció csökkentés
-                top_k=50  # Szélesebb választási spektrum
+                frequency_penalty=0.05  # Enyhe repetíció csökkentés
             )
             for chunk in stream:
                 if chunk.choices[0].delta.content:
@@ -2090,7 +2088,6 @@ async def exa_get_contents(req: ExaContentsRequest):
                         max_completion_tokens=2000,  # Részletesebb összefoglalókért
                         temperature=0.2,  # Kiegyensúlyozott kreativitás
                         top_p=0.9,
-                        top_k=40,
                         presence_penalty=0.1,
                         frequency_penalty=0.05
                     )
