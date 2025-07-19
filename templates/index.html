@@ -491,7 +491,8 @@
         }
 
         .generated-image {
-            max-width: 100%;
+            width: 100%;
+            max-width: 500px;
             max-height: 400px;
             object-fit: contain;
             border-radius: 12px;
@@ -827,6 +828,68 @@
             .welcome-subtitle { font-size: 0.8rem; }
             .user-bubble { font-size: 0.8rem; }
             .ai-content { font-size: 0.8rem; }
+        }
+
+        /* Képgenerálási CSS stílusok hozzáadása */
+        .tool-option:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .generated-image-container {
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .generated-image {
+            width: 100%;
+            max-width: 500px;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+        }
+
+        .generated-image:hover {
+            transform: scale(1.02);
+        }
+
+        .image-actions {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .download-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .image-prompt {
+            margin-top: 10px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+            text-align: center;
+            word-wrap: break-word;
         }
     </style>
 </head>
@@ -1331,7 +1394,7 @@ async function fetchAPI(endpoint, options = {}) {
             if (!message || AppState.isTyping) return;
 
             hideWelcome();
-            
+
             if (currentImageGenerationMode) {
                 // Képgenerálás mód
                 addUserMessage(`🎨 Kép generálás: ${message}`);
@@ -1537,22 +1600,22 @@ async function fetchAPI(endpoint, options = {}) {
                 background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center;
                 z-index: 10000; cursor: pointer;
             `;
-            
+
             const img = document.createElement('img');
             img.src = imageUrl;
             img.style.cssText = `
                 max-width: 90%; max-height: 90%; object-fit: contain;
                 border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.7);
             `;
-            
+
             modal.appendChild(img);
             document.body.appendChild(modal);
-            
+
             modal.addEventListener('click', () => {
                 document.body.removeChild(modal);
                 HapticFeedback.light();
             });
-            
+
             HapticFeedback.medium();
         }
 
@@ -1990,6 +2053,33 @@ async function fetchAPI(endpoint, options = {}) {
             chatContainer.appendChild(messageDiv);
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
+
+        // Kép letöltési funkció
+            async function downloadImage(imageUrl, filename) {
+                try {
+                    const response = await fetch(imageUrl);
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename || 'generated-image.jpg';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                } catch (error) {
+                    console.error('Hiba a kép letöltése során:', error);
+                    alert('Hiba történt a kép letöltése során.');
+                }
+            }
+
+            // Szövegdoboz méretének automatikus beállítása
+            function adjustTextareaHeight(textarea) {
+                textarea.style.height = 'auto';
+                const scrollHeight = textarea.scrollHeight;
+                const maxHeight = 120;
+                textarea.style.height = Math.min(scrollHeight, maxHeight) + 'px';
+            }
     </script>
 </body>
 </html>
