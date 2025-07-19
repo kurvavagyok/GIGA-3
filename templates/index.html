@@ -427,23 +427,92 @@
             40% { transform: scale(1.0); }
         }
 
-        /* Deep Research Töltésjelző */
+        /* Enhanced Deep Research Progress Indicator */
         .research-indicator {
             background: var(--glass);
             border: 1px solid var(--border);
             border-radius: 12px; padding: 20px;
-            display: flex; flex-direction: column; align-items: center; gap: 12px;
+            display: flex; flex-direction: column; gap: 16px;
+            min-width: 320px;
         }
+        
+        .research-header {
+            display: flex; align-items: center; gap: 12px;
+            justify-content: center;
+        }
+        
         .research-indicator .spinner {
-            width: 32px; height: 32px;
-            border: 3px solid var(--border);
+            width: 24px; height: 24px;
+            border: 2px solid var(--border);
             border-top-color: var(--accent);
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+            animation: spin 1.2s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .research-indicator h4 { font-weight: 600; color: var(--text); font-size: 0.9rem; }
-        .research-indicator p { font-size: 0.8rem; color: var(--text-muted); text-align: center; }
+        
+        .research-indicator h4 { 
+            font-weight: 600; color: var(--text); font-size: 0.9rem; 
+            margin: 0; text-align: center;
+        }
+        
+        .progress-section {
+            display: flex; flex-direction: column; gap: 8px;
+        }
+        
+        .progress-bar {
+            width: 100%; height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px; overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 3px;
+            transition: width 0.5s ease;
+            min-width: 2px;
+        }
+        
+        .progress-text {
+            display: flex; justify-content: space-between;
+            font-size: 0.75rem; color: var(--text-muted);
+        }
+        
+        .phase-indicator {
+            font-size: 0.8rem; color: var(--text);
+            text-align: center; line-height: 1.4;
+            background: rgba(0, 119, 255, 0.1);
+            padding: 8px 12px; border-radius: 6px;
+            border-left: 3px solid var(--accent);
+        }
+        
+        .time-estimates {
+            display: flex; justify-content: space-between;
+            font-size: 0.7rem; color: var(--text-muted);
+            padding: 8px 0; border-top: 1px solid var(--border);
+        }
+        
+        .phases-completed {
+            display: flex; gap: 6px; justify-content: center;
+            margin-top: 8px;
+        }
+        
+        .phase-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .phase-dot.completed {
+            background: var(--accent);
+            transform: scale(1.2);
+        }
+        
+        .phase-dot.active {
+            background: var(--secondary);
+            transform: scale(1.4);
+            box-shadow: 0 0 8px var(--secondary);
+        }
 
         /* --- Modális ablak (Modal) --- */
         .modal {
@@ -1313,12 +1382,135 @@ async function fetchAPI(endpoint, options = {}) {
             indicatorDiv.id = 'researchIndicator';
             indicatorDiv.innerHTML = `
                 <div class="research-indicator">
-                    <div class="spinner"></div>
-                    <h4>Mélyreható kutatás folyamatban...</h4>
-                    <p>A rendszer több tucat tudományos forrást elemez a témában: <strong>"${escapeHtml(query)}"</strong>. Ez több percig is eltarthat.</p>
+                    <div class="research-header">
+                        <div class="spinner"></div>
+                        <h4>Háromszoros AI Keresési Rendszer</h4>
+                    </div>
+                    
+                    <div class="progress-section">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                        </div>
+                        <div class="progress-text">
+                            <span id="progressPercent">0%</span>
+                            <span id="progressPhase">Inicializálás...</span>
+                        </div>
+                    </div>
+                    
+                    <div class="phase-indicator" id="phaseStatus">
+                        🔄 Keresési rendszer indítása...<br>
+                        Téma: <strong>"${escapeHtml(query)}"</strong>
+                    </div>
+                    
+                    <div class="phases-completed">
+                        <div class="phase-dot" id="phase1"></div>
+                        <div class="phase-dot" id="phase2"></div>
+                        <div class="phase-dot" id="phase3"></div>
+                        <div class="phase-dot" id="phase4"></div>
+                    </div>
+                    
+                    <div class="time-estimates">
+                        <span>Eltelt: <span id="elapsedTime">0:00</span></span>
+                        <span>Becsült hátralevő: <span id="estimatedTime">2-3 perc</span></span>
+                    </div>
                 </div>`;
             messagesContainer.appendChild(indicatorDiv);
             scrollToBottom();
+            
+            // Progress update simulation
+            startProgressSimulation(query);
+        }
+        
+        function startProgressSimulation(query) {
+            let progress = 0;
+            let phase = 1;
+            let elapsed = 0;
+            
+            const phases = [
+                { name: "🔍 Exa Neural Search", duration: 45, progress: 25 },
+                { name: "🧠 Gemini 2.5 Pro Analysis", duration: 45, progress: 50 },
+                { name: "🤖 OpenAI GPT-4 Research", duration: 45, progress: 75 },
+                { name: "📝 Final Synthesis", duration: 60, progress: 100 }
+            ];
+            
+            const interval = setInterval(() => {
+                elapsed++;
+                
+                // Calculate expected progress based on time
+                let expectedProgress = 0;
+                let currentPhase = 1;
+                let phaseProgress = 0;
+                
+                if (elapsed <= 45) {
+                    // Phase 1: Exa Search
+                    expectedProgress = (elapsed / 45) * 25;
+                    currentPhase = 1;
+                    phaseProgress = (elapsed / 45) * 100;
+                } else if (elapsed <= 90) {
+                    // Phase 2: Gemini Analysis  
+                    expectedProgress = 25 + ((elapsed - 45) / 45) * 25;
+                    currentPhase = 2;
+                    phaseProgress = ((elapsed - 45) / 45) * 100;
+                } else if (elapsed <= 135) {
+                    // Phase 3: OpenAI Research
+                    expectedProgress = 50 + ((elapsed - 90) / 45) * 25;
+                    currentPhase = 3;
+                    phaseProgress = ((elapsed - 90) / 45) * 100;
+                } else {
+                    // Phase 4: Final Synthesis
+                    expectedProgress = 75 + ((elapsed - 135) / 60) * 25;
+                    currentPhase = 4;
+                    phaseProgress = ((elapsed - 135) / 60) * 100;
+                }
+                
+                expectedProgress = Math.min(expectedProgress, 98); // Cap at 98% until real completion
+                
+                // Update UI elements
+                const progressFill = getEl('progressFill');
+                const progressPercent = getEl('progressPercent');
+                const progressPhase = getEl('progressPhase');
+                const phaseStatus = getEl('phaseStatus');
+                const elapsedTime = getEl('elapsedTime');
+                const estimatedTime = getEl('estimatedTime');
+                
+                if (progressFill) progressFill.style.width = `${expectedProgress}%`;
+                if (progressPercent) progressPercent.textContent = `${Math.round(expectedProgress)}%`;
+                if (progressPhase) progressPhase.textContent = phases[currentPhase - 1]?.name || "Folyamatban...";
+                
+                if (phaseStatus) {
+                    const currentPhaseName = phases[currentPhase - 1]?.name || "Feldolgozás";
+                    phaseStatus.innerHTML = `${currentPhaseName}<br>Téma: <strong>"${escapeHtml(query)}"</strong><br><small>${Math.round(phaseProgress)}% kész</small>`;
+                }
+                
+                if (elapsedTime) {
+                    elapsedTime.textContent = `${Math.floor(elapsed/60)}:${(elapsed%60).toString().padStart(2, '0')}`;
+                }
+                
+                if (estimatedTime) {
+                    const remaining = Math.max(180 - elapsed, 30);
+                    estimatedTime.textContent = `${Math.floor(remaining/60)}:${(remaining%60).toString().padStart(2, '0')}`;
+                }
+                
+                // Update phase dots
+                for (let i = 1; i <= 4; i++) {
+                    const dot = getEl(`phase${i}`);
+                    if (dot) {
+                        if (i < currentPhase) {
+                            dot.className = 'phase-dot completed';
+                        } else if (i === currentPhase) {
+                            dot.className = 'phase-dot active';
+                        } else {
+                            dot.className = 'phase-dot';
+                        }
+                    }
+                }
+                
+                // Stop simulation after 4 minutes or when research completes
+                if (elapsed > 240 || !getEl('researchIndicator')) {
+                    clearInterval(interval);
+                }
+                
+            }, 1000); // Update every second
         }
 
         function displayResearchCompletion() {
