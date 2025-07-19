@@ -247,7 +247,7 @@
             transition: all 0.3s var(--transition-curve);
         }
         .service-item:hover .service-icon { transform: scale(1.1); color: var(--secondary); border-color: var(--secondary); }
-        .service-info h4 { font-size: 0.75rem; font-weight: 600; margin-bottom: 2px; }
+        .service-info h3 { font-size: 0.75rem; font-weight: 600; margin-bottom: 2px; }
         .service-info p { font-size: 0.7rem; color: var(--text-muted); }
 
         /* --- Fő tartalom --- */
@@ -1339,7 +1339,7 @@ async function fetchAPI(endpoint, options = {}) {
                             <div class="service-item touch-feedback" onclick="selectService('${serviceName}', '${escapeHtml(category[serviceName])}')">
                                 <div class="service-icon"><i class="fas fa-flask"></i></div>
                                 <div class="service-info">
-                                    <h4>${escapeHtml(serviceName)}</h4>
+                                    <h3>${escapeHtml(serviceName)}</h3>
                                     <p>${escapeHtml(category[serviceName])}</p>
                                 </div>
                             </div>`;
@@ -1368,11 +1368,11 @@ async function fetchAPI(endpoint, options = {}) {
                     <div class="category-services"><div>
                         <div class="service-item touch-feedback" onclick="startDeepResearch()">
                             <div class="service-icon" style="color: var(--secondary);"><i class="fas fa-microscope"></i></div>
-                            <div class="service-info"><h4>Deep Research</h4><p>Mélyreható kutatási elemzés</p></div>
+                            <div class="service-info"><h3>Deep Research</h3><p>Mélyreható kutatási elemzés</p></div>
                         </div>
                         <div class="service-item touch-feedback" onclick="openCodeGenerator()">
                             <div class="service-icon" style="color: var(--secondary);"><i class="fas fa-code"></i></div>
-                            <div class="service-info"><h4>Kód Generátor</h4><p>AI-alapú kódolás</p></div>
+                            <div class="service-info"><h3>Kód Generátor</h3><p>AI-alapú kódolás</p></div>
                         </div>
                     </div></div>`;
                 sidebarContent.appendChild(researchCategory);
