@@ -208,8 +208,9 @@
         .category-header .fa-chevron-down { transition: transform 0.3s var(--transition-curve); }
         .category-header:hover, .category-header:active {
             background: var(--glass-strong);
-            border-color: var(--border-glow);
-            transform: translateY(-2px);
+            border-color: var(--primary);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(153, 12, 88, 0.3);
         }
         .category-title { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.8rem; }
         .category-title i { color: var(--accent); }
@@ -232,10 +233,11 @@
             min-height: 44px;
         }
         .service-item:hover, .service-item:active {
-            background: var(--glass-strong);
+            background: linear-gradient(135deg, rgba(153, 12, 88, 0.2), rgba(229, 18, 132, 0.1));
             border-color: transparent transparent transparent var(--primary);
-            transform: translateX(4px);
+            transform: translateX(6px);
             color: #fff;
+            box-shadow: 0 3px 12px rgba(153, 12, 88, 0.4);
         }
         .service-icon {
             width: 24px; height: 24px;
@@ -1382,12 +1384,12 @@ async function fetchAPI(endpoint, options = {}) {
                 sidebarContent.innerHTML = '';
 
                 const categoryMeta = {
-                    biologiai_orvosi: { name: 'Biológiai & Orvosi', icon: 'fa-dna' },
-                    kemiai_anyagtudomanyi: { name: 'Kémiai & Anyagtudományi', icon: 'fa-atom' },
-                    kornyezeti_fenntarthato: { name: 'Környezeti & Fenntartható', icon: 'fa-leaf' },
-                    fizikai_asztrofizikai: { name: 'Fizikai & Asztrofizikai', icon: 'fa-satellite-dish' },
-                    technologiai_melymu: { name: 'Technológiai & Mélyműszaki', icon: 'fa-microchip' },
-                    tarsadalmi_gazdasagi: { name: 'Társadalmi & Gazdasági', icon: 'fa-chart-line' }
+                    biologiai_orvosi: { name: 'Alpha Bio & Orvosi', icon: 'fa-dna' },
+                    kemiai_anyagtudomanyi: { name: 'Alpha Kémiai & Anyag', icon: 'fa-atom' },
+                    kornyezeti_fenntarthato: { name: 'Alpha Környezeti', icon: 'fa-leaf' },
+                    fizikai_asztrofizikai: { name: 'Alpha Fizikai', icon: 'fa-satellite-dish' },
+                    technologiai_melymu: { name: 'Alpha Technológiai', icon: 'fa-microchip' },
+                    tarsadalmi_gazdasagi: { name: 'Alpha Társadalmi', icon: 'fa-chart-line' }
                 };
 
                 for (const categoryId in categories) {
@@ -1431,8 +1433,8 @@ async function fetchAPI(endpoint, options = {}) {
                     </div>
                     <div class="category-services"><div>
                         <div class="service-item touch-feedback" onclick="startDeepResearch()">
-                            <div class="service-icon" style="color: var(--secondary);"><i class="fas fa-microscope"></i></div>
-                            <div class="service-info"><h3>Deep Research</h3><p>Mélyreható kutatási elemzés</p></div>
+                            <div class="service-icon" style="color: var(--secondary);"><i class="fas fa-search-plus"></i></div>
+                            <div class="service-info"><h3>Deep Discovery</h3><p>Tudományos kutatás 150+ forrásból</p></div>
                         </div>
                         <div class="service-item touch-feedback" onclick="openCodeGenerator()">
                             <div class="service-icon" style="color: var(--secondary);"><i class="fas fa-code"></i></div>
@@ -1723,11 +1725,16 @@ async function fetchAPI(endpoint, options = {}) {
         }
 
         function startDeepResearch() {
-            modalTitle.innerText = 'Deep Research';
+            modalTitle.innerText = 'Deep Discovery Kutatás';
             modalBody.innerHTML = `
+                <div style="margin-bottom: 16px; padding: 12px; background: var(--glass); border-radius: 8px; border-left: 4px solid var(--primary);">
+                    <p style="margin: 0; font-size: 0.9rem; color: var(--text);">
+                        <strong>Deep Discovery:</strong> Átfogó tudományos kutatás 150+ forrásból, AI szintézissel
+                    </p>
+                </div>
                 <label for="researchQuery">Kutatási téma:</label>
-                <input type="text" id="researchQuery" placeholder="Pl. \'A grafén felhasználása az akkumulátor technológiában\'">`;
-            modalFooter.innerHTML = `<button class="modal-submit-btn touch-feedback" onclick="submitDeepResearchQuery()">Kutatás indítása</button>`;
+                <input type="text" id="researchQuery" placeholder="Pl. 'kvantum számítástechnika fejlődése 2024-ben'">`;
+            modalFooter.innerHTML = `<button class="modal-submit-btn touch-feedback" onclick="submitDeepResearchQuery()">Deep Discovery Indítása</button>`;
             openModal();
         }
 
@@ -1737,7 +1744,7 @@ async function fetchAPI(endpoint, options = {}) {
 
             closeModal();
             hideWelcome();
-            addUserMessage(`Deep Research indítva: ${query}`);
+            addUserMessage(`🔬 Deep Discovery kutatás indítva: ${query}`);
             showResearchIndicator(query);
 
             try {
@@ -1770,8 +1777,9 @@ async function fetchAPI(endpoint, options = {}) {
             indicatorDiv.innerHTML = `
                 <div class="research-indicator">
                     <div class="spinner"></div>
-                    <h4>Mélyreható kutatás folyamatban...</h4>
-                    <p>A rendszer több tucat tudományos forrást elemez a témában: <strong>"${escapeHtml(query)}"</strong>. Ez több percig is eltarthat.</p>
+                    <h4>🔬 Deep Discovery kutatás folyamatban...</h4>
+                    <p>JADED elemzi a tudományos adatbázisokat: <strong>"${escapeHtml(query)}"</strong><br>
+                    Várható idő: 1-3 perc</p>
                 </div>`;
             messagesContainer.appendChild(indicatorDiv);
             scrollToBottom();
@@ -1911,17 +1919,22 @@ async function fetchAPI(endpoint, options = {}) {
         // Globális változók
         let currentImageGenerationMode = false;
 
-        // Event listeners
-        document.getElementById('sendBtn').addEventListener('click', sendMessage);
-        document.getElementById('messageInput').addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-            }
-        });
+        // Event listeners - biztonságos inicializálás
+        const sendButton = document.getElementById('sendBtn');
+        const messageInputEl = document.getElementById('messageInput');
+        const toolsButtonEl = document.getElementById('toolsButton');
+        
+        if (sendButton) sendButton.addEventListener('click', sendMessage);
+        if (messageInputEl) {
+            messageInputEl.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+        }
 
-        // Tools button event listener
-        document.getElementById('toolsButton').addEventListener('click', toggleToolsMenu);
+        if (toolsButtonEl) toolsButtonEl.addEventListener('click', toggleToolsMenu);
 
         // Kívül kattintás az eszközök menü bezárásához
         document.addEventListener('click', function(e) {
@@ -1929,11 +1942,6 @@ async function fetchAPI(endpoint, options = {}) {
             if (!toolsContainer) {
                 closeToolsMenu();
             }
-        });
-
-        // Image prompt strength slider
-        document.getElementById('imagePromptStrength').addEventListener('input', function(e) {
-            document.getElementById('strengthValue').textContent = e.target.value;
         });
 
         // Eszközök menü kezelés

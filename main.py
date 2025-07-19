@@ -582,7 +582,11 @@ async def execute_model(model_info: Dict[str, Any], prompt: str):
             for chunk in stream:
                 if hasattr(chunk, 'choices') and chunk.choices and chunk.choices[0].delta.content:
                     response_text += chunk.choices[0].delta.content
-            return {"response": response_text or "Válasz nem generálható.", "model_used": "JADED AI", "selected_backend": "Cerebras"}
+            return {
+                "response": response_text or "Válasz nem generálható.",
+                "model_used": "JADED AI",
+                "selected_backend": "JADED AI"
+            }
 
         elif model_type == "openai" and model == openai_client:
             # OpenAI gyorsított beállítások
@@ -596,7 +600,7 @@ async def execute_model(model_info: Dict[str, Any], prompt: str):
                 presence_penalty=0.0
             )
             response_text = response.choices[0].message.content if response.choices else "Válasz nem generálható."
-            return {"response": response_text, "model_used": "JADED AI", "selected_backend": "OpenAI"}
+            return {"response": response_text, "model_used": "JADED AI", "selected_backend": "JADED AI"}
 
         elif model_type == "gemini":
             # Gemini gyorsított konfiguráció
@@ -609,7 +613,7 @@ async def execute_model(model_info: Dict[str, Any], prompt: str):
             )
             response = await model.generate_content_async(prompt, generation_config=generation_config)
             response_text = response.text if hasattr(response, 'text') and response.text else "Válasz nem generálható."
-            return {"response": response_text, "model_used": "JADED AI", "selected_backend": "Gemini"}
+            return {"response": response_text, "model_used": "JADED AI", "selected_backend": "JADED AI"}
 
         else:
             raise ValueError("Érvénytelen modell típus")
@@ -1444,7 +1448,8 @@ async def exa_neural_search(query: str, domains: List[str] = [], exclude_domains
         )
 
         processed_results = []
-        for result in results:
+        for```python
+ result in results:
             processed_result = {
                 "title": result.title,
                 "url": result.url,
@@ -2139,7 +2144,7 @@ async def generate_flux_image(req: FluxImageRequest):
 
     try:
         logger.info(f"Generating image with Flux 1.1 Pro Ultra: {req.prompt}")
-        
+
         output = replicate_client.run(
             "black-forest-labs/flux-1.1-pro-ultra",
             input={
