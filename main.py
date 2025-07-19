@@ -84,22 +84,42 @@ OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 OPENAI_ORG_ID = os.environ.get("OPENAI_ORG_ID")
 OPENAI_ADMIN_KEY = os.environ.get("OPENAI_ADMIN_KEY")
 
-# --- Token Limit Definíciók ---
+# --- Token Limit Definíciók - Frissítve az új OpenAI API kulcshoz ---
 TOKEN_LIMITS = {
-    "gpt-3.5-turbo": 200000,
-    "gpt-4.1": 900000,
-    "gpt-4.1-long-context": 200000,
-    "gpt-4.1-mini": 200000,
-    "gpt-4.1-mini-long-context": 400000,
-    "gpt-4.1-nano": 200000,
-    "gpt-4.1-nano-long-context": 400000,
-    "gpt-4.5-preview": 200,
-    "gpt-4.0": 90000,
-    "gpt-4.0-mini": 200000,
-    "dall-e-2": 200,
-    "dall-e-3": 200,
-    "tts-1": 200,
-    "whisper-1": 200
+    # OpenAI Chat modellek
+    "gpt-3.5-turbo": 40000,  # 40,000 TPM
+    "gpt-3.5-turbo-0125": 40000,
+    "gpt-3.5-turbo-1106": 40000,
+    "gpt-3.5-turbo-16k": 40000,
+    "gpt-3.5-turbo-instruct": 90000,  # 90,000 TPM
+    "gpt-4o": 10000,  # 10,000 TPM
+    "gpt-4o-2024-05-13": 10000,
+    "gpt-4o-2024-08-06": 10000,
+    "gpt-4o-2024-11-20": 10000,
+    "gpt-4o-mini": 60000,  # 60,000 TPM
+    "gpt-4o-mini-2024-07-18": 60000,
+    "gpt-4.1": 10000,  # 10,000 TPM
+    "gpt-4.1-2025-04-14": 10000,
+    "gpt-4.1-long-context": 60000,  # 60,000 TPM
+    "gpt-4.1-mini": 60000,  # 60,000 TPM
+    "gpt-4.1-mini-long-context": 120000,  # 120,000 TPM
+    "gpt-4.1-nano": 60000,  # 60,000 TPM
+    "gpt-4.1-nano-long-context": 120000,  # 120,000 TPM
+    # Embedding modellek
+    "text-embedding-3-large": 40000,  # 40,000 TPM
+    "text-embedding-3-small": 40000,
+    "text-embedding-ada-002": 40000,
+    # Audio/Image modellek
+    "dall-e-2": 150000,  # 150,000 TPM
+    "dall-e-3": 150000,
+    "tts-1": 150000,
+    "tts-1-hd": 150000,
+    "whisper-1": 150000,
+    # O1 modellek
+    "o1-mini": 150000,
+    "o1-preview": 150000,
+    # Default
+    "default": 150000
 }
 
 # --- Kliensek inicializálása ---
@@ -566,18 +586,24 @@ async def execute_model(model_info: Dict[str, Any], prompt: str):
             return {"response": response_text or "Válasz nem generálható.", "model_used": "JADED AI", "selected_backend": "Cerebras"}
 
         elif model_type == "openai" and model == openai_client:
-            # OpenAI gyorsított beállítások
+            # OpenAI optimalizált beállítások az új limitek szerint
+            max_tokens = min(4096, TOKEN_LIMITS.get(model_name, 2048))
             response = openai_client.chat.completions.create(
                 model=model_name,
                 messages=[{"role": "user", "content": prompt}],
-                max_tokens=2048,
+                max_tokens=max_tokens,
                 temperature=0.01,
                 top_p=0.95,
                 frequency_penalty=0.0,
                 presence_penalty=0.0
             )
             response_text = response.choices[0].message.content if response.choices else "Válasz nem generálható."
-            return {"response": response_text, "model_used": "JADED AI", "selected_backend": "OpenAI"}
+            return {
+                "response": response_text, 
+                "model_used": "JADED AI", 
+                "selected_backend": "OpenAI",
+                "tokens_used": response.usage.total_tokens if response.usage else 0
+            }
 
         elif model_type == "gemini":
             # Gemini gyorsított konfiguráció
@@ -930,14 +956,21 @@ async def deep_discovery_chat(req: ChatRequest):
                     response_text += chunk.choices[0].delta.content
                     
         elif model_info["type"] == "openai":
+            # Optimális token használat gpt-4o limitek alapján (10,000 TPM)
             response = openai_client.chat.completions.create(
                 model="gpt-4o",
                 messages=messages_for_llm,
-                max_tokens=1024,
+                max_tokens=2048,  # Növelt token limit a jobb válaszokért
                 temperature=0.01,
-                top_p=0.95
+                top_p=0.95,
+                frequency_penalty=0.0,
+                presence_penalty=0.0
             )
             response_text = response.choices[0].message.content
+            
+            # Token használat logolása
+            if response.usage:
+                logger.info(f"OpenAI tokens used: {response.usage.total_tokens} (prompt: {response.usage.prompt_tokens}, completion: {response.usage.completion_tokens})")
             
         elif model_info["type"] == "gemini":
             response = await model_info["model"].generate_content_async(
