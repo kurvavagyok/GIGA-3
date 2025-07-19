@@ -1,0 +1,33 @@
+- https://docs.exa.ai  
+- https://docs.exa.ai/websets/overview  
+- https://docs.exa.ai/reference/answer  
+- https://docs.exa.ai/reference/quickstart  
+- https://docs.exa.ai/research/examples  
+- https://docs.exa.ai/reference/search  
+- https://docs.exa.ai/integrations  
+- https://docs.exa.ai/sdks  
+- https://docs.exa.ai/changelog  
+- https://docs.exa.ai/concepts
+
+Források
+[1] Zalalövő története az ókorban - Municipium Aelium Salla = History of Zalalövő in the ancient times - Muncipium Aelium Salla https://www.semanticscholar.org/paper/b77be4feff3b0e4f7aafc9bb30591527339404b5
+[2] XXAI: Towards eXplicitly eXplainable Artificial Intelligence https://arxiv.org/pdf/2401.03093.pdf
+[3] The Explabox: Model-Agnostic Machine Learning Transparency & Analysis https://arxiv.org/pdf/2411.15257.pdf
+[4] EUCA: the End-User-Centered Explainable AI Framework https://arxiv.org/pdf/2102.02437.pdf
+[5] OmniXAI: A Library for Explainable AI https://arxiv.org/pdf/2206.01612.pdf
+[6] XpertAI: uncovering regression model strategies for sub-manifolds https://arxiv.org/pdf/2403.07486.pdf
+[7] Towards Explainable Artificial Intelligence (XAI): A Data Mining
+  Perspective https://arxiv.org/pdf/2401.04374.pdf
+[8] Exascale Workflow Applications and Middleware: An ExaWorks Retrospective http://arxiv.org/pdf/2411.10637.pdf
+[9] Explaining Expert Search and Team Formation Systems with ExES http://arxiv.org/pdf/2405.12881.pdf
+[10] Nissan Auto Lease Trust 2023-B ; NO_TICKER ; 1978414 ; 10-k ; 2025-06-27 https://www.sec.gov/Archives/edgar/data/1978414/000119312525151190/d20297d10k.htm
+[11] Nissan Auto Receivables 2021-A Owner Trust ; NO_TICKER ; 1864913 ; 10-k ; 2025-06-27 https://www.sec.gov/Archives/edgar/data/1864913/000119312525151149/d41887d10k.htm
+[12] Nissan Auto Lease Trust 2024-A ; NO_TICKER ; 1999583 ; 10-k ; 2025-06-27 https://www.sec.gov/Archives/edgar/data/1999583/000119312525151124/d16751d10k.htm
+[13] Nissan Auto Lease Trust 2024-B ; NO_TICKER ; 2029406 ; 10-k ; 2025-06-27 https://www.sec.gov/Archives/edgar/data/2029406/000119312525151235/d109540d10k.htm
+[14] Nissan Auto Receivables 2024-B Owner Trust ; NO_TICKER ; 2035264 ; 10-k ; 2025-06-27 https://www.sec.gov/Archives/edgar/data/2035264/000119312525151244/d922363d10k.htm
+[15] Nissan Auto Receivables 2023-A Owner Trust ; NO_TICKER ; 1971902 ; 10-k ; 2025-06-27 https://www.sec.gov/Archives/edgar/data/1971902/000119312525151142/d53291d10k.htm
+[16] Pyxis Oncology, Inc. ; PYXS ; 1782223 ; 10-k ; 2025-03-18 https://www.sec.gov/Archives/edgar/data/1782223/000095017025040771/pyxs-20241231.htm
+[17] Examples - Exa https://docs.exa.ai/research/examples
+[18] Exa | Web Search API, AI Search Engine, & Website Crawler https://exa.ai
+[19] Welcome to Exa - Exa https://docs.exa.ai
+[20] AI Overview: A Google új funkciója, ami átalakítja a keresés világát https://www.exaline.hu/ai-overview-a-google-uj-funkcioja-ami-atalakitja-a-kereses-vilagat/

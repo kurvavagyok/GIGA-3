@@ -43,8 +43,3 @@ pandas>=2.1.0
 # matplotlib>=3.7.0  # Csak ha szükséges
 # seaborn>=0.12.0  # Csak ha szükséges
 # folium>=0.15.0  # Csak ha szükséges
-replicate
-sift-stack-py
-replicate
-sift-stack-py
-replicate
