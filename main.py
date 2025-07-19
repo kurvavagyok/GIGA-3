@@ -583,7 +583,7 @@ async def execute_model(model_info: Dict[str, Any], prompt: str):
             for chunk in stream:
                 if hasattr(chunk, 'choices') and chunk.choices and chunk.choices[0].delta.content:
                     response_text += chunk.choices[0].delta.content
-            return {"response": response_text or "Válasz nem generálható.", "model_used": "JADED AI", "selected_backend": "Cerebras"}
+            return {"response": response_text or "Válasz nem generálható.", "model_used": "JADED AI", "selected_backend": "JADED AI"}
 
         elif model_type == "openai" and model == openai_client:
             # OpenAI optimalizált beállítások az új limitek szerint
@@ -601,7 +601,7 @@ async def execute_model(model_info: Dict[str, Any], prompt: str):
             return {
                 "response": response_text, 
                 "model_used": "JADED AI", 
-                "selected_backend": "OpenAI",
+                "selected_backend": "JADED AI",
                 "tokens_used": response.usage.total_tokens if response.usage else 0
             }
 
@@ -616,7 +616,7 @@ async def execute_model(model_info: Dict[str, Any], prompt: str):
             )
             response = await model.generate_content_async(prompt, generation_config=generation_config)
             response_text = response.text if hasattr(response, 'text') and response.text else "Válasz nem generálható."
-            return {"response": response_text, "model_used": "JADED AI", "selected_backend": "Gemini"}
+            return {"response": response_text, "model_used": "JADED AI", "selected_backend": "JADED AI"}
 
         else:
             raise ValueError("Érvénytelen modell típus")

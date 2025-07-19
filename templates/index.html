@@ -1049,6 +1049,7 @@ async function fetchAPI(endpoint, options = {}) {
         function closeDocumentViewer() {
             documentViewer.classList.remove('show');
             documentViewer.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = 'auto';
         }
 
         function hideWelcome() {
@@ -1325,19 +1326,37 @@ async function fetchAPI(endpoint, options = {}) {
             const sourcesCount = researchState.sources ? researchState.sources.length : 0;
             const contentLength = researchState.documentContent ? researchState.documentContent.length : 0;
 
-            addAiMessage(`🔬 **Deep Research befejezve!**
-
-**Kutatási téma:** ${researchState.query}
-**Összes forrás:** ${researchState.totalSources || sourcesCount} találat
-**Felhasznált források:** ${sourcesCount} forrás
-**Jelentés hossza:** ${contentLength} karakter
-
-📋 [Részletes jelentés megtekintése](#document-viewer)
-
-A jelentés tartalmazza a három AI rendszer (Exa, Gemini, OpenAI) keresési eredményeinek szintézisét.`, 'JADED AI');
-
-            // Document viewer gomb hozzáadása
-            addDocumentViewerButton();
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ai-message';
+            messageDiv.innerHTML = `
+                <div class="research-complete">
+                    <div class="completion-stats">
+                        <h3><i class="fas fa-check-circle"></i> Deep Research befejezve!</h3>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <span class="stat-number">${researchState.totalSources || sourcesCount}</span>
+                                <span class="stat-label">Forrás</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number">${Math.round(contentLength/1000)}k</span>
+                                <span class="stat-label">Karakter</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="document-preview" onclick="showDocumentViewer()">
+                        <div class="document-icon"><i class="fas fa-file-alt"></i></div>
+                        <div class="document-info">
+                            <h4>Részletes jelentés megtekintése</h4>
+                            <p>Kutatási téma: ${researchState.query}</p>
+                        </div>
+                        <div class="document-arrow"><i class="fas fa-arrow-right"></i></div>
+                    </div>
+                </div>
+                <div class="message-actions">
+                    <button class="action-btn touch-feedback" onclick="copyMessage(event, 'research-result')"><i class="fas fa-copy"></i> Másolás</button>
+                </div>`;
+            messagesContainer.appendChild(messageDiv);
+            scrollToBottom();
         }
 
         function displayResearchError(errorMessage) {
@@ -1363,41 +1382,33 @@ A jelentés tartalmazza a három AI rendszer (Exa, Gemini, OpenAI) keresési ere
                 return;
             }
 
-            const documentViewer = getEl('documentViewer');
-            const documentTitle = getEl('documentTitle');
-            const documentContent = getEl('documentContent');
-
-            if (!documentViewer || !documentTitle || !documentContent) {
-                console.error('Document viewer elements not found');
-                return;
-            }
-
             documentTitle.textContent = `Kutatási jelentés: ${researchState.query}`;
 
             const sourcesArray = Array.isArray(researchState.sources) ? researchState.sources : [];
 
             documentContent.innerHTML = `
                 <div class="document-section">
-                    <h3>AI Által Generált Szintézis</h3>
+                    <h3>Kutatási Jelentés</h3>
                     <div class="synthesis-content">${marked.parse(researchState.documentContent)}</div>
                 </div>
                 <div class="document-section">
                     <h3>Felhasznált Források (${sourcesArray.length})</h3>
                     <div class="sources-list">
-                        ${sourcesArray.length > 0 ? sourcesArray.map(source => `
+                        ${sourcesArray.length > 0 ? sourcesArray.map((source, index) => `
                             <div class="source-item">
-                                <a href="${source.url}" target="_blank" class="source-link">
+                                <div class="source-number">${index + 1}.</div>
+                                <div class="source-content">
                                     <h4>${source.title || 'Névtelen forrás'}</h4>
-                                    <p class="source-meta">${source.domain || (source.url ? new URL(source.url).hostname : 'Ismeretlen domain')} • ${source.published_date || 'Dátum ismeretlen'}</p>
-                                </a>
+                                    <a href="${source.url}" target="_blank">${source.url}</a>
+                                    <span class="source-date">${source.published_date || 'Dátum ismeretlen'}</span>
+                                </div>
                             </div>
                         `).join('') : '<p>Nincsenek elérhető források.</p>'}
                     </div>
                 </div>
             `;
 
-            documentViewer.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
+            openDocumentViewer();
             HapticFeedback.success();
         }
 
