@@ -1006,16 +1006,15 @@ async def deep_research(req: DeepResearchRequest):
         # Gyorsabb keresés - kevesebb batch
         all_results = []
 
-        # 1. Fő neurális keresés - 2 batch csak
+        # 1. Fő neurális keresés és tartalom lekérés - 2 batch csak
         for batch in range(2):
             try:
-                neural_search = exa_client.search(
+                neural_search = exa_client.search_and_contents(
                     query=f"{req.query} research",
                     type="neural",
                     num_results=100,  # Több eredmény batch-enként
                     include_domains=scientific_domains,
-                    text=True,
-                    livecrawl="never"  # Gyorsabb
+                    text=True
                 )
                 all_results.extend(neural_search.results)
                 logger.info(f"Neural batch {batch+1}/2 completed: {len(neural_search.results)} results")
@@ -1024,7 +1023,7 @@ async def deep_research(req: DeepResearchRequest):
 
         # 2. Egyszerűsített kulcsszavas keresés
         try:
-            keyword_search = exa_client.search(
+            keyword_search = exa_client.search_and_contents(
                 query=f"{req.query} study analysis",
                 type="keyword",
                 num_results=50,
@@ -1038,7 +1037,7 @@ async def deep_research(req: DeepResearchRequest):
 
         # 3. Gyors idő alapú keresés - csak 2024
         try:
-            recent_search = exa_client.search(
+            recent_search = exa_client.search_and_contents(
                 query=f"{req.query} 2024",
                 type="neural",
                 num_results=50,
@@ -1200,8 +1199,19 @@ async def exa_advanced_search(req: AdvancedExaRequest):
         if req.subcategory:
             search_params["subcategory"] = req.subcategory
 
+        # Text és highlights kezelése különálló paraméterként
+        text_param = search_params.pop("text_contents", None)
+        
         logger.info(f"Advanced Exa search with params: {search_params}")
-        response = exa_client.search(**search_params)
+        
+        # Ha text tartalom kért, használjuk a search_and_contents metódust
+        if text_param:
+            response = exa_client.search_and_contents(
+                text=True,
+                **search_params
+            )
+        else:
+            response = exa_client.search(**search_params)
 
         # Eredmények feldolgozása
         results = []
@@ -1255,21 +1265,17 @@ async def exa_find_similar(req: ExaSimilarityRequest):
 
         response = exa_client.find_similar(**params)
 
-        # Text contents külön lekérése
-        if response.results:
-            ids = [result.id for result in response.results]
-            try:
-                contents_response = exa_client.get_contents(
-                    ids=ids,
-                    text_contents={
-                        "max_characters": 2000,
-                        "strategy": "comprehensive"
-                    }
-                )
-                contents_map = {content.id: content for content in contents_response.contents}
-            except:
-                contents_map = {}
-        else:
+        # Find similar with contents metódus használata
+        try:
+            response_with_content = exa_client.find_similar_and_contents(
+                url=req.url,
+                num_results=req.num_results,
+                exclude_source_domain=req.exclude_source_domain,
+                text=True
+            )
+            contents_map = {result.id: result for result in response_with_content.results}
+        except Exception as e:
+            logger.warning(f"Error getting contents: {e}")
             contents_map = {}
 
         results = []
@@ -1309,19 +1315,12 @@ async def exa_get_contents(req: ExaContentsRequest):
         )
 
     try:
-        params = {
-            "ids": req.ids,
-            "text_contents": {
-                "max_characters": 5000,
-                "include_html_tags": True,
-                "strategy": "comprehensive"
-            }
-        }
-
-        if req.highlights:
-            params["highlights"] = req.highlights
-
-        response = exa_client.get_contents(**params)
+        # Get contents with text és highlights paraméterekkel
+        response = exa_client.get_contents(
+            ids=req.ids,
+            text=True,
+            highlights=bool(req.highlights)
+        )
 
         contents = []
         for content in response.contents:
@@ -1407,14 +1406,13 @@ async def exa_neural_search(query: str, domains: List[str] = [], exclude_domains
         ]
 
     try:
-        response = exa_client.search(
+        response = exa_client.search_and_contents(
             query=query,
             type="neural",
             num_results=num_results,
             include_domains=domains,
             exclude_domains=exclude_domains,
-            text=True,
-            livecrawl="when_necessary"
+            text=True
         )
 
         # Eredmények pontszám szerint rendezése
@@ -1467,13 +1465,12 @@ async def get_research_trends(req: ScientificInsightRequest):
             "ieee.org", "acm.org", "springer.com", "wiley.com", "biorxiv.org"
         ]
 
-        search_response = exa_client.search(
+        search_response = exa_client.search_and_contents(
             query=req.query,
             type="neural",
             num_results=req.num_results,
             include_domains=scientific_domains,
             text=True,
-            livecrawl="when_necessary",
             start_published_date="2020-01-01"  # Friss kutatások
         )
 
