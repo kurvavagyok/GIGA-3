@@ -2154,7 +2154,7 @@ async def generate_flux_image(req: FluxImageRequest):
 
         # Képfájl URL lekérése
         if hasattr(output, 'url'):
-            image_url = output.url()
+            image_url = output.url
         elif isinstance(output, str):
             image_url = output
         elif isinstance(output, list) and len(output) > 0:
