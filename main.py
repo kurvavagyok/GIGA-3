@@ -741,9 +741,7 @@ async def execute_model(model_info: Dict[str, Any], prompt: str):
                 stream=True,
                 max_completion_tokens=4096,  # Növelt token limit a pontosabb válaszokért
                 temperature=0.3,  # Optimalizált kreativitás a pontosságért
-                top_p=0.9,  # Finomított nucleus sampling
-                presence_penalty=0.1,  # Enyhe penalty a repetíció elkerülésére
-                frequency_penalty=0.1  # Változatosabb válaszokért
+                top_p=0.9  # Finomított nucleus sampling
             )
             for chunk in stream:
                 if hasattr(chunk, 'choices') and chunk.choices and chunk.choices[0].delta.content:
@@ -1228,9 +1226,7 @@ async def deep_discovery_chat(req: ChatRequest):
                 stream=True,
                 max_completion_tokens=2048,  # Megnövelt token limit a részletesebb válaszokért
                 temperature=0.25,  # Kiegyensúlyozott kreativitás
-                top_p=0.9,  # Nucleus sampling optimalizálása
-                presence_penalty=0.1,  # Változatosság növelése
-                frequency_penalty=0.05  # Enyhe repetíció csökkentés
+                top_p=0.9  # Nucleus sampling optimalizálása
             )
             for chunk in stream:
                 if chunk.choices[0].delta.content:
@@ -2092,7 +2088,7 @@ async def exa_get_contents(req: ExaContentsRequest):
                         frequency_penalty=0.05
                     )
                     for chunk in stream:
-                        if chunk.choices[0].delta.content:
+                        if hasattr(chunk, 'choices') and chunk.choices and chunk.choices[0].delta.content:
                             summary += chunk.choices[0].delta.content
             except Exception as e:
                 logger.error(f"Error generating summary: {e}")
