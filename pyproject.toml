@@ -1,3 +1,4 @@
+
 [project]
 name = "python-template"
 version = "0.1.0"
@@ -6,4 +7,10 @@ authors = ["Your Name <you@example.com>"]
 requires-python = ">=3.11"
 dependencies = [
     "cerebras-cloud-sdk>=1.35.0",
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "httpx>=0.25.0",
+    "pydantic>=2.5.0",
+    "python-multipart>=0.0.6",
+    "jinja2>=3.1.2",
 ]

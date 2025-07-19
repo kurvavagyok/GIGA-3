@@ -19,10 +19,14 @@ import threading
 import sqlite3
 from urllib.parse import urlparse
 
-# Google Cloud kliensekhez
-from google.cloud import aiplatform
-from google.oauth2 import service_account
-from google.api_core.exceptions import GoogleAPIError
+# Google Cloud kliensekhez (opcionális)
+try:
+    from google.cloud import aiplatform
+    from google.oauth2 import service_account
+    from google.api_core.exceptions import GoogleAPIError
+    GCP_AVAILABLE = True
+except ImportError:
+    GCP_AVAILABLE = False
 
 # Cerebras Cloud SDK
 try:
@@ -128,7 +132,7 @@ TOKEN_LIMITS = {
 
 # --- Kliensek inicializálása ---
 gcp_credentials = None
-if GCP_SERVICE_ACCOUNT_KEY_JSON and GCP_PROJECT_ID and GCP_REGION:
+if GCP_AVAILABLE and GCP_SERVICE_ACCOUNT_KEY_JSON and GCP_PROJECT_ID and GCP_REGION:
     try:
         info = json.loads(GCP_SERVICE_ACCOUNT_KEY_JSON)
         gcp_credentials = service_account.Credentials.from_service_account_info(info)
@@ -352,6 +356,7 @@ class ReplitDB:
                     return response.text
         except Exception as e:
             logger.warning(f"DB get error: {e}")
+            return self.cache.get(key)
         return self.cache.get(key)
     
     async def set(self, key: str, value: str) -> bool:
@@ -1190,6 +1195,8 @@ async def deep_discovery_chat(req: ChatRequest):
             if current_time - cached_data.get('timestamp', 0) < CACHE_EXPIRY:
                 logger.info("Serving cached response from DB")
                 return cached_data.get('data', {})
+    except Exception as e:
+        logger.warning(f"DB cache lookup error: {e}")
 
     # Gyorsabb backend kiválasztás
     model_info = await select_backend_model(current_message)
@@ -2509,7 +2516,7 @@ async def alphafold3_analysis(req: AlphaFold3Request):
 @app.post("/api/gcp/custom_model")
 async def predict_custom_gcp_model(req: CustomGCPModelRequest):
     """Egyedi GCP Vertex AI modell futtatása"""
-    if not gcp_credentials:
+    if not GCP_AVAILABLE or not gcp_credentials:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="GCP Vertex AI nem elérhető"
@@ -2720,9 +2727,9 @@ async def alphamissense_analysis(req: AlphaMissenseRequest):
         mutation_scores = []
         for mutation in valid_mutations:
             # Egyszerű heurisztika a demo célokra
-            import random
-            random.seed(hash(mutation))
-            score = random.uniform(0.1, 0.9)
+            import hashlib
+            hash_value = int(hashlib.md5(mutation.encode()).hexdigest(), 16)
+            score = (hash_value % 1000) / 1000.0  # 0.0-1.0 közötti érték
             pathogenic = score >= req.pathogenicity_threshold
             
             mutation_scores.append({
