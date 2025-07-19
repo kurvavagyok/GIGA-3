@@ -987,7 +987,7 @@ async def deep_discovery_chat(req: ChatRequest):
 
 @app.post("/api/deep_discovery/deep_research")
 async def deep_research(req: DeepResearchRequest):
-    """Fejlett multi-AI deep research: Exa + Gemini + OpenAI kombinációval, 20,000+ karakteres jelentéssel"""
+    """Fejlett multi-AI deep research: Exa + Gemini + OpenAI kombinációval, 20,000+ karakteres OpenAI jelentéssel"""
     if not exa_client or not EXA_AVAILABLE:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -997,32 +997,23 @@ async def deep_research(req: DeepResearchRequest):
     try:
         logger.info(f"Starting advanced multi-AI deep research for: {req.query}")
 
-        # Kibővített tudományos domainok
-        scientific_domains = [
-            "arxiv.org", "pubmed.ncbi.nlm.nih.gov", "nature.com", "science.org",
-            "cell.com", "ieee.org", "springer.com", "wiley.com", "biorxiv.org", "plos.org",
-            "nejm.org", "thelancet.com", "bmj.com", "acm.org", "elsevier.com",
-            "sciencedirect.com", "tandfonline.com", "sage.com", "mdpi.com", "frontiersin.org"
-        ]
-
-        # === 1. OMFATTNINGABB EXA KERESÉS ===
+        # === 1. ÁLTALÁNOS EXA KERESÉS (nem csak tudományos) ===
         all_results = []
         
-        # Neural keresés - több iteráció
+        # Neural keresés - általános témákhoz
         for batch in range(4):
             try:
                 queries = [
-                    f"{req.query} research study",
-                    f"{req.query} analysis findings",
-                    f"{req.query} methodology results",
-                    f"{req.query} innovation breakthrough"
+                    f"{req.query}",
+                    f"{req.query} news analysis",
+                    f"{req.query} trends insights",
+                    f"{req.query} industry report"
                 ]
                 
                 neural_search = exa_client.search_and_contents(
                     query=queries[batch % len(queries)],
                     type="neural",
-                    num_results=150,
-                    include_domains=scientific_domains,
+                    num_results=100,
                     text=True,
                     start_published_date="2020-01-01"
                 )
@@ -1031,12 +1022,12 @@ async def deep_research(req: DeepResearchRequest):
             except Exception as e:
                 logger.error(f"Neural search batch {batch+1} error: {e}")
 
-        # Kulcsszavas keresés - többféle perspektíva
+        # Kulcsszavas keresés - általános perspektívák
         keyword_queries = [
-            f"{req.query} systematic review",
-            f"{req.query} meta-analysis",
-            f"{req.query} clinical trial",
-            f"{req.query} experimental study"
+            f"{req.query} overview",
+            f"{req.query} guide",
+            f"{req.query} analysis",
+            f"{req.query} latest developments"
         ]
         
         for kw_query in keyword_queries:
@@ -1044,8 +1035,7 @@ async def deep_research(req: DeepResearchRequest):
                 keyword_search = exa_client.search_and_contents(
                     query=kw_query,
                     type="keyword",
-                    num_results=75,
-                    include_domains=scientific_domains,
+                    num_results=50,
                     text=True
                 )
                 all_results.extend(keyword_search.results)
@@ -1053,12 +1043,11 @@ async def deep_research(req: DeepResearchRequest):
             except Exception as e:
                 logger.error(f"Keyword search error for '{kw_query}': {e}")
 
-        # Időbeli keresések - különböző időszakok
+        # Időbeli keresések - friss információk
         time_periods = [
             ("2024-01-01", None, "2024 latest"),
-            ("2023-01-01", "2023-12-31", "2023 research"),
-            ("2022-01-01", "2022-12-31", "2022 research"),
-            ("2021-01-01", "2021-12-31", "2021 research")
+            ("2023-01-01", "2023-12-31", "2023 info"),
+            ("2022-01-01", "2022-12-31", "2022 info")
         ]
         
         for start_date, end_date, period_name in time_periods:
@@ -1066,8 +1055,7 @@ async def deep_research(req: DeepResearchRequest):
                 time_search = exa_client.search_and_contents(
                     query=f"{req.query} {period_name}",
                     type="neural",
-                    num_results=100,
-                    include_domains=scientific_domains,
+                    num_results=75,
                     start_published_date=start_date,
                     end_published_date=end_date,
                     text=True
@@ -1087,7 +1075,7 @@ async def deep_research(req: DeepResearchRequest):
         combined_content = ""
         detailed_content_chunks = []
 
-        for i, result in enumerate(final_results[:1000]):  # Több eredmény feldolgozása
+        for i, result in enumerate(final_results[:800]):  # Több eredmény feldolgozása
             source_data = {
                 "id": i + 1,
                 "title": result.title or "Cím nem elérhető",
@@ -1110,261 +1098,170 @@ async def deep_research(req: DeepResearchRequest):
 
         logger.info(f"Content processing completed. Total content length: {len(combined_content)} characters")
 
-        # === 2. MULTI-AI ELEMZÉS ===
-        
-        # Gemini 2.5 Pro első fázis elemzés
+        # === 2. GEMINI KERESÉSI ELEMZÉS ===
         gemini_analysis = ""
         if gemini_25_pro:
             try:
                 gemini_prompt = f"""
-                MÉLYREHATÓ TUDOMÁNYOS KUTATÁSI ELEMZÉS - I. FÁZIS
+                KERESÉSI EREDMÉNYEK ELEMZÉSE - GEMINI FÁZIS
                 
                 Kutatási téma: {req.query}
                 
-                Elemezd részletesen a következő tudományos forrásokat és készíts átfogó elemzést:
+                Elemezd a következő keresési eredményeket és adj átfogó képet a témáról:
                 
-                FORRÁSANYAG ({len(detailed_content_chunks)} darab tudományos publikáció):
-                {combined_content[:25000]}
+                FORRÁSANYAG ({len(detailed_content_chunks)} találat):
+                {combined_content[:30000]}
                 
                 ELEMZÉSI SZEMPONTOK:
                 
-                1. TUDOMÁNYOS HÁTTÉR ÉS KONTEXTUS
-                - Kutatási terület történeti fejlődése
-                - Jelenlegi paradigmák és elméletek
-                - Kulcsfogalmak és definíciók
-                - Interdiszciplináris kapcsolatok
+                1. TÉMA ÁTTEKINTÉSE
+                - A téma jelenlegi helyzete
+                - Főbb trendek és fejlődési irányok
+                - Kulcsfontosságú szereplők és vélemények
                 
-                2. MÓDSZERTANI MEGKÖZELÍTÉSEK
-                - Alkalmazott kutatási módszerek
-                - Kísérleti tervezések és protokollok
-                - Adatgyűjtési és elemzési technikák
-                - Validáció és reprodukálhatóság
+                2. KÜLÖNBÖZŐ PERSPEKTÍVÁK
+                - Eltérő nézőpontok és megközelítések
+                - Vitatott kérdések és vélemények
+                - Szakértői álláspontok
                 
-                3. FŐ KUTATÁSI EREDMÉNYEK
-                - Jelentős felfedezések és áttörések
-                - Konzisztens minták és trendek
-                - Ellentmondásos vagy vitatott eredmények
-                - Statisztikai szignifikancia és klinikai relevanciák
+                3. GYAKORLATI INFORMÁCIÓK
+                - Valós alkalmazások és példák
+                - Hasznos tippek és tanácsok
+                - Gyakorlati megvalósítás lehetőségei
                 
-                4. TECHNOLÓGIAI ÉS INNOVÁCIÓS ASPEKTUSOK
-                - Új technológiák és eszközök
-                - Szabadalmak és licencek
-                - Kereskedelmi alkalmazások
-                - Startup és vállalati fejlesztések
+                4. AKTUÁLIS FEJLEMÉNYEK
+                - Legfrissebb hírek és események
+                - Újdonságok és innovációk
+                - Jövőbeli kilátások
                 
-                A válasz legyen részletes, strukturált és legalább 4000 karakter hosszú.
+                A válasz legyen részletes és informatív, legalább 3000 karakter hosszú.
                 """
                 
                 gemini_response = await gemini_25_pro.generate_content_async(
                     gemini_prompt,
                     generation_config=genai.types.GenerationConfig(
-                        max_output_tokens=8000,
+                        max_output_tokens=6000,
                         temperature=0.2,
                         top_p=0.9
                     )
                 )
                 gemini_analysis = gemini_response.text if gemini_response.text else "Gemini elemzés nem sikerült"
-                logger.info(f"Gemini 2.5 Pro analysis completed. Length: {len(gemini_analysis)} characters")
+                logger.info(f"Gemini analysis completed. Length: {len(gemini_analysis)} characters")
             except Exception as e:
                 logger.error(f"Gemini analysis error: {e}")
                 gemini_analysis = "Gemini elemzés során hiba történt"
 
-        # OpenAI GPT-4 második fázis elemzés
-        openai_analysis = ""
+        # === 3. OPENAI VÉGSŐ JELENTÉS ÍRÁSA ===
+        final_report = ""
         if openai_client:
             try:
                 openai_prompt = f"""
-                FEJLETT TUDOMÁNYOS KUTATÁSI SZINTÉZIS - II. FÁZIS
+                ÁTFOGÓ KUTATÁSI JELENTÉS ÍRÁSA - OPENAI FÁZIS
                 
                 Témakör: {req.query}
                 
-                ELSŐ FÁZIS ELEMZÉSI EREDMÉNYEK:
+                GEMINI ELEMZÉSI EREDMÉNYEK:
                 {gemini_analysis}
                 
-                TOVÁBBI FORRÁSADATOK RÉSZLETES ELEMZÉSE:
-                {combined_content[25000:50000] if len(combined_content) > 25000 else "Nincs további tartalom"}
+                TOVÁBBI FORRÁSADATOK:
+                {combined_content[30000:60000] if len(combined_content) > 30000 else "Nincs további tartalom"}
                 
-                MÁSODIK FÁZIS ELEMZÉSI FELADATOK:
+                FELADAT: Írj egy részletes, átfogó jelentést legalább 20,000 karakter hosszúságban a következő struktúrával:
                 
-                1. KRITIKAI ÉRTÉKELÉS ÉS SZINTÉZIS
-                - Az első fázis eredményeinek kritikai elemzése
-                - Hiányosságok és korlátok azonosítása
-                - Alternatív értelmezések és perspektívák
-                - Metodológiai erősségek és gyengeségek
+                1. EXECUTIVE SUMMARY (vezetői összefoglaló)
                 
-                2. GYAKORLATI ALKALMAZÁSOK ÉS IMPLEMENTÁCIÓ
-                - Valós világbeli alkalmazási lehetőségek
-                - Implementációs kihívások és megoldások
-                - Költség-haszon elemzések
-                - Regulatory és etikai megfontolások
+                2. BEVEZETÉS ÉS HÁTTÉR
+                - Téma kontextusa és jelentősége
+                - Történeti áttekintés
+                - Jelenlegi helyzet
                 
-                3. JÖVŐBELI KUTATÁSI IRÁNYOK
-                - Feltáratlan kutatási területek
-                - Technológiai konvergencia lehetőségei
-                - Finanszírozási trendek és prioritások
-                - Nemzetközi együttműködési projektek
+                3. FŐ MEGÁLLAPÍTÁSOK
+                - Kulcsfontosságú eredmények és tények
+                - Statisztikák és adatok
+                - Szakértői vélemények
                 
-                4. TÁRSADALMI ÉS GAZDASÁGI HATÁSOK
-                - Szociológiai implikációk
-                - Gazdasági hatásmechanizmusok
-                - Környezeti fenntarthatóság
-                - Globális egyenlőtlenségek
+                4. RÉSZLETES ELEMZÉS
+                - Mélyreható vizsgálat
+                - Összehasonlítások és értékelések
+                - Kritikai szempontok
                 
-                5. KOCKÁZATELEMZÉS ÉS MITIGÁCIÓ
-                - Potenciális kockázatok és veszélyek
-                - Biztonsági protokollok
-                - Etikai dilemmák
-                - Hosszú távú következmények
+                5. GYAKORLATI ALKALMAZÁSOK
+                - Valódi példák és esettanulmányok
+                - Implementációs lehetőségek
+                - Sikertényezők és buktatók
                 
-                A válasz legyen részletes, kritikai szemléletű és legalább 5000 karakter hosszú.
+                6. JÖVŐBELI KILÁTÁSOK
+                - Várható fejlemények
+                - Lehetséges forgatókönyvek
+                - Ajánlások és stratégiák
+                
+                7. KÖVETKEZTETÉSEK ÉS AJÁNLÁSOK
+                - Összefoglaló megállapítások
+                - Praktikus tanácsok
+                - Következő lépések
+                
+                8. FORRÁSOK ÉS HIVATKOZÁSOK
+                - Feldolgozott anyagok listája
+                - További olvasmányok
+                
+                A jelentés legyen professzionális, jól strukturált, magyar nyelvű és gyakorlatias szempontokat is tartalmazzon. Használj konkrét adatokat, példákat és hivatkozásokat a forrásokból.
                 """
                 
                 openai_response = openai_client.chat.completions.create(
                     model="gpt-4o",
                     messages=[{"role": "user", "content": openai_prompt}],
-                    max_tokens=8000,
-                    temperature=0.3,
-                    top_p=0.9
+                    max_tokens=16000,
+                    temperature=0.2,
+                    top_p=0.95
                 )
-                openai_analysis = openai_response.choices[0].message.content
-                logger.info(f"OpenAI GPT-4 analysis completed. Length: {len(openai_analysis)} characters")
+                final_report = openai_response.choices[0].message.content
+                logger.info(f"OpenAI final report completed. Length: {len(final_report)} characters")
             except Exception as e:
-                logger.error(f"OpenAI analysis error: {e}")
-                openai_analysis = "OpenAI elemzés során hiba történt"
+                logger.error(f"OpenAI report generation error: {e}")
+                final_report = "OpenAI jelentés generálása során hiba történt"
 
-        # Cerebras harmadik fázis - integráció és összegzés
-        cerebras_synthesis = ""
-        if cerebras_client:
-            try:
-                cerebras_prompt = f"""
-                INTEGRÁLT TUDOMÁNYOS KUTATÁSI JELENTÉS - VÉGSŐ SZINTÉZIS
-                
-                Kutatási téma: {req.query}
-                
-                ELSŐ FÁZIS (Gemini 2.5 Pro):
-                {gemini_analysis}
-                
-                MÁSODIK FÁZIS (OpenAI GPT-4):
-                {openai_analysis}
-                
-                HARMADIK FÁZIS FELADATOK - VÉGSŐ INTEGRÁCIÓ:
-                
-                1. MULTI-PERSPEKTÍVÁS SZINTÉZIS
-                - Az előző két elemzés integrálása
-                - Konszenzus pontok és eltérések
-                - Komplementer megközelítések egyesítése
-                - Holisztikus következtetések levonása
-                
-                2. STRATÉGIAI AJÁNLÁSOK
-                - Rövid távú akciótervezés (1-2 év)
-                - Középtávú stratégiai irányok (3-5 év)
-                - Hosszú távú vízió és célok (5-10 év)
-                - Kulcs stakeholderek és partnerségek
-                
-                3. DÖNTÉSTÁMOGATÓ ÖSSZEFOGLALÓ
-                - Vezetői összefoglaló (executive summary)
-                - Kulcs teljesítménymutatók (KPI-k)
-                - Mérföldkövek és timeline
-                - Erőforrás-szükségletek
-                
-                4. INNOVÁCIÓS LEHETŐSÉGEK
-                - Disruptív technológiai potenciálok
-                - Új üzleti modellek
-                - Szellemi tulajdon lehetőségek
-                - Startup és spin-off ötletek
-                
-                5. GLOBÁLIS TRENDEK ÉS KONTEXTUS
-                - Nemzetközi versenyhelyzet
-                - Geopolitikai megfontolások
-                - Kulturális és társadalmi tényezők
-                - Klímaváltozás és fenntarthatóság
-                
-                A végső jelentés legyen átfogó, akcióorientált és legalább 6000 karakter hosszú.
-                """
-                
-                cerebras_stream = cerebras_client.chat.completions.create(
-                    messages=[{"role": "user", "content": cerebras_prompt}],
-                    model="llama-4-scout-17b-16e-instruct",
-                    stream=True,
-                    max_completion_tokens=8000,
-                    temperature=0.25,
-                    top_p=0.9
-                )
-                
-                for chunk in cerebras_stream:
-                    if chunk.choices[0].delta.content:
-                        cerebras_synthesis += chunk.choices[0].delta.content
-                        
-                logger.info(f"Cerebras synthesis completed. Length: {len(cerebras_synthesis)} characters")
-            except Exception as e:
-                logger.error(f"Cerebras synthesis error: {e}")
-                cerebras_synthesis = "Cerebras szintézis során hiba történt"
-
-        # === 3. VÉGSŐ JELENTÉS ÖSSZEÁLLÍTÁSA ===
+        # === 4. VÉGSŐ JELENTÉS ÖSSZEÁLLÍTÁSA ===
         
-        final_comprehensive_report = f"""
-# MÉLYREHATÓ TUDOMÁNYOS KUTATÁSI JELENTÉS
+        comprehensive_report = f"""
+# ÁTFOGÓ KUTATÁSI JELENTÉS
 
 **Kutatási téma:** {req.query}  
 **Generálás dátuma:** {datetime.now().strftime("%Y. %m. %d. %H:%M")}  
-**Feldolgozott források:** {len(sources)} tudományos publikáció  
-**AI modellek:** Exa Neural Search + Gemini 2.5 Pro + OpenAI GPT-4 + Cerebras Llama  
+**Feldolgozott források:** {len(sources)} találat  
+**AI modellek:** Exa Neural Search + Gemini 2.5 Pro (keresés) + OpenAI GPT-4 (jelentés)  
 
 ---
 
-## EXECUTIVE SUMMARY
-
-Ez a jelentés a "{req.query}" témakörben végrehajtott mélyreható kutatás eredményeit foglalja össze. A kutatás során {len(sources)} tudományos forrást elemeztünk {len(set(s["domain"] for s in sources))} különböző tudományos platformról, három élvonalbeli AI modell együttes használatával.
+{final_report}
 
 ---
 
-## I. FÁZIS - ALAPVETŐ TUDOMÁNYOS ELEMZÉS
-### (Gemini 2.5 Pro Neural Engine)
+## TECHNIKAI ADATOK ÉS FORRÁSOK
 
-{gemini_analysis}
-
----
-
-## II. FÁZIS - KRITIKAI ÉRTÉKELÉS ÉS GYAKORLATI ALKALMAZÁSOK  
-### (OpenAI GPT-4 Advanced Reasoning)
-
-{openai_analysis}
-
----
-
-## III. FÁZIS - INTEGRÁLT SZINTÉZIS ÉS STRATÉGIAI AJÁNLÁSOK
-### (Cerebras Llama Multi-Modal Integration)
-
-{cerebras_synthesis}
-
----
-
-## FORRÁSADATOK ÉS METODOLÓGIA
-
-### Keresési stratégia:
-- **Neural Search:** 4 iteráció, 150 eredmény/iteráció
-- **Keyword Search:** 4 különböző lekérdezés, 75 eredmény/lekérdezés
-- **Temporal Search:** 4 időszak (2021-2024), 100 eredmény/időszak
-- **Összesen:** {len(all_results)} eredmény, {len(final_results)} egyedi forrás
-
-### Feldolgozott domainok:
-{', '.join(scientific_domains)}
+### Keresési statisztikák:
+- **Neural Search:** 4 iteráció, összesen {len([r for r in all_results if hasattr(r, 'type') and getattr(r, 'type', None) == 'neural'])} eredmény
+- **Keyword Search:** 4 lekérdezés, összesen {len([r for r in all_results if hasattr(r, 'type') and getattr(r, 'type', None) == 'keyword'])} eredmény  
+- **Temporal Search:** 3 időszak, összesen {len([r for r in all_results if 'time' in str(r)])} eredmény
+- **Összes eredmény:** {len(all_results)} találat
+- **Egyedi források:** {len(final_results)} darab
 
 ### AI modellek teljesítménye:
-- **Gemini 2.5 Pro:** {len(gemini_analysis)} karakter elemzés
-- **OpenAI GPT-4:** {len(openai_analysis)} karakter elemzés  
-- **Cerebras Llama:** {len(cerebras_synthesis)} karakter szintézis
-- **Összesen:** {len(gemini_analysis) + len(openai_analysis) + len(cerebras_synthesis)} karakter
+- **Gemini 2.5 Pro keresési elemzés:** {len(gemini_analysis)} karakter
+- **OpenAI GPT-4 végső jelentés:** {len(final_report)} karakter
+- **Összes generált tartalom:** {len(gemini_analysis) + len(final_report)} karakter
+
+### Feldolgozott domainok:
+{', '.join(sorted(set(s["domain"] for s in sources[:20])))}... és további {max(0, len(set(s["domain"] for s in sources)) - 20)} domain
 
 ---
 
-## FELHASZNÁLT FORRÁSOK TELJES LISTÁJA
+## FELHASZNÁLT FORRÁSOK LISTÁJA
 
 """
 
         # Források részletes listája
-        for i, source in enumerate(sources[:100]):  # Top 100 forrás részletesen
-            final_comprehensive_report += f"""
+        for i, source in enumerate(sources[:50]):  # Top 50 forrás részletesen
+            comprehensive_report += f"""
 ### [{i+1}] {source['title']}
 - **URL:** {source['url']}
 - **Domain:** {source['domain']}
@@ -1374,35 +1271,35 @@ Ez a jelentés a "{req.query}" témakörben végrehajtott mélyreható kutatás 
 """
 
         # További források tömör listája
-        if len(sources) > 100:
-            final_comprehensive_report += f"\n### További {len(sources) - 100} forrás tömör listája:\n\n"
-            for i, source in enumerate(sources[100:], 101):
-                final_comprehensive_report += f"{i}. {source['title']} - {source['domain']}\n"
+        if len(sources) > 50:
+            comprehensive_report += f"\n### További {len(sources) - 50} forrás:\n\n"
+            for i, source in enumerate(sources[50:], 51):
+                comprehensive_report += f"{i}. [{source['title'][:80]}...]({source['url']}) - {source['domain']}\n"
 
-        final_comprehensive_report += f"""
+        comprehensive_report += f"""
 
 ---
 
-## TECHNIKAI RÉSZLETEK
+## METODOLÓGIAI MEGJEGYZÉSEK
 
-- **Elemzés típusa:** Multi-AI Deep Research
-- **Teljes jelentés hossza:** {len(final_comprehensive_report)} karakter
-- **Feldolgozási idő:** {datetime.now().isoformat()}
-- **Adatforrások minősége:** Peer-reviewed tudományos publikációk
-- **AI konszenzus szintje:** Magas (3 modell egyetértése)
+- **Keresési módszer:** Multi-platform neurális és kulcsszavas keresés
+- **Időbeli lefedettség:** 2020-2024
+- **Tartalom feldolgozás:** Automatizált szövegelemzés és szintézis
+- **Minőségbiztosítás:** Multi-AI cross-validation
+- **Jelentés típusa:** Átfogó szakmai elemzés
 
 ---
 
 *Jelentést generálta: JADED Deep Discovery AI Platform*  
-*Technológia: Exa Neural Search + Multi-AI Synthesis*  
+*Technológia: Exa Search + Gemini Analysis + OpenAI Synthesis*  
 *© {datetime.now().year} - Sándor Kollár*
 """
 
-        logger.info(f"Final comprehensive report generated. Total length: {len(final_comprehensive_report)} characters")
+        logger.info(f"Final comprehensive report generated. Total length: {len(comprehensive_report)} characters")
 
         return {
             "query": req.query,
-            "final_synthesis": final_comprehensive_report,
+            "final_synthesis": comprehensive_report,
             "sources": sources,
             "total_sources": len(sources),
             "unique_domains": len(set(s["domain"] for s in sources)),
@@ -1410,17 +1307,14 @@ Ez a jelentés a "{req.query}" témakörben végrehajtott mélyreható kutatás 
                 "total_results_found": len(all_results),
                 "unique_results": len(final_results),
                 "content_length": len(combined_content),
-                "domains_searched": len(scientific_domains),
-                "ai_models_used": 3,
+                "ai_models_used": 2,
                 "gemini_analysis_length": len(gemini_analysis),
-                "openai_analysis_length": len(openai_analysis),
-                "cerebras_synthesis_length": len(cerebras_synthesis),
-                "final_report_length": len(final_comprehensive_report)
+                "openai_report_length": len(final_report),
+                "final_report_length": len(comprehensive_report)
             },
             "ai_analysis_breakdown": {
-                "phase_1_gemini": gemini_analysis[:500] + "..." if len(gemini_analysis) > 500 else gemini_analysis,
-                "phase_2_openai": openai_analysis[:500] + "..." if len(openai_analysis) > 500 else openai_analysis,
-                "phase_3_cerebras": cerebras_synthesis[:500] + "..." if len(cerebras_synthesis) > 500 else cerebras_synthesis
+                "gemini_search_analysis": gemini_analysis[:500] + "..." if len(gemini_analysis) > 500 else gemini_analysis,
+                "openai_final_report": final_report[:500] + "..." if len(final_report) > 500 else final_report
             },
             "timestamp": datetime.now().isoformat(),
             "status": "success"
