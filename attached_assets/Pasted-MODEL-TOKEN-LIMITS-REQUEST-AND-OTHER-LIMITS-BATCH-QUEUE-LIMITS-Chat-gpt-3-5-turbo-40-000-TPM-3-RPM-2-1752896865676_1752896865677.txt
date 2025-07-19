@@ -1,0 +1,221 @@
+MODEL	TOKEN LIMITS	REQUEST AND OTHER LIMITS	BATCH QUEUE LIMITS
+Chat
+gpt-3.5-turbo
+40 000 TPM
+3 RPM
+200 RPD
+200 000 TPD
+gpt-3.5-turbo-0125
+40 000 TPM
+3 RPM
+200 RPD
+200 000 TPD
+gpt-3.5-turbo-1106
+40 000 TPM
+3 RPM
+200 RPD
+200 000 TPD
+gpt-3.5-turbo-16k
+40 000 TPM
+3 RPM
+200 RPD
+540 000 TPD
+gpt-3.5-turbo-instruct
+90 000 TPM
+3 RPM
+200 RPD
+200 000 TPD
+gpt-3.5-turbo-instruct-0914
+90 000 TPM
+3 RPM
+200 RPD
+200 000 TPD
+gpt-4.1
+Shared limits:
+gpt-4.1-2025-04-14
+10 000 TPM
+3 RPM
+200 RPD
+900 000 TPD
+gpt-4.1 (long context)
+60 000 TPM
+3 RPM
+200 RPD
+200 000 TPD
+gpt-4.1-mini
+Shared limits:
+gpt-4.1-mini-2025-04-14
+60 000 TPM
+3 RPM
+200 RPD
+200 000 TPD
+gpt-4.1-mini (long context)
+120 000 TPM
+3 RPM
+200 RPD
+400 000 TPD
+gpt-4.1-nano
+Shared limits:
+gpt-4.1-nano-2025-04-14
+60 000 TPM
+3 RPM
+200 RPD
+200 000 TPD
+gpt-4.1-nano (long context)
+120 000 TPM
+3 RPM
+200 RPD
+400 000 TPD
+gpt-4o
+Shared limits:
+gpt-4o-2024-05-13
+gpt-4o-2024-08-06
+gpt-4o-2024-11-20
+gpt-4o-audio-preview
+gpt-4o-audio-preview-2024-10-01
+gpt-4o-audio-preview-2024-12-17
+10 000 TPM
+3 RPM
+200 RPD
+90 000 TPD
+gpt-4o-audio-preview-2025-06-03
+150 000 TPM
+3 RPM
+200 RPD
+gpt-4o-mini
+Shared limits:
+gpt-4o-mini-2024-07-18
+gpt-4o-mini-audio-preview
+gpt-4o-mini-audio-preview-2024-12-17
+60 000 TPM
+3 RPM
+200 RPD
+200 000 TPD
+gpt-4o-mini-search-preview
+3000 TPM
+3 RPM
+200 RPD
+gpt-4o-mini-search-preview-2025-03-11
+3000 TPM
+3 RPM
+200 RPD
+gpt-4o-mini-transcribe
+200 RPD
+gpt-4o-search-preview
+3000 TPM
+3 RPM
+200 RPD
+gpt-4o-search-preview-2025-03-11
+3000 TPM
+3 RPM
+200 RPD
+gpt-4o-transcribe
+200 RPD
+Text
+babbage-002
+150 000 TPM
+3 RPM
+200 RPD
+davinci-002
+150 000 TPM
+3 RPM
+200 RPD
+o1-mini
+150 000 TPM
+3 RPM
+200 RPD
+o1-mini-2024-09-12
+150 000 TPM
+3 RPM
+200 RPD
+o1-preview
+150 000 TPM
+3 RPM
+200 RPD
+o1-preview-2024-09-12
+150 000 TPM
+3 RPM
+200 RPD
+text-embedding-3-large
+40 000 TPM
+100 RPM
+2000 RPD
+text-embedding-3-small
+40 000 TPM
+100 RPM
+2000 RPD
+text-embedding-ada-002
+40 000 TPM
+100 RPM
+2000 RPD
+Moderation
+omni-moderation-2024-09-26
+5000 TPM
+250 RPM
+10 000 RPD
+omni-moderation-latest
+5000 TPM
+250 RPM
+10 000 RPD
+text-moderation-latest
+150 000 TPM
+3 RPM
+200 RPD
+text-moderation-stable
+150 000 TPM
+3 RPM
+200 RPD
+Fine-Tuning Inference (shares limits with base model)
+babbage-002	150 000	3	
+davinci-002	150 000	3	
+gpt-3.5-turbo-0125	40 000	3	
+gpt-3.5-turbo-0613	40 000	3	
+gpt-3.5-turbo-1106	40 000	3	
+gpt-4-0613	10 000	3	
+gpt-4o-2024-05-13	10 000	3	
+gpt-4o-mini-2024-07-18	60 000	3	
+Fine-tuning Training	active / queued jobs	jobs per day	
+babbage-002	3	48	
+davinci-002	3	48	
+gpt-3.5-turbo-0613	3	48	
+Image
+dall-e-2
+150 000 TPM
+3 RPM
+200 RPD
+5 images per minute
+dall-e-3
+150 000 TPM
+3 RPM
+200 RPD
+gpt-image-1
+3 RPM
+200 RPD
+Audio
+gpt-4o-mini-tts
+200 RPD
+tts-1
+150 000 TPM
+3 RPM
+200 RPD
+tts-1-1106
+150 000 TPM
+3 RPM
+200 RPD
+tts-1-hd
+150 000 TPM
+3 RPM
+200 RPD
+tts-1-hd-1106
+150 000 TPM
+3 RPM
+200 RPD
+whisper-1
+150 000 TPM
+3 RPM
+200 RPD
+Other
+Default limits for all other models
+150 000 TPM
+3 RPM
+200 RPD
