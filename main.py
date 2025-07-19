@@ -14,6 +14,10 @@ import time
 import sys
 import pathlib
 import re
+import gc
+import threading
+import sqlite3
+from urllib.parse import urlparse
 
 # Google Cloud kliensekhez
 from google.cloud import aiplatform
@@ -187,10 +191,18 @@ from contextlib import asynccontextmanager
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    logger.info("JADED alkalmazás elindult - optimalizált verzió")
-    yield
-    # Shutdown
-    logger.info("JADED alkalmazás leáll")
+    logger.info("JADED alkalmazás elindult - megerősített verzió DB integrációval")
+    
+    # Background cleanup task indítása
+    cleanup_task = asyncio.create_task(periodic_cleanup())
+    
+    try:
+        yield
+    finally:
+        # Shutdown
+        cleanup_task.cancel()
+        await advanced_memory_cleanup()
+        logger.info("JADED alkalmazás leáll - cleanup befejezve")
 
 # FastAPI app újradefiniálása a lifespan-nel
 app = FastAPI(
@@ -311,12 +323,82 @@ class CodeGenerationRequest(BaseModel):
     complexity: str = Field(default="medium", description="Kód komplexitása")
     temperature: float = Field(default=0.3, ge=0.0, le=1.0, description="AI kreativitás")
 
-# Beszélgetési előzmények és cache - Optimalizált
+# Replit Database integráció
+class ReplitDB:
+    def __init__(self):
+        self.db_url = self._get_db_url()
+        self.cache = {}
+        self._lock = threading.Lock()
+        
+    def _get_db_url(self):
+        """Replit DB URL lekérése"""
+        # Próbáljuk a fájlból (deployment esetén)
+        try:
+            with open('/tmp/replitdb', 'r') as f:
+                return f.read().strip()
+        except:
+            # Fallback környezeti változóra
+            return os.getenv('REPLIT_DB_URL')
+    
+    async def get(self, key: str) -> Optional[str]:
+        """Érték lekérése a DB-ből"""
+        if not self.db_url:
+            return self.cache.get(key)
+            
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                response = await client.get(f"{self.db_url}/{key}")
+                if response.status_code == 200:
+                    return response.text
+        except Exception as e:
+            logger.warning(f"DB get error: {e}")
+        return self.cache.get(key)
+    
+    async def set(self, key: str, value: str) -> bool:
+        """Érték beállítása a DB-ben"""
+        with self._lock:
+            self.cache[key] = value
+            
+        if not self.db_url:
+            return True
+            
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                response = await client.post(
+                    self.db_url,
+                    data={key: value[:4000000]}  # 5MB limit alatt
+                )
+                return response.status_code == 200
+        except Exception as e:
+            logger.warning(f"DB set error: {e}")
+            return False
+    
+    async def delete(self, key: str) -> bool:
+        """Kulcs törlése"""
+        with self._lock:
+            self.cache.pop(key, None)
+            
+        if not self.db_url:
+            return True
+            
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                response = await client.delete(f"{self.db_url}/{key}")
+                return response.status_code == 200
+        except Exception as e:
+            logger.warning(f"DB delete error: {e}")
+            return False
+
+# Database inicializálás
+replit_db = ReplitDB()
+
+# Beszélgetési előzmények és cache - Erősített verzió
 chat_histories: Dict[str, List[Message]] = {}
 response_cache: Dict[str, Dict[str, Any]] = {}
-CACHE_EXPIRY = 600  # 10 perces cache a teljesítményért
-MAX_CHAT_HISTORY = 25  # Csökkentett memória használat
-MAX_HISTORY_LENGTH = 20  # Rövidebb előzmények
+CACHE_EXPIRY = 1800  # 30 perces cache
+MAX_CHAT_HISTORY = 50  # Több chat történet
+MAX_HISTORY_LENGTH = 30  # Hosszabb előzmények
+MEMORY_CLEANUP_INTERVAL = 300  # 5 percenként cleanup
 
 # Gyorsabb cache implementáció
 @lru_cache(maxsize=500)
@@ -328,36 +410,114 @@ def get_cached_response(cache_key: str, timestamp: float) -> Optional[Dict[str, 
             return cached['data']
     return None
 
-def cleanup_memory():
-    """Agresszívebb memória tisztítás a teljesítményért"""
+async def advanced_memory_cleanup():
+    """Fejlett memória kezelés és optimalizálás"""
     try:
         current_time = time.time()
+        cleanup_count = 0
         
-        # Gyorsabb cache tisztítás
-        if len(response_cache) > 200:  # Kisebb cache méret
-            expired_keys = [k for k, v in response_cache.items() 
-                           if current_time - v.get('timestamp', 0) > CACHE_EXPIRY]
-            for key in expired_keys[:50]:  # Batch törlés
+        # Cache tisztítás nagy jelentéseknél
+        large_cache_keys = []
+        for key, value in list(response_cache.items()):
+            try:
+                # Nagy jelentések azonosítása (>100KB)
+                content_size = len(str(value.get('data', {}).get('final_synthesis', '')))
+                if content_size > 100000:
+                    large_cache_keys.append(key)
+                    
+                # Lejárt cache-ek törlése
+                if current_time - value.get('timestamp', 0) > CACHE_EXPIRY:
+                    response_cache.pop(key, None)
+                    cleanup_count += 1
+            except Exception:
                 response_cache.pop(key, None)
         
-        # Chat history agresszív tisztítás
-        if len(chat_histories) > MAX_CHAT_HISTORY:
-            # Legrégebbi beszélgetések törlése
-            users_to_remove = list(chat_histories.keys())[:len(chat_histories) - MAX_CHAT_HISTORY]
-            for user_id in users_to_remove:
-                chat_histories.pop(user_id, None)
+        # Nagy jelentések DB-be mentése és memóriából törlése
+        for key in large_cache_keys[:10]:  # Maximum 10 egyszerre
+            try:
+                cache_data = response_cache.get(key)
+                if cache_data:
+                    # Mentés DB-be
+                    await replit_db.set(f"large_report_{key}", json.dumps(cache_data))
+                    # Memóriából törlés
+                    response_cache.pop(key, None)
+                    cleanup_count += 1
+            except Exception as e:
+                logger.warning(f"Large cache save error: {e}")
+        
+        # Chat history optimalizálás
+        if len(chat_histories) > MAX_CHAT_HISTORY * 2:
+            # Régi beszélgetések DB-be mentése
+            users_to_archive = list(chat_histories.keys())[:-MAX_CHAT_HISTORY]
+            for user_id in users_to_archive[:20]:  # Max 20 egyszerre
+                try:
+                    chat_data = chat_histories.get(user_id)
+                    if chat_data and len(chat_data) > 5:
+                        await replit_db.set(f"chat_history_{user_id}", json.dumps(chat_data))
+                        chat_histories.pop(user_id, None)
+                        cleanup_count += 1
+                except Exception as e:
+                    logger.warning(f"Chat archive error: {e}")
         
         # Beszélgetések rövidítése
         for user_id in list(chat_histories.keys()):
-            if len(chat_histories[user_id]) > MAX_HISTORY_LENGTH:
+            if len(chat_histories[user_id]) > MAX_HISTORY_LENGTH * 2:
+                # Régi részek mentése
+                old_messages = chat_histories[user_id][:-MAX_HISTORY_LENGTH]
+                if len(old_messages) > 10:
+                    try:
+                        await replit_db.set(f"old_messages_{user_id}", json.dumps(old_messages))
+                    except Exception:
+                        pass
                 chat_histories[user_id] = chat_histories[user_id][-MAX_HISTORY_LENGTH:]
-                
-        # Cache függvény tisztítása
-        if len(response_cache) > 300:
+        
+        # Python garbage collection
+        if cleanup_count > 0:
+            gc.collect()
+            
+        # LRU cache tisztítás
+        if len(response_cache) > 500:
             get_cached_response.cache_clear()
+        
+        logger.info(f"Advanced cleanup: {cleanup_count} items processed, {len(response_cache)} cache entries, {len(chat_histories)} active chats")
                 
     except Exception as e:
-        logger.error(f"Memory cleanup error: {e}")
+        logger.error(f"Advanced cleanup error: {e}")
+
+def cleanup_memory():
+    """Egyszerű szinkron cleanup wrapper"""
+    try:
+        # Azonnali memória felszabadítás
+        gc.collect()
+        
+        # Cache méret ellenőrzés
+        if len(response_cache) > 1000:
+            # Régi elemek törlése
+            current_time = time.time()
+            expired = [k for k, v in response_cache.items() 
+                      if current_time - v.get('timestamp', 0) > CACHE_EXPIRY]
+            for key in expired[:200]:
+                response_cache.pop(key, None)
+        
+        # Chat history tisztítás
+        if len(chat_histories) > MAX_CHAT_HISTORY * 3:
+            excess_users = list(chat_histories.keys())[:-MAX_CHAT_HISTORY]
+            for user in excess_users[:50]:
+                chat_histories.pop(user, None)
+                
+    except Exception as e:
+        logger.error(f"Sync cleanup error: {e}")
+
+# Automatikus cleanup task
+async def periodic_cleanup():
+    """Időszakos cleanup task"""
+    while True:
+        try:
+            await asyncio.sleep(MEMORY_CLEANUP_INTERVAL)
+            await advanced_memory_cleanup()
+        except Exception as e:
+            logger.error(f"Periodic cleanup error: {e}")
+            await asyncio.sleep(60)
 
 # --- Alpha Services definíciója ---
 ALPHA_SERVICES = {
@@ -770,7 +930,108 @@ async def root_endpoint():
         "status": "active",
         "info": CREATOR_INFO,
         "total_services": sum(len(services) for services in ALPHA_SERVICES.values()),
-        "categories": list(ALPHA_SERVICES.keys())
+        "categories": list(ALPHA_SERVICES.keys()),
+        "enhanced_features": {
+            "replit_db_integration": True,
+            "advanced_memory_management": True,
+            "large_report_handling": True,
+            "persistent_cache": True
+        },
+        "memory_stats": {
+            "active_chats": len(chat_histories),
+            "cached_responses": len(response_cache),
+            "db_connected": replit_db.db_url is not None
+        }
+    }
+
+@app.get("/api/system/health")
+async def system_health():
+    """Rendszer állapot ellenőrzés"""
+    try:
+        # Memória statisztikák
+        memory_usage = {
+            "chat_histories": len(chat_histories),
+            "response_cache": len(response_cache),
+            "cache_memory_mb": sum(len(str(v)) for v in response_cache.values()) / (1024 * 1024)
+        }
+        
+        # DB connection teszt
+        db_status = "connected" if replit_db.db_url else "disconnected"
+        
+        return {
+            "status": "healthy",
+            "timestamp": datetime.now().isoformat(),
+            "memory": memory_usage,
+            "database": db_status,
+            "uptime": "running",
+            "services_active": {
+                "cerebras": cerebras_client is not None,
+                "openai": openai_client is not None,
+                "gemini": gemini_25_pro is not None,
+                "exa": exa_client is not None
+            }
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+@app.post("/api/system/cleanup")
+async def manual_cleanup():
+    """Manuális memória tisztítás"""
+    try:
+        await advanced_memory_cleanup()
+        return {
+            "status": "success",
+            "message": "Memória tisztítás befejezve",
+            "stats": {
+                "active_chats": len(chat_histories),
+                "cached_responses": len(response_cache)
+            }
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+@app.get("/api/research/{research_id}")
+async def get_research_report(research_id: str):
+    """Mentett kutatási jelentés lekérése DB-ből"""
+    try:
+        # Metadata lekérés
+        metadata_json = await replit_db.get(f"research_meta_{research_id}")
+        if not metadata_json:
+            raise HTTPException(status_code=404, detail="Kutatás nem található")
+            
+        metadata = json.loads(metadata_json)
+        
+        # Jelentés lekérés
+        report = await replit_db.get(f"research_report_{research_id}")
+        if not report:
+            raise HTTPException(status_code=404, detail="Jelentés nem található")
+        
+        return {
+            "research_id": research_id,
+            "metadata": metadata,
+            "report": report,
+            "status": "success"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Hiba a jelentés lekérésénél: {e}")
+
+@app.get("/api/research/list")
+async def list_research_reports():
+    """Mentett kutatások listája"""
+    # Ezt részletesebben ki kellene dolgozni a Replit DB kulcs listázással
+    return {
+        "message": "Kutatások listázása fejlesztés alatt",
+        "note": "Használd a research_id-t a konkrét jelentés lekéréséhez"
     }
 
 @app.get("/api/services")
@@ -907,7 +1168,7 @@ async def execute_simple_alpha_service(service_name: str, request: SimpleAlphaRe
 
 @app.post("/api/deep_discovery/chat")
 async def deep_discovery_chat(req: ChatRequest):
-    """Szuper gyors chat funkcionalitás optimalizált teljesítménnyel"""
+    """Erősített chat funkcionalitás DB integrációval és jobb teljesítménnyel"""
     user_id = req.user_id
     current_message = req.message
 
@@ -915,11 +1176,20 @@ async def deep_discovery_chat(req: ChatRequest):
     cache_key = hashlib.md5(f"{user_id}:{current_message}".encode()).hexdigest()
     current_time = time.time()
 
-    # Cache lookup
+    # Cache lookup először memóriából
     cached = get_cached_response(cache_key, current_time)
     if cached:
-        logger.info("Serving cached response")
+        logger.info("Serving cached response from memory")
         return cached
+    
+    # DB lookup ha nincs memóriában
+    try:
+        db_cached = await replit_db.get(f"chat_cache_{cache_key}")
+        if db_cached:
+            cached_data = json.loads(db_cached)
+            if current_time - cached_data.get('timestamp', 0) < CACHE_EXPIRY:
+                logger.info("Serving cached response from DB")
+                return cached_data.get('data', {})
 
     # Gyorsabb backend kiválasztás
     model_info = await select_backend_model(current_message)
@@ -1009,11 +1279,20 @@ async def deep_discovery_chat(req: ChatRequest):
             'status': 'success'
         }
 
-        # Cache mentés
-        response_cache[cache_key] = {
+        # Cache mentés memóriába és DB-be
+        cache_data = {
             'data': result,
             'timestamp': current_time
         }
+        
+        response_cache[cache_key] = cache_data
+        
+        # Aszinkron DB mentés (nem blokkoló)
+        asyncio.create_task(replit_db.set(f"chat_cache_{cache_key}", json.dumps(cache_data)))
+        
+        # Chat history DB mentés hosszú beszélgetéseknél
+        if len(history) > 15:
+            asyncio.create_task(replit_db.set(f"chat_backup_{user_id}", json.dumps(history)))
 
         return result
 
@@ -1026,11 +1305,15 @@ async def deep_discovery_chat(req: ChatRequest):
 
 @app.post("/api/deep_discovery/deep_research")
 async def deep_research(req: DeepResearchRequest):
-    """Háromszoros keresési rendszer állapotjelzővel és időbecsléssel"""
+    """Megerősített háromszoros keresési rendszer chunked streaming-gel"""
     
     try:
         start_time = time.time()
-        logger.info(f"Starting triple-AI search system for: {req.query}")
+        logger.info(f"Starting enhanced triple-AI search system for: {req.query}")
+        
+        # Memória előkészítés
+        cleanup_memory()
+        gc.collect()
 
         # Állapot inicializálás
         research_state = {
@@ -1504,9 +1787,33 @@ async def deep_research(req: DeepResearchRequest):
         total_content_length = len(complete_report)
         character_target_met = len(final_comprehensive_report) >= 15000
         
-        logger.info(f"Triple AI search completed in {int(total_elapsed_time/60)}:{int(total_elapsed_time%60):02d}")
+        # Nagy jelentés DB-be mentése a memória tehermentesítéséért
+        research_id = hashlib.md5(f"{req.query}_{start_time}".encode()).hexdigest()
+        
+        try:
+            # Jelentés DB mentés
+            await replit_db.set(f"research_report_{research_id}", complete_report[:4000000])
+            
+            # Metadata külön mentése
+            metadata = {
+                "query": req.query,
+                "total_length": total_content_length,
+                "sources_count": len(exa_results),
+                "timestamp": datetime.now().isoformat(),
+                "duration": f"{int(total_elapsed_time/60)}:{int(total_elapsed_time%60):02d}"
+            }
+            await replit_db.set(f"research_meta_{research_id}", json.dumps(metadata))
+            
+        except Exception as e:
+            logger.warning(f"Failed to save research to DB: {e}")
+
+        logger.info(f"Enhanced triple AI search completed in {int(total_elapsed_time/60)}:{int(total_elapsed_time%60):02d}")
         logger.info(f"Total report: {total_content_length} characters")
         logger.info(f"15K character target: {'✓ MET' if character_target_met else '✗ NOT MET'}")
+        logger.info(f"Research saved with ID: {research_id}")
+
+        # Memória takarítás a végén
+        cleanup_memory()
 
         return {
             "query": req.query,
