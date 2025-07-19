@@ -14,6 +14,7 @@ import time
 import sys
 import pathlib
 import re
+import itertools
 
 # Google Cloud kliensekhez
 from google.cloud import aiplatform
@@ -47,6 +48,13 @@ try:
     REPLICATE_AVAILABLE = True
 except ImportError:
     REPLICATE_AVAILABLE = False
+
+# Numpy import
+try:
+    import numpy as np
+    NUMPY_AVAILABLE = True
+except ImportError:
+    NUMPY_AVAILABLE = False
 
 # OpenAI API
 try:
@@ -91,6 +99,11 @@ REPLICATE_API_TOKEN = os.environ.get("REPLICATE_API_TOKEN", "r8_LoDV0PyMV9RrUqMI
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 OPENAI_ORG_ID = os.environ.get("OPENAI_ORG_ID")
 OPENAI_ADMIN_KEY = os.environ.get("OPENAI_ADMIN_KEY")
+
+# --- AlphaMissense konstansok ---
+_IPTM_WEIGHT = 0.8
+_FRACTION_DISORDERED_WEIGHT = 0.1
+_CLASH_PENALIZATION_WEIGHT = 0.5
 
 # --- Token Limit Definíciók ---
 TOKEN_LIMITS = {
@@ -327,6 +340,21 @@ def get_cached_response(cache_key: str, timestamp: float) -> Optional[Dict[str, 
             return cached['data']
     return None
 
+def get_ranking_score(
+    ptm: float, iptm: float, fraction_disordered_: float, has_clash_: bool
+) -> float:
+    """AlphaMissense ranking score számítása"""
+    # ipTM is NaN for single chain structures. Use pTM for such cases.
+    if NUMPY_AVAILABLE and np.isnan(iptm):
+        ptm_iptm_average = ptm
+    else:
+        ptm_iptm_average = _IPTM_WEIGHT * iptm + (1.0 - _IPTM_WEIGHT) * ptm
+    return (
+        ptm_iptm_average
+        + _FRACTION_DISORDERED_WEIGHT * fraction_disordered_
+        - _CLASH_PENALIZATION_WEIGHT * has_clash_
+    )
+
 def cleanup_memory():
     """Agresszívebb memória tisztítás a teljesítményért"""
     try:
@@ -357,6 +385,14 @@ def cleanup_memory():
 
     except Exception as e:
         logger.error(f"Memory cleanup error: {e}")
+        # Fallback cleanup ha minden más elbukik
+        try:
+            if len(response_cache) > 1000:
+                response_cache.clear()
+            if len(chat_histories) > 100:
+                chat_histories.clear()
+        except:
+            pass
 
 # --- Alpha Services definíciója ---
 ALPHA_SERVICES = {
@@ -611,8 +647,13 @@ async def execute_model(model_info: Dict[str, Any], prompt: str):
                 top_k=40,
                 candidate_count=1
             )
-            response = await model.generate_content_async(prompt, generation_config=generation_config)
-            response_text = response.text if hasattr(response, 'text') and response.text else "Válasz nem generálható."
+            try:
+                response = await model.generate_content_async(prompt, generation_config=generation_config)
+                response_text = response.text if hasattr(response, 'text') and response.text else "Válasz nem generálható."
+            except:
+                # Fallback szinkron hívásra
+                response = model.generate_content(prompt, generation_config=generation_config)
+                response_text = response.text if hasattr(response, 'text') and response.text else "Válasz nem generálható."
             return {"response": response_text, "model_used": "JADED AI", "selected_backend": "JADED AI"}
 
         else:
@@ -1448,8 +1489,7 @@ async def exa_neural_search(query: str, domains: List[str] = [], exclude_domains
         )
 
         processed_results = []
-        for```python
- result in results:
+        for result in results:
             processed_result = {
                 "title": result.title,
                 "url": result.url,
@@ -2286,6 +2326,6 @@ def find_available_port(start_port=5000, max_attempts=10):
 # Adding FastAPI application execution to the end of the file.
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.environ.get("PORT", find_available_port()))
+    port = int(os.environ.get("PORT", 5000))
     logger.info(f"Starting JADED AI Platform on port {port}")
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    uvicorn.run(app, host="0.0.0.0", port=port, reload=False)
