@@ -208,9 +208,8 @@
         .category-header .fa-chevron-down { transition: transform 0.3s var(--transition-curve); }
         .category-header:hover, .category-header:active {
             background: var(--glass-strong);
-            border-color: var(--primary);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 15px rgba(153, 12, 88, 0.3);
+            border-color: var(--border-glow);
+            transform: translateY(-2px);
         }
         .category-title { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.8rem; }
         .category-title i { color: var(--accent); }
@@ -233,11 +232,10 @@
             min-height: 44px;
         }
         .service-item:hover, .service-item:active {
-            background: linear-gradient(135deg, rgba(153, 12, 88, 0.2), rgba(229, 18, 132, 0.1));
+            background: var(--glass-strong);
             border-color: transparent transparent transparent var(--primary);
-            transform: translateX(6px);
+            transform: translateX(4px);
             color: #fff;
-            box-shadow: 0 3px 12px rgba(153, 12, 88, 0.4);
         }
         .service-icon {
             width: 24px; height: 24px;
@@ -249,7 +247,7 @@
             transition: all 0.3s var(--transition-curve);
         }
         .service-item:hover .service-icon { transform: scale(1.1); color: var(--secondary); border-color: var(--secondary); }
-        .service-info h3 { font-size: 0.75rem; font-weight: 600; margin-bottom: 2px; }
+        .service-info h4 { font-size: 0.75rem; font-weight: 600; margin-bottom: 2px; }
         .service-info p { font-size: 0.7rem; color: var(--text-muted); }
 
         /* --- Fő tartalom --- */
@@ -799,70 +797,6 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Form stílusok a modális ablakhoz */
-        .form-group {
-            margin-bottom: 16px;
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 6px;
-            font-weight: 500;
-            color: var(--text);
-            font-size: 0.9rem;
-        }
-
-        .form-group select,
-        .form-group input[type="range"] {
-            width: 100%;
-            background: var(--glass-strong);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 8px 12px;
-            color: var(--text);
-            font-size: 0.9rem;
-        }
-
-        .modal-actions {
-            display: flex;
-            gap: 12px;
-            justify-content: flex-end;
-            margin-top: 20px;
-        }
-
-        .btn-cancel,
-        .btn-generate {
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s var(--transition-curve);
-            font-size: 0.9rem;
-            border: none;
-        }
-
-        .btn-cancel {
-            background: var(--glass-strong);
-            color: var(--text);
-            border: 1px solid var(--border);
-        }
-
-        .btn-generate {
-            background: var(--accent);
-            color: white;
-        }
-
-        .btn-cancel:hover,
-        .btn-generate:hover {
-            transform: translateY(-2px);
-        }
-
         /* Gomb pressed állapot */
         .btn-pressed {
             transform: scale(0.95) !important;
@@ -1384,12 +1318,12 @@ async function fetchAPI(endpoint, options = {}) {
                 sidebarContent.innerHTML = '';
 
                 const categoryMeta = {
-                    biologiai_orvosi: { name: 'Alpha Bio & Orvosi', icon: 'fa-dna' },
-                    kemiai_anyagtudomanyi: { name: 'Alpha Kémiai & Anyag', icon: 'fa-atom' },
-                    kornyezeti_fenntarthato: { name: 'Alpha Környezeti', icon: 'fa-leaf' },
-                    fizikai_asztrofizikai: { name: 'Alpha Fizikai', icon: 'fa-satellite-dish' },
-                    technologiai_melymu: { name: 'Alpha Technológiai', icon: 'fa-microchip' },
-                    tarsadalmi_gazdasagi: { name: 'Alpha Társadalmi', icon: 'fa-chart-line' }
+                    biologiai_orvosi: { name: 'Biológiai & Orvosi', icon: 'fa-dna' },
+                    kemiai_anyagtudomanyi: { name: 'Kémiai & Anyagtudományi', icon: 'fa-atom' },
+                    kornyezeti_fenntarthato: { name: 'Környezeti & Fenntartható', icon: 'fa-leaf' },
+                    fizikai_asztrofizikai: { name: 'Fizikai & Asztrofizikai', icon: 'fa-satellite-dish' },
+                    technologiai_melymu: { name: 'Technológiai & Mélyműszaki', icon: 'fa-microchip' },
+                    tarsadalmi_gazdasagi: { name: 'Társadalmi & Gazdasági', icon: 'fa-chart-line' }
                 };
 
                 for (const categoryId in categories) {
@@ -1405,7 +1339,7 @@ async function fetchAPI(endpoint, options = {}) {
                             <div class="service-item touch-feedback" onclick="selectService('${serviceName}', '${escapeHtml(category[serviceName])}')">
                                 <div class="service-icon"><i class="fas fa-flask"></i></div>
                                 <div class="service-info">
-                                    <h3>${escapeHtml(serviceName)}</h3>
+                                    <h4>${escapeHtml(serviceName)}</h4>
                                     <p>${escapeHtml(category[serviceName])}</p>
                                 </div>
                             </div>`;
@@ -1433,12 +1367,12 @@ async function fetchAPI(endpoint, options = {}) {
                     </div>
                     <div class="category-services"><div>
                         <div class="service-item touch-feedback" onclick="startDeepResearch()">
-                            <div class="service-icon" style="color: var(--secondary);"><i class="fas fa-search-plus"></i></div>
-                            <div class="service-info"><h3>Deep Discovery</h3><p>Tudományos kutatás 150+ forrásból</p></div>
+                            <div class="service-icon" style="color: var(--secondary);"><i class="fas fa-microscope"></i></div>
+                            <div class="service-info"><h4>Deep Research</h4><p>Mélyreható kutatási elemzés</p></div>
                         </div>
                         <div class="service-item touch-feedback" onclick="openCodeGenerator()">
                             <div class="service-icon" style="color: var(--secondary);"><i class="fas fa-code"></i></div>
-                            <div class="service-info"><h3>Kód Generátor</h3><p>AI-alapú kódolás</p></div>
+                            <div class="service-info"><h4>Kód Generátor</h4><p>AI-alapú kódolás</p></div>
                         </div>
                     </div></div>`;
                 sidebarContent.appendChild(researchCategory);
@@ -1725,16 +1659,11 @@ async function fetchAPI(endpoint, options = {}) {
         }
 
         function startDeepResearch() {
-            modalTitle.innerText = 'Deep Discovery Kutatás';
+            modalTitle.innerText = 'Deep Research';
             modalBody.innerHTML = `
-                <div style="margin-bottom: 16px; padding: 12px; background: var(--glass); border-radius: 8px; border-left: 4px solid var(--primary);">
-                    <p style="margin: 0; font-size: 0.9rem; color: var(--text);">
-                        <strong>Deep Discovery:</strong> Átfogó tudományos kutatás 150+ forrásból, AI szintézissel
-                    </p>
-                </div>
                 <label for="researchQuery">Kutatási téma:</label>
-                <input type="text" id="researchQuery" placeholder="Pl. 'kvantum számítástechnika fejlődése 2024-ben'">`;
-            modalFooter.innerHTML = `<button class="modal-submit-btn touch-feedback" onclick="submitDeepResearchQuery()">Deep Discovery Indítása</button>`;
+                <input type="text" id="researchQuery" placeholder="Pl. \'A grafén felhasználása az akkumulátor technológiában\'">`;
+            modalFooter.innerHTML = `<button class="modal-submit-btn touch-feedback" onclick="submitDeepResearchQuery()">Kutatás indítása</button>`;
             openModal();
         }
 
@@ -1744,7 +1673,7 @@ async function fetchAPI(endpoint, options = {}) {
 
             closeModal();
             hideWelcome();
-            addUserMessage(`🔬 Deep Discovery kutatás indítva: ${query}`);
+            addUserMessage(`Deep Research indítva: ${query}`);
             showResearchIndicator(query);
 
             try {
@@ -1777,9 +1706,8 @@ async function fetchAPI(endpoint, options = {}) {
             indicatorDiv.innerHTML = `
                 <div class="research-indicator">
                     <div class="spinner"></div>
-                    <h4>🔬 Deep Discovery kutatás folyamatban...</h4>
-                    <p>JADED elemzi a tudományos adatbázisokat: <strong>"${escapeHtml(query)}"</strong><br>
-                    Várható idő: 1-3 perc</p>
+                    <h4>Mélyreható kutatás folyamatban...</h4>
+                    <p>A rendszer több tucat tudományos forrást elemez a témában: <strong>"${escapeHtml(query)}"</strong>. Ez több percig is eltarthat.</p>
                 </div>`;
             messagesContainer.appendChild(indicatorDiv);
             scrollToBottom();
@@ -1913,28 +1841,81 @@ async function fetchAPI(endpoint, options = {}) {
         }
     </script>
 
-    
+    <div id="fluxModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-image"></i> FLUX 1.1 Pro Ultra</h3>
+                <button class="close-btn" onclick="closeFluxModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="fluxPrompt">Kép leírása:</label>
+                    <textarea id="fluxPrompt" placeholder="Írj le részletesen, milyen képet szeretnél generálni..." rows="3"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="aspectRatio">Képarány:</label>
+                        <select id="aspectRatio">
+                            <option value="3:2">3:2 (Landscape)</option>
+                            <option value="1:1">1:1 (Square)</option>
+                            <option value="2:3">2:3 (Portrait)</option>
+                            <option value="16:9">16:9 (Widescreen)</option>
+                            <option value="9:16">9:16 (Mobile)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="outputFormat">Formátum:</label>
+                        <select id="outputFormat">
+                            <option value="jpg">JPG</option>
+                            <option value="png">PNG</option>
+                            <option value="webp">WebP</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="safetyTolerance">Biztonsági szint:</label>
+                        <select id="safetyTolerance">
+                            <option value="1">1 (Legbiztonságosabb)</option>
+                            <option value="2" selected>2 (Biztonságos)</option>
+                            <option value="3">3 (Kiegyensúlyozott)</option>
+                            <option value="4">4 (Engedékeny)</option>
+                            <option value="5">5 (Legkevésbé korlátozott)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="imagePromptStrength">Prompt erősség:</label>
+                        <input type="range" id="imagePromptStrength" min="0" max="1" step="0.1" value="0.1">
+                        <span id="strengthValue">0.1</span>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-cancel" onclick="closeFluxModal()">Mégse</button>
+                    <button class="btn-generate" onclick="generateFluxImage()">
+                        <i class="fas fa-magic"></i> Generálás
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         // Globális változók
         let currentImageGenerationMode = false;
 
-        // Event listeners - biztonságos inicializálás
-        const sendButton = document.getElementById('sendBtn');
-        const messageInputEl = document.getElementById('messageInput');
-        const toolsButtonEl = document.getElementById('toolsButton');
-        
-        if (sendButton) sendButton.addEventListener('click', sendMessage);
-        if (messageInputEl) {
-            messageInputEl.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendMessage();
-                }
-            });
-        }
+        // Event listeners
+        document.getElementById('sendBtn').addEventListener('click', sendMessage);
+        document.getElementById('messageInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
 
-        if (toolsButtonEl) toolsButtonEl.addEventListener('click', toggleToolsMenu);
+        // Tools button event listener
+        document.getElementById('toolsButton').addEventListener('click', toggleToolsMenu);
 
         // Kívül kattintás az eszközök menü bezárásához
         document.addEventListener('click', function(e) {
@@ -1942,6 +1923,11 @@ async function fetchAPI(endpoint, options = {}) {
             if (!toolsContainer) {
                 closeToolsMenu();
             }
+        });
+
+        // Image prompt strength slider
+        document.getElementById('imagePromptStrength').addEventListener('input', function(e) {
+            document.getElementById('strengthValue').textContent = e.target.value;
         });
 
         // Eszközök menü kezelés
@@ -1976,11 +1962,124 @@ async function fetchAPI(endpoint, options = {}) {
             HapticFeedback.medium();
         }
 
-        
+        // FLUX Modal functions
+        function openFluxModal() {
+            document.getElementById('fluxModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
 
-        
+        function closeFluxModal() {
+            document.getElementById('fluxModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
 
-        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('fluxModal');
+            if (event.target === modal) {
+                closeFluxModal();
+            }
+        }
+
+        async function generateFluxImage() {
+            const prompt = document.getElementById('fluxPrompt').value.trim();
+            if (!prompt) {
+                alert('Kérlek add meg a kép leírását!');
+                return;
+            }
+
+            const generateBtn = document.querySelector('.btn-generate');
+            const originalText = generateBtn.innerHTML;
+            generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generálás...';
+            generateBtn.disabled = true;
+
+            try {
+                const response = await fetch('/api/replicate/flux_generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        prompt: prompt,
+                        aspect_ratio: document.getElementById('aspectRatio').value,
+                        output_format: document.getElementById('outputFormat').value,
+                        safety_tolerance: parseInt(document.getElementById('safetyTolerance').value),
+                        image_prompt_strength: parseFloat(document.getElementById('imagePromptStrength').value),
+                        raw: false
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    // Add generated image to chat
+                    addImageToChat(data.image_url, prompt, data);
+                    closeFluxModal();
+                    // Clear form
+                    document.getElementById('fluxPrompt').value = '';
+                } else {
+                    alert('Hiba a kép generálása során: ' + data.detail);
+                }
+            } catch (error) {
+                console.error('FLUX generálási hiba:', error);
+                alert('Hiba történt a kép generálása során.');
+            } finally {
+                generateBtn.innerHTML = originalText;
+                generateBtn.disabled = false;
+            }
+        }
+
+        function addImageToChat(imageUrl, prompt, metadata) {
+            const chatContainer = document.getElementById('messagesContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ai-message';
+
+            messageDiv.innerHTML = `
+                <div class="ai-content">
+                    <div class="flux-image-container">
+                        <img src="${imageUrl}" alt="${prompt}" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+                        <div class="image-metadata">
+                            <p><strong>Prompt:</strong> ${prompt}</p>
+                            <p><strong>Képarány:</strong> ${metadata.aspect_ratio} | <strong>Formátum:</strong> ${metadata.output_format}</p>
+                            <p><strong>Biztonsági szint:</strong> ${metadata.safety_tolerance} | <strong>Modell:</strong> ${metadata.model}</p>
+                        </div>
+                    </div>
+                </div>
+				<div class="message-actions">
+                    <button class="action-btn touch-feedback" onclick=""><i class="fas fa-copy"></i> Másolás</button>
+                </div>
+            `;
+
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Kép letöltési funkció
+            async function downloadImage(imageUrl, filename) {
+                try {
+                    const response = await fetch(imageUrl);
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename || 'generated-image.jpg';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                } catch (error) {
+                    console.error('Hiba a kép letöltése során:', error);
+                    alert('Hiba történt a kép letöltése során.');
+                }
+            }
+
+            // Szövegdoboz méretének automatikus beállítása
+            function adjustTextareaHeight(textarea) {
+                textarea.style.height = 'auto';
+                const scrollHeight = textarea.scrollHeight;
+                const maxHeight = 120;
+                textarea.style.height = Math.min(scrollHeight, maxHeight) + 'px';
+            }
     </script>
 </body>
 </html>
