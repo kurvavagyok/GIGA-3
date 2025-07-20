@@ -924,6 +924,11 @@ async def handle_alpha_service(service_name: str, input_data: Dict[str, Any], pa
 async def serve_frontend():
     return FileResponse("templates/index.html")
 
+@app.get("/secret-widget")
+async def serve_secret_widget():
+    """Titkos widget megjelenítése"""
+    return FileResponse("templates/secret_widget.html")
+
 @app.get("/api")
 async def root_endpoint():
     return {
