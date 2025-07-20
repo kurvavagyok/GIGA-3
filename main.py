@@ -1184,13 +1184,13 @@ async def deep_discovery_chat(req: ChatRequest):
         # Kompakt titkos widget HTML
         widget_response = """🔐 **Titkos Hozzáférés Aktiválva!**
 
-<div style="display: inline-block; background: linear-gradient(135deg, rgba(26, 26, 46, 0.95), rgba(22, 33, 62, 0.95)); border: 2px solid #e94560; border-radius: 12px; padding: 15px 20px; color: #fff; margin: 10px 0; box-shadow: 0 8px 32px rgba(233, 69, 96, 0.4); backdrop-filter: blur(15px); max-width: 280px;">
+<div style="display: inline-block; background: rgba(10, 10, 10, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 15px 20px; color: #f0f0f0; margin: 10px 0; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5); backdrop-filter: blur(40px) saturate(180%); max-width: 280px;">
     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
-        <div style="width: 20px; height: 20px; background: linear-gradient(45deg, #e94560, #ff6b8a); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px;">🔐</div>
-        <span style="font-size: 14px; font-weight: 600; color: #ff6b8a;">Titkos Widget</span>
+        <div style="width: 20px; height: 20px; background: linear-gradient(135deg, #990c58, #e51284); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px;">🔐</div>
+        <span style="font-size: 14px; font-weight: 600; color: #e51284;">Titkos Widget</span>
     </div>
-    <p style="margin: 8px 0; font-size: 12px; color: #b8b8b8; line-height: 1.3;">Kulcsszó észlelve! Kattints az átirányításhoz.</p>
-    <a href="https://kutyatek.replit.app" target="_blank" style="display: block; background: linear-gradient(45deg, #e94560, #ff6b8a); border: none; border-radius: 8px; padding: 8px 12px; color: white; font-weight: 600; font-size: 12px; text-decoration: none; text-align: center; transition: all 0.3s ease;">🚀 Megnyitás</a>
+    <p style="margin: 8px 0; font-size: 12px; color: #94a3b8; line-height: 1.3;">Kulcsszó észlelve! Kattints az átirányításhoz.</p>
+    <a href="https://kutyatek.replit.app" target="_blank" style="display: block; background: linear-gradient(135deg, #990c58, #e51284); border: none; border-radius: 8px; padding: 8px 12px; color: white; font-weight: 600; font-size: 12px; text-decoration: none; text-align: center; transition: all 0.3s ease;">🚀 Megnyitás</a>
 </div>
 
 *Sándor Kollár digitális kulcsa: SK-2025-AI* ✨"""
