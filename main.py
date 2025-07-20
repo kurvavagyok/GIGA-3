@@ -1181,31 +1181,23 @@ async def deep_discovery_chat(req: ChatRequest):
 
     # Speciális kulcsszó ellenőrzése - orizatriznyák
     if "orizatriznyák" in current_message.lower():
-        # Titkos widget HTML visszaküldése
-        widget_response = """
-        🔐 **TITKOS KULCSSZÓ ÉSZLELVE!** 🔐
-        
-        Gratulálok! Megtaláltad a titkos kulcsszót. Itt a titkos widget:
-        
-        <div style="background: linear-gradient(135deg, #1a1a2e, #16213e); border: 2px solid #e94560; border-radius: 15px; padding: 20px; color: #fff; margin: 20px 0; box-shadow: 0 8px 32px rgba(233, 69, 96, 0.3);">
-            <h3 style="color: #ff6b8a; margin: 0 0 15px 0;">🚀 Titkos Fájl Hozzáférés</h3>
-            <p style="margin: 10px 0;">Észleltem, hogy a kulcsszót használtad!</p>
-            <div style="background: rgba(233, 69, 96, 0.2); border: 1px solid #e94560; border-radius: 8px; padding: 8px 12px; font-family: monospace; font-size: 12px; color: #ff6b8a; text-align: center; margin: 15px 0; letter-spacing: 1px;">
-                orizatriznyák
-            </div>
-            <a href="https://kutyatek.replit.app" target="_blank" style="display: block; width: 100%; background: linear-gradient(45deg, #e94560, #ff6b8a); border: none; border-radius: 8px; padding: 12px; color: white; font-weight: bold; font-size: 14px; text-decoration: none; text-align: center; transition: all 0.3s ease;">
-                🚀 Titkos Fájl Megnyitása
-            </a>
-        </div>
-        
-        **Üzenet:** A titkos widget aktiválva! Kattints a linkre a kutyatek.replit.app oldalra való átirányításhoz.
-        
-        *Rejtett üzenet Sándor Kollár-tól: "Az AI-alapú kutatás jövője itt van"* ✨
-        """
+        # Kompakt titkos widget HTML
+        widget_response = """🔐 **Titkos Hozzáférés Aktiválva!**
+
+<div style="display: inline-block; background: linear-gradient(135deg, rgba(26, 26, 46, 0.95), rgba(22, 33, 62, 0.95)); border: 2px solid #e94560; border-radius: 12px; padding: 15px 20px; color: #fff; margin: 10px 0; box-shadow: 0 8px 32px rgba(233, 69, 96, 0.4); backdrop-filter: blur(15px); max-width: 280px;">
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+        <div style="width: 20px; height: 20px; background: linear-gradient(45deg, #e94560, #ff6b8a); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px;">🔐</div>
+        <span style="font-size: 14px; font-weight: 600; color: #ff6b8a;">Titkos Widget</span>
+    </div>
+    <p style="margin: 8px 0; font-size: 12px; color: #b8b8b8; line-height: 1.3;">Kulcsszó észlelve! Kattints az átirányításhoz.</p>
+    <a href="https://kutyatek.replit.app" target="_blank" style="display: block; background: linear-gradient(45deg, #e94560, #ff6b8a); border: none; border-radius: 8px; padding: 8px 12px; color: white; font-weight: 600; font-size: 12px; text-decoration: none; text-align: center; transition: all 0.3s ease;">🚀 Megnyitás</a>
+</div>
+
+*Sándor Kollár digitális kulcsa: SK-2025-AI* ✨"""
         
         return {
             'response': widget_response,
-            'model_used': 'JADED AI - Secret Widget System',
+            'model_used': 'JADED AI - Compact Widget',
             'status': 'secret_activated',
             'secret_widget': True
         }
