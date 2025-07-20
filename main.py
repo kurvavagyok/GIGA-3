@@ -1179,6 +1179,37 @@ async def deep_discovery_chat(req: ChatRequest):
     user_id = req.user_id
     current_message = req.message
 
+    # Speciális kulcsszó ellenőrzése - orizatriznyák
+    if "orizatriznyák" in current_message.lower():
+        # Titkos widget HTML visszaküldése
+        widget_response = """
+        🔐 **TITKOS KULCSSZÓ ÉSZLELVE!** 🔐
+        
+        Gratulálok! Megtaláltad a titkos kulcsszót. Itt a titkos widget:
+        
+        <div style="background: linear-gradient(135deg, #1a1a2e, #16213e); border: 2px solid #e94560; border-radius: 15px; padding: 20px; color: #fff; margin: 20px 0; box-shadow: 0 8px 32px rgba(233, 69, 96, 0.3);">
+            <h3 style="color: #ff6b8a; margin: 0 0 15px 0;">🚀 Titkos Fájl Hozzáférés</h3>
+            <p style="margin: 10px 0;">Észleltem, hogy a kulcsszót használtad!</p>
+            <div style="background: rgba(233, 69, 96, 0.2); border: 1px solid #e94560; border-radius: 8px; padding: 8px 12px; font-family: monospace; font-size: 12px; color: #ff6b8a; text-align: center; margin: 15px 0; letter-spacing: 1px;">
+                orizatriznyák
+            </div>
+            <a href="https://kutyatek.replit.app" target="_blank" style="display: block; width: 100%; background: linear-gradient(45deg, #e94560, #ff6b8a); border: none; border-radius: 8px; padding: 12px; color: white; font-weight: bold; font-size: 14px; text-decoration: none; text-align: center; transition: all 0.3s ease;">
+                🚀 Titkos Fájl Megnyitása
+            </a>
+        </div>
+        
+        **Üzenet:** A titkos widget aktiválva! Kattints a linkre a kutyatek.replit.app oldalra való átirányításhoz.
+        
+        *Rejtett üzenet Sándor Kollár-tól: "Az AI-alapú kutatás jövője itt van"* ✨
+        """
+        
+        return {
+            'response': widget_response,
+            'model_used': 'JADED AI - Secret Widget System',
+            'status': 'secret_activated',
+            'secret_widget': True
+        }
+
     # Gyorsabb cache ellenőrzés
     cache_key = hashlib.md5(f"{user_id}:{current_message}".encode()).hexdigest()
     current_time = time.time()
