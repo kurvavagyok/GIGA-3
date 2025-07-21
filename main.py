@@ -30,6 +30,7 @@ except ImportError:
 
 # Cerebras Cloud SDK
 try:
+    import os
     from cerebras.cloud.sdk import Cerebras
     CEREBRAS_AVAILABLE = True
 except ImportError:
@@ -145,7 +146,9 @@ if GCP_AVAILABLE and GCP_SERVICE_ACCOUNT_KEY_JSON and GCP_PROJECT_ID and GCP_REG
 cerebras_client = None
 if CEREBRAS_API_KEY and CEREBRAS_AVAILABLE:
     try:
-        cerebras_client = Cerebras(api_key=CEREBRAS_API_KEY)
+        cerebras_client = Cerebras(
+            api_key=os.environ.get("CEREBRAS_API_KEY")
+        )
         logger.info("Cerebras client initialized successfully.")
     except Exception as e:
         logger.error(f"Error initializing Cerebras client: {e}")
@@ -702,7 +705,7 @@ def _get_available_models():
     """Elérhető modellek cache-elése"""
     models = []
     if cerebras_client and CEREBRAS_AVAILABLE:
-        models.append({"model": cerebras_client, "name": "llama-4-scout-17b-16e-instruct", "type": "cerebras"})
+        models.append({"model": cerebras_client, "name": "llama-4-maverick-17b-128e-instruct", "type": "cerebras"})
     if openai_client and OPENAI_AVAILABLE:
         models.append({"model": openai_client, "name": "gpt-4o", "type": "openai"})
     if gemini_25_pro and GEMINI_AVAILABLE:
@@ -734,14 +737,14 @@ async def execute_model(model_info: Dict[str, Any], prompt: str):
 
     try:
         if model_type == "cerebras" and model == cerebras_client:
-            # Cerebras optimalizált pontosság és sebesség
+            # Cerebras llama-4-maverick modell optimalizált beállításokkal
             stream = cerebras_client.chat.completions.create(
                 messages=[{"role": "user", "content": prompt}],
-                model="llama-4-scout-17b-16e-instruct",
+                model="llama-4-maverick-17b-128e-instruct",
                 stream=True,
-                max_completion_tokens=4096,  # Növelt token limit a pontosabb válaszokért
-                temperature=0.3,  # Optimalizált kreativitás a pontosságért
-                top_p=0.9  # Finomított nucleus sampling
+                max_completion_tokens=2697,
+                temperature=0.6,
+                top_p=0.75
             )
             for chunk in stream:
                 if hasattr(chunk, 'choices') and chunk.choices and chunk.choices[0].delta.content:
@@ -1246,15 +1249,15 @@ async def deep_discovery_chat(req: ChatRequest):
         response_text = ""
         model_used = "JADED AI"
 
-        # Optimalizált Cerebras pontosság és sebesség
+        # Cerebras llama-4-maverick modell optimalizált beállításokkal
         if model_info["type"] == "cerebras":
             stream = cerebras_client.chat.completions.create(
                 messages=messages_for_llm,
-                model="llama-4-scout-17b-16e-instruct",
+                model="llama-4-maverick-17b-128e-instruct",
                 stream=True,
-                max_completion_tokens=2048,  # Megnövelt token limit a részletesebb válaszokért
-                temperature=0.25,  # Kiegyensúlyozott kreativitás
-                top_p=0.9  # Nucleus sampling optimalizálása
+                max_completion_tokens=2697,
+                temperature=0.6,
+                top_p=0.75
             )
             for chunk in stream:
                 if chunk.choices[0].delta.content:
@@ -2107,13 +2110,11 @@ async def exa_get_contents(req: ExaContentsRequest):
                 elif cerebras_client:
                     stream = cerebras_client.chat.completions.create(
                         messages=[{"role": "user", "content": summary_prompt}],
-                        model="llama-4-scout-17b-16e-instruct",
+                        model="llama-4-maverick-17b-128e-instruct",
                         stream=True,
-                        max_completion_tokens=2000,  # Részletesebb összefoglalókért
-                        temperature=0.2,  # Kiegyensúlyozott kreativitás
-                        top_p=0.9,
-                        presence_penalty=0.1,
-                        frequency_penalty=0.05
+                        max_completion_tokens=2697,
+                        temperature=0.6,
+                        top_p=0.75
                     )
                     for chunk in stream:
                         if hasattr(chunk, 'choices') and chunk.choices and chunk.choices[0].delta.content:
